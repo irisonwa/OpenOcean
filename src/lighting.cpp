@@ -159,6 +159,21 @@ void Lighting::addSpotLightAtt(vec3 pos, vec3 dir, vec3 amb, vec3 dif, vec3 spec
     }
 }
 
+void Lighting::setSpotLightAtt(int idx, vec3 pos, vec3 dir, vec3 amb, vec3 dif, vec3 spec) {
+    if (idx < 100) {
+        spotLights[idx].position = pos;
+        spotLights[idx].direction = dir;
+        spotLights[idx].ambient = amb;
+        spotLights[idx].diffuse = dif;
+        spotLights[idx].specular = spec;
+        spotLights[idx].constant = 1.f;
+        spotLights[idx].linear = 0.09f;
+        spotLights[idx].quadratic = 0.032f;
+        spotLights[idx].cutOff = cos(Util::deg2Rad(12.5f));
+        spotLights[idx].outerCutOff = cos(Util::deg2Rad(15.5f));
+    }
+}
+
 void Lighting::setPointLightsAtt(std::vector<vec3> pos) {
     nPointLights = pos.size();
     for (int i = 0; i < pos.size(); i++) {

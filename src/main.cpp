@@ -37,7 +37,7 @@ void init() {
                     (float)y + offset * (rand() % spread),
                     (float)z + offset * (rand() % spread));
                 translations.push_back(translation);
-                scales.push_back(vec3(0.5 + rand() % 10));
+                scales.push_back(vec3(0.5 + rand() % 4));
             }
         }
     }
@@ -45,6 +45,14 @@ void init() {
         Boid* boid = new Boid(translations[i], translations[i], BoidType::FISH_1, i);
         boids.push_back(boid);
     }
+
+    baseLight->addSpotLightAtt(flashlightCoords, flashlightDir, vec3(0.2f), vec3(1), vec3(1));
+    baseLight->spotLights[baseLight->nSpotLights - 1].cutOff = cos(Util::deg2Rad(24.f));
+    baseLight->spotLights[baseLight->nSpotLights - 1].outerCutOff = cos(Util::deg2Rad(35.f));
+    float fct = 6.f;
+    baseLight->setDirLightsAtt(vector<vec3>{vec3(0, -1, 0)});
+    baseLight->setDirLightColour(vec3(1, 0, 0.8f) / fct, vec3(1, 0, 0.8f) / fct,
+                                 vec3(1, 0, 0.8f));
 }
 
 void display() {
@@ -60,50 +68,21 @@ void display() {
     mat4 persp_proj = perspective(Util::deg2Rad(camera.FOV), (float)SM::width / (float)SM::height, 0.1f, 1000.0f);
     // Skybox
 #pragma region SKYBOX
-    glDepthFunc(GL_LEQUAL);
-    mat4 nvm = mat4(mat3(camera.getViewMatrix()));
-    shaders["skybox"]->use();
-    shaders["skybox"]->setInt("skybox", 0);
-    shaders["skybox"]->setMat4("view", nvm);
-    shaders["skybox"]->setMat4("proj", persp_proj);
-    cubemap->render();
-    glDepthFunc(GL_LESS);
+    // glDepthFunc(GL_LEQUAL);
+    // mat4 nvm = mat4(mat3(camera.getViewMatrix()));
+    // shaders["skybox"]->use();
+    // shaders["skybox"]->setInt("skybox", 0);
+    // shaders["skybox"]->setMat4("view", nvm);
+    // shaders["skybox"]->setMat4("proj", persp_proj);
+    // cubemap->render();
+    // glDepthFunc(GL_LESS);
 #pragma endregion
 
+    // update camera view and flashlight
     baseLight->setLightAtt(view, persp_proj, camera.pos);
-    baseLight->setSpotLightsAtt(lPos, lDir);
-    baseLight->setPointLightsAtt(lPos);
-    baseLight->setDirLightsAtt(vector<vec3>{vec3(0, -1, 0)});
-    baseLight->setSpotLightColours(
-        vector<vec3>{vec3(0.05f), vec3(0.05f), vec3(0.05f),
-                     vec3(0.05f)},  // ambient
-        lCol,                       // diffuse
-        lCol                        // specular
-    );
-    for (int i = 0; i < baseLight->nSpotLights; i++) {
-        baseLight->spotLights[i].quadratic = 0.032f;
-        baseLight->spotLights[i].cutOff = cos(Util::deg2Rad(18.f));
-        baseLight->spotLights[i].outerCutOff = cos(Util::deg2Rad(22.f));
-    }
-    baseLight->addSpotLightAtt(flashlightCoords, flashlightDir, vec3(0.2f), vec3(1), vec3(1));
+    baseLight->setSpotLightAtt(0, flashlightCoords, flashlightDir, vec3(0.2f), vec3(1), vec3(1));
     baseLight->spotLights[baseLight->nSpotLights - 1].cutOff = cos(Util::deg2Rad(24.f));
     baseLight->spotLights[baseLight->nSpotLights - 1].outerCutOff = cos(Util::deg2Rad(35.f));
-    baseLight->setPointLightColours(
-        vector<vec3>(1, vec3(0.05f)),  // ambient
-        lCol,                          // diffuse
-        lCol                           // specular
-    );
-    for (int i = 0; i < baseLight->nPointLights; i++) {
-        baseLight->pointLights[i].quadratic = 0.032f;
-        baseLight->spotLights[i].cutOff = cos(Util::deg2Rad(18.f));
-        baseLight->spotLights[i].outerCutOff = cos(Util::deg2Rad(22.f));
-    }
-    baseLight->addPointLightAtt(vec3(0, 220, 550), vec3(0, 0.2, 1), vec3(0, 0.2, 1), vec3(0, 0.2, 1));
-    baseLight->pointLights[baseLight->nPointLights - 1].linear = 0.0009f;
-    baseLight->pointLights[baseLight->nPointLights - 1].quadratic = 0.00009f;
-    float fct = 6.f;
-    baseLight->setDirLightColour(vec3(1, 0, 0.8f) / fct, vec3(1, 0, 0.8f) / fct,
-                                 vec3(1, 0, 0.8f));
     baseLight->use();
 
     // Transform each instance

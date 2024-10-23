@@ -127,6 +127,7 @@ class Lighting {
     /// <param name="dif">The diffuse light colour</param>
     /// <param name="spe">The specular light colour</param>
     void addSpotLightAtt(vec3 pos, vec3 dir, vec3 amb, vec3 dif, vec3 spec);
+    void setSpotLightAtt(int idx, vec3 pos, vec3 dir, vec3 amb, vec3 dif, vec3 spec);
 
     /// <summary>
     /// Set the positions of the point lights
