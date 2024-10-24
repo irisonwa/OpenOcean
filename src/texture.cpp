@@ -61,7 +61,7 @@ bool Texture::load() {
             glTexParameteri(textureEnum, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         } else {
             printf("Texture type %x is not supported.", textureEnum);
-            exit(1);  // exit if trying to load different (weird, strange, unusual) texture type. i'm the only one here though, so why would i do that?
+            exit(1);  // exit if trying to load different texture type
         }
     } else {
         std::cout << "Failed to load texture " << file_name.c_str() << std::endl;
@@ -70,7 +70,7 @@ bool Texture::load() {
     return glGetError() == GL_NO_ERROR;
 }
 
-bool Texture::load(std::vector<std::string> faces) {
+bool Texture::loadCubemap(std::vector<std::string> faces) {
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_CUBE_MAP, texture);
 

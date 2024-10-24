@@ -11,9 +11,14 @@ class Texture {
     Texture(GLenum);                     // create from memory buffer
     Texture(const std::string, GLenum);  // create from file
     Texture(const std::vector<std::string>, GLenum);  // create from files
-    bool load();                                      // load given file
-    bool load(std::vector<std::string> faces);        // load from files
-    bool load(unsigned int, void*);                   // load from memory buffer
+
+    // load given file
+    bool load();
+    // load from files (cubemap)
+    // bool load(std::vector<std::string> faces);
+    bool loadCubemap(std::vector<std::string> faces);
+    // load from memory buffer (embedded textures)
+    bool load(unsigned int, void*); 
     void bind(GLenum textureUnit);
     void bind(GLenum textureType, GLenum textureUnit);
 

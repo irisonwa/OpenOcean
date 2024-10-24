@@ -8,7 +8,7 @@ void Cubemap::loadCubemap(std::vector<std::string> fs) {
 
     // bind texture
     tex = new Texture(fs, GL_TEXTURE_CUBE_MAP);
-    bool loaded = tex->load(fs);
+    bool loaded = tex->loadCubemap(fs);
     assert(loaded);  // make sure the cubemap's textures have fully loaded
 
     // fill vbo data

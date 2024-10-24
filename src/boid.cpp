@@ -43,10 +43,10 @@ void Boid::move(std::deque<Boid*> boids) {
     // float moveY = 0;
     vec3 avgMove(0);
 
-    float minSepDistance = 10;
+    float minSepDistance = 2;
     float matchingFactor = 0.05;
     float centeringFactor = 0.005;
-    float avoidFactor = 0.01;
+    float avoidFactor = 0.05;
 
     // // if being chased, ignore all prey. define separate attacking and fleeing so that any behaviour defined
     // // before fully seen (i.e., deciding to chase before finding a predator in boid list) can be undone
@@ -66,19 +66,13 @@ void Boid::move(std::deque<Boid*> boids) {
             // alignment
             if (distFromBoid < Boid::FAMILY_RANGE) {
                 numFamily += 1;
-                // avgXVel += otherBoid.velocity.x;
-                // avgYVel += otherBoid.velocity.y;
                 avgVel += otherBoid->velocity;
 
                 // cohesion
-                // centerX += otherBoid.pos.x;
-                // centerY += otherBoid.pos.y;
                 avgCentre += otherBoid->pos;
                 
                 // separation
                 if (distFromBoid < minSepDistance) {
-                    // moveX += pos.x - otherBoid.pos.x;
-                    // moveY += pos.y - otherBoid.pos.y;
                     avgMove += pos - otherBoid->pos;
                 }
             }
@@ -111,7 +105,7 @@ void Boid::limitSpeed() {
 }
 
 void Boid::update() {
-    float lm = -100, rm = 100, tf = 0.2;
+    float lm = -50, rm = 50, tf = 0.2;
     velocity = normalize(velocity);
     if (pos.x < lm)
         velocity.x += tf;

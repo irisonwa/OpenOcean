@@ -16,7 +16,7 @@ void init() {
     baseLight = new Lighting("stony light", shaders["base"], MATERIAL_WOOD);
 
     // Load meshes to be used
-    Mesh* m1 = new Mesh("fish", TEST_FISH);
+    Mesh* m1 = new Mesh("fish", TEST_INST);
     meshes.emplace_back(m1);
     Mesh* m2 = new Mesh("ground", TEST_GROUND);
     meshes.emplace_back(m2);
@@ -29,6 +29,8 @@ void init() {
     SM::startTime = timeGetTime();
     float offset = 1.0f;
     float lim = 10;
+    vector<int> opts = {0, 1, 2};
+    vector<float> scls = {0.5, 1, 3};
     for (int z = -lim / 2; z < lim / 2; z += 1) {
         for (int y = -lim / 2; y < lim / 2; y += 1) {
             for (int x = -lim / 2; x < lim / 2; x += 1) {
@@ -37,7 +39,9 @@ void init() {
                     (float)y + offset * (rand() % spread),
                     (float)z + offset * (rand() % spread));
                 translations.push_back(translation);
-                scales.push_back(vec3(0.5 + rand() % 4));
+                scales.push_back(vec3(scls[rand() % 3]));
+                // scales.push_back(vec3(.5));
+                // mat_idxs.push_back()
             }
         }
     }
@@ -49,10 +53,11 @@ void init() {
     baseLight->addSpotLightAtt(flashlightCoords, flashlightDir, vec3(0.2f), vec3(1), vec3(1));
     baseLight->spotLights[baseLight->nSpotLights - 1].cutOff = cos(Util::deg2Rad(24.f));
     baseLight->spotLights[baseLight->nSpotLights - 1].outerCutOff = cos(Util::deg2Rad(35.f));
-    float fct = 6.f;
+    float fct = 1.f;
     baseLight->setDirLightsAtt(vector<vec3>{vec3(0, -1, 0)});
-    baseLight->setDirLightColour(vec3(1, 0, 0.8f) / fct, vec3(1, 0, 0.8f) / fct,
-                                 vec3(1, 0, 0.8f));
+    // baseLight->setDirLightColour(vec3(1, 0, 0.8f) / fct, vec3(1, 0, 0.8f) / fct,
+    //                              vec3(1, 0, 0.8f));
+    baseLight->setDirLightColour(vec3(1), vec3(1), vec3(1));
 }
 
 void display() {
@@ -61,13 +66,13 @@ void display() {
     glEnable(GL_BLEND);       // enable depth-testing
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDepthFunc(GL_LESS);  // depth-testing interprets a smaller value as "closer"
-    glClearColor(0.1f, 0.1f, 0.3f, 1.0f);
+    glClearColor(0.3f, 0.2f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     mat4 view = camera.getViewMatrix();
     mat4 persp_proj = perspective(Util::deg2Rad(camera.FOV), (float)SM::width / (float)SM::height, 0.1f, 1000.0f);
+
     // Skybox
-#pragma region SKYBOX
     // glDepthFunc(GL_LEQUAL);
     // mat4 nvm = mat4(mat3(camera.getViewMatrix()));
     // shaders["skybox"]->use();
@@ -76,7 +81,6 @@ void display() {
     // shaders["skybox"]->setMat4("proj", persp_proj);
     // cubemap->render();
     // glDepthFunc(GL_LESS);
-#pragma endregion
 
     // update camera view and flashlight
     baseLight->setLightAtt(view, persp_proj, camera.pos);
@@ -95,7 +99,7 @@ void display() {
     for (int i = 0; i < numInstances; i++) {
         models[i] = scale(Util::lookTowards(boids[i]->pos, boids[i]->dir), scales[i]);
     }
-    meshes[1]->render(translate(mat4(1), vec3(0, -10, 0)));
+    // meshes[1]->render(translate(mat4(1), vec3(0, -10, 0))); // floor
     meshes[0]->render(numInstances, models);  // draw cubes
 
     glutSwapBuffers();

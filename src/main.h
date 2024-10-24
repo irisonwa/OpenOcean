@@ -47,24 +47,8 @@
 #pragma region MESH_NAMES
 #define MESH_WALL "wall.gltf"
 #define MESH_LONGWALL "wall_4x1.gltf"
-#define MESH_SPIRE "cone.gltf"
-#define MESH_LAMP "lamppost.gltf"
-#define MESH_MON1 "monument1.gltf"
-#define MESH_MON1GUY "monument_1_zombie.obj"
-#define MESH_MONKEY "monkey.obj"
-#define MESH_ROAD "ground.obj"
-#define MESH_TRAM "tram.gltf"
-#define MESH_TREE "tree.gltf"
-#define MESH_GPO "gpo.gltf"
-#define MESH_BUILDING1 "building1.obj"
-#define MESH_BUILDING2 "building2.obj"
-#define MESH_BUILDING3 "building3.obj"
-#define MESH_BUILDING4 "building4.obj"
-#define MESH_BUS "bus.gltf"
-#define MESH_RUBBLE "rubble.gltf"
-#define BMESH_ENEMY "enemy.gltf"
-
 #define TEST_CUBE "test_cube.obj"
+#define TEST_INST "inst_cube.obj"
 #define TEST_PRISM "prism.glb"
 #define TEST_FISH "fsh.obj"
 #define TEST_GROUND "test_ground.obj"
@@ -93,6 +77,7 @@ vec3 flashlightCoords = vec3(-10000);
 vec3 flashlightDir = vec3(0, -1, 0);
 std::vector<Mesh*> meshes;
 std::vector<vec3> translations, scales;
+std::vector<int> mat_idxs;
 int spread = 10;
 
 std::vector<std::string> cubemap_faces = {

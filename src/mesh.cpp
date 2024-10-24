@@ -117,12 +117,12 @@ bool Mesh::initMaterials(const aiScene* scene, std::string file_name) {
             aiString Path;
 
             if (pMaterial->GetTexture(aiTextureType_DIFFUSE, 0, &Path, NULL, NULL, NULL, NULL, NULL) == AI_SUCCESS) {
-                const aiTexture* cTex = scene->GetEmbeddedTexture(Path.C_Str());
-                if (cTex) {
+                const aiTexture* embeddedTex = scene->GetEmbeddedTexture(Path.C_Str());
+                if (embeddedTex) {
                     m_Textures[i] = new Texture(GL_TEXTURE_2D);
-                    unsigned int buffer = cTex->mWidth;
-                    m_Textures[i]->load(buffer, cTex->pcData);
-                    printf("%s: embedded diffuse texture type %s\n", name.c_str(), cTex->achFormatHint);
+                    unsigned int buffer = embeddedTex->mWidth;
+                    m_Textures[i]->load(buffer, embeddedTex->pcData);
+                    printf("%s: embedded diffuse texture type %s\n", name.c_str(), embeddedTex->achFormatHint);
                 } else {
                     std::string p(Path.data);
                     std::cout << p << std::endl;
@@ -210,6 +210,7 @@ void Mesh::render(unsigned int nInstances, const mat4* model_matrix) {
         assert(mIndex < m_Textures.size());
 
         if (m_Textures[mIndex]) m_Textures[mIndex]->bind(GL_TEXTURE0);
+        std::cout << mIndex << std::endl;
         glDrawElementsInstancedBaseVertex(
             GL_TRIANGLES,
             m_Meshes[i].n_Indices,
