@@ -59,12 +59,14 @@ class Mesh {
     void populateBuffers();
     void render();
     void render(unsigned int, const mat4*);
+    void render(unsigned int, const mat4*, const float*);
     void render(mat4);
 
 #define POSITION_LOC 0  // p_vbo
 #define NORMAL_LOC 1    // n_vbo
 #define TEXTURE_LOC 2   // t_vbo
 #define INSTANCE_LOC 3
+#define DEPTH_LOC 7     // texture depth
 
     std::string name;
     mat4 mat;
@@ -73,6 +75,7 @@ class Mesh {
     unsigned int p_VBO = 0;  // position vbo
     unsigned int n_VBO = 0;  // normal vbo
     unsigned int t_VBO = 0;  // texture vbo
+    unsigned int d_VBO = 0;  // texture depth vbo
     unsigned int EBO = 0;    // index (element) vbo (ebo)
     unsigned int IBO = 0;    // instance vbo (ibo)
 
@@ -82,6 +85,7 @@ class Mesh {
     std::vector<unsigned int> m_Indices;
     std::vector<MeshObject> m_Meshes;
     std::vector<Texture*> m_Textures;
+    Texture* texture;
     std::vector<Material> m_Materials;
 };
 

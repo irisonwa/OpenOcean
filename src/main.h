@@ -78,6 +78,7 @@ vec3 flashlightDir = vec3(0, -1, 0);
 std::vector<Mesh*> meshes;
 std::vector<vec3> translations, scales;
 std::vector<int> mat_idxs;
+std::vector<float> depths;
 int spread = 10;
 
 std::vector<std::string> cubemap_faces = {
@@ -88,5 +89,19 @@ std::vector<std::string> cubemap_faces = {
     PROJDIR "Models/bskybox/front.jpg",
     PROJDIR "Models/bskybox/back.jpg",
 };
+
+// error/debug message callback, from https://www.khronos.org/opengl/wiki/Debug_Output#Examples
+void GLAPIENTRY
+MessageCallback(GLenum source,
+                GLenum type,
+                GLuint id,
+                GLenum severity,
+                GLsizei length,
+                const GLchar* message,
+                const void* userParam) {
+    fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
+            (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
+            type, severity, message);
+}
 
 #endif /* MAIN_H */

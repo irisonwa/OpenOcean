@@ -11,6 +11,7 @@ bool Mesh::loadMesh(std::string file_name) {
     glGenBuffers(1, &p_VBO);
     glGenBuffers(1, &n_VBO);
     glGenBuffers(1, &t_VBO);
+    glGenBuffers(1, &d_VBO);
     glGenBuffers(1, &EBO);
     glGenBuffers(1, &IBO);
 
@@ -107,8 +108,9 @@ void Mesh::initSingleMesh(const aiMesh* amesh) {
 /// <param name="file_name">The name of the model file.</param>
 /// <returns>A boolean. <code>true</code> if everything loaded correctly, false otherwise.</returns>
 bool Mesh::initMaterials(const aiScene* scene, std::string file_name) {
-    bool valid = true;
     std::string dir = MODELDIR(file_name);
+    texture = new Texture(GL_TEXTURE_2D_ARRAY);
+    std::vector<std::string> paths;
     for (unsigned int i = 0; i < scene->mNumMaterials; i++) {
         const aiMaterial* pMaterial = scene->mMaterials[i];
         m_Textures[i] = NULL;
@@ -130,17 +132,23 @@ bool Mesh::initMaterials(const aiScene* scene, std::string file_name) {
                         p = p.substr(2, p.size() - 2);
                     }
                     std::string fullPath = dir + p;
-                    m_Textures[i] = new Texture(fullPath, GL_TEXTURE_2D);
-                    if (!m_Textures[i]->load()) {
-                        printf("Error loading diffuse texture '%s'\n", fullPath.c_str());
-                    } else {
-                        printf("%s: Loaded diffuse texture '%s'\n", name.c_str(), fullPath.c_str());
-                    }
+                    paths.push_back(fullPath);
+                    // m_Textures[i] = new Texture(fullPath, GL_TEXTURE_2D_ARRAY);
+                    // if (!m_Textures[i]->load(i)) {
+                    //     printf("Error loading diffuse texture '%s'\n", fullPath.c_str());
+                    // } else {
+                    //     printf("%s: Loaded diffuse texture '%s'\n", name.c_str(), fullPath.c_str());
+                    // }
                 }
             }
         }
     }
-    return valid;
+    if (texture->loadAtlas(paths[0], 3, 1024)) {
+        printf("%s: Loaded diffuse textures from '%s'\n", name.c_str(), dir.c_str());
+    } else {
+        printf("Error loading diffuse textures from '%s'\n", dir.c_str());
+    }
+    return glGetError() == GL_NO_ERROR;
 }
 
 /// <summary>
@@ -171,6 +179,11 @@ void Mesh::populateBuffers() {
         glVertexAttribPointer(INSTANCE_LOC + i, 4, GL_FLOAT, GL_FALSE, sizeof(mat4), (const void*)(i * sizeof(vec4)));
         glVertexAttribDivisor(INSTANCE_LOC + i, 1);  // tell OpenGL this is an instanced vertex attribute.
     }
+    
+    glBindBuffer(GL_ARRAY_BUFFER, d_VBO);
+    glEnableVertexAttribArray(DEPTH_LOC);
+    glVertexAttribPointer(DEPTH_LOC, 1, GL_FLOAT, GL_FALSE, sizeof(float), 0);
+    glVertexAttribDivisor(DEPTH_LOC, 1);  // tell OpenGL this is an instanced vertex attribute.
 }
 
 /// <summary>
@@ -205,12 +218,51 @@ void Mesh::render(unsigned int nInstances, const mat4* model_matrix) {
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, IBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(mat4) * nInstances, &model_matrix[0], GL_DYNAMIC_DRAW);
+    float idxs[nInstances];
+    for (int i = 0; i < nInstances; ++i) {
+        idxs[i] = 0;
+    }
     for (unsigned int i = 0; i < m_Meshes.size(); i++) {
         unsigned int mIndex = m_Meshes[i].materialIndex;
-        assert(mIndex < m_Textures.size());
+        assert(mIndex < texture->file_names.size() - 1);
 
-        if (m_Textures[mIndex]) m_Textures[mIndex]->bind(GL_TEXTURE0);
-        std::cout << mIndex << std::endl;
+        if (texture) {
+            std::cout << mIndex << std::endl;
+            texture->bind(GL_TEXTURE0);
+            glBindBuffer(GL_ARRAY_BUFFER, d_VBO);
+            glBufferData(GL_ARRAY_BUFFER, sizeof(float) * nInstances, &idxs[0], GL_DYNAMIC_DRAW);
+            // glEnableVertexAttribArray(DEPTH_LOC);
+            // glVertexAttrib1f(DEPTH_LOC, 2);
+        }
+        glDrawElementsInstancedBaseVertex(
+            GL_TRIANGLES,
+            m_Meshes[i].n_Indices,
+            GL_UNSIGNED_INT,
+            (void*)(sizeof(unsigned int) * m_Meshes[i].baseIndex),
+            nInstances,
+            m_Meshes[i].baseVertex);
+    }
+    glBindVertexArray(0);  // prevent VAO from being changed externally
+}
+
+/// <summary>
+/// Render the mesh by binding its VAO and drawing each index of every submesh. This function supports instancing and atlas coordinates.
+/// </summary>
+/// <param name="nInstances">The number of instances you would like to draw.</param>
+/// <param name="model_matrix">The matrices you would like to transform each instance with.</param>
+void Mesh::render(unsigned int nInstances, const mat4* model_matrix, const float* atlasDepths) {
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, IBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(mat4) * nInstances, &model_matrix[0], GL_DYNAMIC_DRAW);
+    for (unsigned int i = 0; i < m_Meshes.size(); i++) {
+        unsigned int mIndex = m_Meshes[i].materialIndex;
+        assert(mIndex < texture->file_names.size() - 1);
+
+        if (texture) {
+            texture->bind(GL_TEXTURE0);
+            glBindBuffer(GL_ARRAY_BUFFER, d_VBO);
+            glBufferData(GL_ARRAY_BUFFER, sizeof(float) * nInstances, &atlasDepths[0], GL_DYNAMIC_DRAW);
+        }
         glDrawElementsInstancedBaseVertex(
             GL_TRIANGLES,
             m_Meshes[i].n_Indices,

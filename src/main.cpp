@@ -4,6 +4,9 @@
 using namespace std;
 
 void init() {
+    glEnable(GL_DEBUG_OUTPUT);
+    glDebugMessageCallback(MessageCallback, 0);
+
     srand(time(nullptr));
 
     // Create shaders to use
@@ -16,10 +19,10 @@ void init() {
     baseLight = new Lighting("stony light", shaders["base"], MATERIAL_WOOD);
 
     // Load meshes to be used
-    Mesh* m1 = new Mesh("fish", TEST_INST);
+    Mesh* m1 = new Mesh("fish", TEST_FISH);
     meshes.emplace_back(m1);
-    Mesh* m2 = new Mesh("ground", TEST_GROUND);
-    meshes.emplace_back(m2);
+    // Mesh* m2 = new Mesh("ground", TEST_GROUND);
+    // meshes.emplace_back(m2);
 
     // Create skybox
     cubemap = new Cubemap();
@@ -29,8 +32,8 @@ void init() {
     SM::startTime = timeGetTime();
     float offset = 1.0f;
     float lim = 10;
-    vector<int> opts = {0, 1, 2};
-    vector<float> scls = {0.5, 1, 3};
+
+    vector<float> scls = {0.5, 1, 1.5};
     for (int z = -lim / 2; z < lim / 2; z += 1) {
         for (int y = -lim / 2; y < lim / 2; y += 1) {
             for (int x = -lim / 2; x < lim / 2; x += 1) {
@@ -39,7 +42,10 @@ void init() {
                     (float)y + offset * (rand() % spread),
                     (float)z + offset * (rand() % spread));
                 translations.push_back(translation);
-                scales.push_back(vec3(scls[rand() % 3]));
+                int idx = rand() % 3;
+                // printf("%d\n", idx);
+                scales.push_back(vec3(scls[idx]));
+                depths.push_back(idx);
                 // scales.push_back(vec3(.5));
                 // mat_idxs.push_back()
             }
@@ -55,9 +61,7 @@ void init() {
     baseLight->spotLights[baseLight->nSpotLights - 1].outerCutOff = cos(Util::deg2Rad(35.f));
     float fct = 1.f;
     baseLight->setDirLightsAtt(vector<vec3>{vec3(0, -1, 0)});
-    // baseLight->setDirLightColour(vec3(1, 0, 0.8f) / fct, vec3(1, 0, 0.8f) / fct,
-    //                              vec3(1, 0, 0.8f));
-    baseLight->setDirLightColour(vec3(1), vec3(1), vec3(1));
+    baseLight->setDirLightColour(vec3(.5), vec3(.5), vec3(.5));
 }
 
 void display() {
@@ -100,7 +104,7 @@ void display() {
         models[i] = scale(Util::lookTowards(boids[i]->pos, boids[i]->dir), scales[i]);
     }
     // meshes[1]->render(translate(mat4(1), vec3(0, -10, 0))); // floor
-    meshes[0]->render(numInstances, models);  // draw cubes
+    meshes[0]->render(numInstances, models, depths.data());  // draw cubes
 
     glutSwapBuffers();
 }
@@ -179,7 +183,7 @@ int main(int argc, char** argv) {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_STENCIL | GLUT_DEPTH);
     glutInitWindowSize(SM::width, SM::height);
-    glutCreateWindow("Final Project");
+    glutCreateWindow("Open Ocean");
 
     // Tell glut where the display function is
     glutIgnoreKeyRepeat(true);
