@@ -47,8 +47,8 @@ class Camera {
     float yaw = 0.0;                          // y-axis rotation (horizontal)
     float roll = 0.0;                         // z-axis rotation
     float sensitivity = 0.15f;          // Camera sensitivity
-    float baseSpeed = 35.0f;             // Walking speed (movement speed)
-    float sprintSpeed = 215.0f;          // Sprinting speed (movement speed)
+    float baseSpeed = 5.0f;             // Walking speed (movement speed)
+    float sprintSpeed = 100.0f;          // Sprinting speed (movement speed)
     float speed = baseSpeed;            // Camera speed (movement speed)
 
     // Keyboard movement

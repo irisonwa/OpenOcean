@@ -1,23 +1,30 @@
-#pragma warning(disable : 26495)
+// #pragma warning(disable : 26495)
 #include "texture.h"
 #include "stb/stb_image.h"
 #define STB_IMAGE_IMPLEMENTATION
 
 Texture::Texture(GLenum texType = GL_TEXTURE_2D) {
-    glGenTextures(1, &texture);
     textureEnum = texType;
+    isAtlas = texType == GL_TEXTURE_2D_ARRAY;
 }
 
 Texture::Texture(const std::string fname, GLenum texType = GL_TEXTURE_2D) {
-    glGenTextures(1, &texture);
     textureEnum = texType;
     file_name = fname;
+    isAtlas = texType == GL_TEXTURE_2D_ARRAY;
 }
 
 Texture::Texture(const std::vector<std::string> fnames, GLenum texType = GL_TEXTURE_CUBE_MAP) {
-    glGenTextures(1, &texture);
     textureEnum = texType;
     file_names = fnames;
+}
+
+void Texture::bind() {
+    if (file_names.size() == 1 || !isAtlas) {
+        bind(GL_TEXTURE0);
+    } else if (file_names.size() == 2) {
+        bind(GL_TEXTURE0, GL_TEXTURE1);
+    }
 }
 
 void Texture::bind(GLenum textureUnit) {
@@ -25,20 +32,23 @@ void Texture::bind(GLenum textureUnit) {
     glBindTexture(textureEnum, texture);  // bind model's texture
 }
 
-void Texture::bind(GLenum textureType, GLenum textureUnit) {
-    glActiveTexture(textureUnit);
-    glBindTexture(textureType, texture);  // bind model's texture
+void Texture::bind(GLenum textureUnitA, GLenum textureUnitB) {
+    glActiveTexture(textureUnitA);
+    glBindTexture(textureEnum, textureDiff);  // bind diffuse texture
+    glActiveTexture(textureUnitB);
+    glBindTexture(textureEnum, textureSpec);  // bind specular texture
 }
 
-bool Texture::loadAtlas(std::string fname, int tiles, int tileSize) {
-    // load and generate the texture
-    // stbi_set_flip_vertically_on_load(true);
-    unsigned char* data = stbi_load(fname.c_str(), &_width, &_height, &_nrChannels, 0);
+bool Texture::_loadAtlas(std::string path, int tileSize, int tiles, unsigned int& buffer) {
+    stbi_set_flip_vertically_on_load(true);
+    unsigned char* data = stbi_load(path.c_str(), &_width, &_height, &_nrChannels, 0);
     if (data) {
         if (textureEnum == GL_TEXTURE_2D_ARRAY) {
-            glBindTexture(textureEnum, texture);
-            printf(fname.c_str());
-            printf("\n");
+            glGenTextures(1, &buffer);
+            glBindTexture(textureEnum, buffer);
+            // printf(path.c_str());
+            // printf("\n");
+            glPixelStorei(GL_UNPACK_ALIGNMENT, 1);  // align data to 1-byte. used to prevent warping of certain textures.
             GLint bpp = 0;
             switch (_nrChannels) {
                 case 1:
@@ -58,30 +68,47 @@ bool Texture::loadAtlas(std::string fname, int tiles, int tileSize) {
             
             // texture arrays
             glTexImage3D(textureEnum, 0, bpp, tileSize, tileSize, tiles, 0, bpp, GL_UNSIGNED_BYTE, data);
-            glTexParameteri(textureEnum, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(textureEnum, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(textureEnum, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(textureEnum, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            // set the texture wrapping/filtering options (on the currently bound texture object)
+            glTexParameteri(textureEnum, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(textureEnum, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         } else {
             printf("Texture type %x is not supported.", textureEnum);
             glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
             exit(1);  // exit if trying to load different texture type
         }
     } else {
-        std::cout << "Failed to load texture " << fname.c_str() << std::endl;
-        stbi_image_free(data);
+        std::cout << "Failed to load texture " << path.c_str() << std::endl;
     }
-    glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+    stbi_image_free(data);
+    // glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
     return glGetError() == GL_NO_ERROR;
 }
 
+bool Texture::loadAtlas(std::string path, int tileSize, int tiles) {
+    file_names.push_back(path);
+    return _loadAtlas(path, tileSize, tiles, texture);
+}
+
+bool Texture::loadAtlas(std::string diffuseTexture, std::string specularTexture, int tileSize, int tiles) {
+    file_names.push_back(diffuseTexture);
+    file_names.push_back(specularTexture);
+    bool diff = _loadAtlas(diffuseTexture, tileSize, tiles, textureDiff);
+    bool spec = _loadAtlas(specularTexture, tileSize, tiles, textureSpec);
+    return diff && spec;
+}
+
 bool Texture::load() {
+    glGenTextures(1, &texture);
     // load and generate the texture
     stbi_set_flip_vertically_on_load(true);
     unsigned char* data = stbi_load(file_name.c_str(), &_width, &_height, &_nrChannels, 0);
     if (data) {
         if (textureEnum == GL_TEXTURE_2D) {
             glBindTexture(textureEnum, texture);
-            printf(file_name.c_str());
-            printf("\n");
+            // printf(file_name.c_str());
+            // printf("\n");
             glPixelStorei(GL_UNPACK_ALIGNMENT, 1);  // align data to 1-byte. used to prevent warping of certain textures.
             GLint bpp = 0;
             switch (_nrChannels) {
@@ -98,7 +125,7 @@ bool Texture::load() {
                     printf("unsupported image bits per pixel");
                     break;
             }
-            glTexImage2D(textureEnum, 0, GL_RGBA, _width, _height, 0, bpp, GL_UNSIGNED_BYTE, data);
+            glTexImage2D(textureEnum, 0, bpp, _width, _height, 0, bpp, GL_UNSIGNED_BYTE, data);
             glGenerateMipmap(textureEnum);
             // set the texture wrapping/filtering options (on the currently bound texture object)
             glTexParameteri(textureEnum, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -113,6 +140,7 @@ bool Texture::load() {
         std::cout << "Failed to load texture " << file_name.c_str() << std::endl;
     }
     stbi_image_free(data);
+    // glBindTexture(GL_TEXTURE_2D, 0);
     return glGetError() == GL_NO_ERROR;
 }
 

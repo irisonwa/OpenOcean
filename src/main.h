@@ -49,8 +49,11 @@
 #define MESH_LONGWALL "wall_4x1.gltf"
 #define TEST_CUBE "test_cube.obj"
 #define TEST_INST "inst_cube.obj"
+#define TEST_SPEC "spec_cube.obj"
 #define TEST_PRISM "prism.glb"
-#define TEST_FISH "fsh.obj"
+#define TEST_FISHA "fsh.obj"
+#define TEST_FISHB "fsh2.obj"
+#define TEST_BOID "boid.obj"
 #define TEST_GROUND "test_ground.obj"
 #pragma endregion
 
@@ -75,7 +78,7 @@ std::deque<Boid*> boids;
 
 vec3 flashlightCoords = vec3(-10000);
 vec3 flashlightDir = vec3(0, -1, 0);
-std::vector<Mesh*> meshes;
+std::map<std::string, Mesh*> meshes;
 std::vector<vec3> translations, scales;
 std::vector<int> mat_idxs;
 std::vector<float> depths;

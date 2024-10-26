@@ -4,6 +4,7 @@
 using namespace std;
 
 void init() {
+    // enable debug callback
     glEnable(GL_DEBUG_OUTPUT);
     glDebugMessageCallback(MessageCallback, 0);
 
@@ -16,13 +17,15 @@ void init() {
     Shader* s2 = new Shader("skybox", vert_sb, frag_sb);
     shaders[s2->name] = s2;
     
-    baseLight = new Lighting("stony light", shaders["base"], MATERIAL_WOOD);
+    baseLight = new Lighting("stony light", shaders["base"], MATERIAL_SHINY);
 
     // Load meshes to be used
-    Mesh* m1 = new Mesh("fish", TEST_FISH);
-    meshes.emplace_back(m1);
-    // Mesh* m2 = new Mesh("ground", TEST_GROUND);
-    // meshes.emplace_back(m2);
+    Mesh* m1 = new Mesh("boid", TEST_FISHB, 1024, 4);
+    meshes[m1->name] = m1;
+    Mesh* m2 = new Mesh("boid_display", TEST_BOID, 1024, 4);
+    meshes[m2->name] = m2;
+    Mesh* m3 = new Mesh("ground", TEST_GROUND, 1024, 1);
+    meshes[m3->name] = m3;
 
     // Create skybox
     cubemap = new Cubemap();
@@ -33,7 +36,7 @@ void init() {
     float offset = 1.0f;
     float lim = 10;
 
-    vector<float> scls = {0.5, 1, 1.5};
+    vector<float> scls = {1.5, 1, 1.5, 2};
     for (int z = -lim / 2; z < lim / 2; z += 1) {
         for (int y = -lim / 2; y < lim / 2; y += 1) {
             for (int x = -lim / 2; x < lim / 2; x += 1) {
@@ -42,7 +45,7 @@ void init() {
                     (float)y + offset * (rand() % spread),
                     (float)z + offset * (rand() % spread));
                 translations.push_back(translation);
-                int idx = rand() % 3;
+                int idx = rand() % 4;
                 // printf("%d\n", idx);
                 scales.push_back(vec3(scls[idx]));
                 depths.push_back(idx);
@@ -61,13 +64,13 @@ void init() {
     baseLight->spotLights[baseLight->nSpotLights - 1].outerCutOff = cos(Util::deg2Rad(35.f));
     float fct = 1.f;
     baseLight->setDirLightsAtt(vector<vec3>{vec3(0, -1, 0)});
-    baseLight->setDirLightColour(vec3(.5), vec3(.5), vec3(.5));
+    baseLight->setDirLightColour(vec3(.1), vec3(.1), vec3(1));
 }
 
 void display() {
     // tell GL to only draw onto a pixel if the shape is closer to the viewer
     glEnable(GL_DEPTH_TEST);  // enable depth-testing
-    glEnable(GL_BLEND);       // enable depth-testing
+    glEnable(GL_BLEND);       // enable colour blending
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDepthFunc(GL_LESS);  // depth-testing interprets a smaller value as "closer"
     glClearColor(0.3f, 0.2f, 0.3f, 1.0f);
@@ -88,29 +91,33 @@ void display() {
 
     // update camera view and flashlight
     baseLight->setLightAtt(view, persp_proj, camera.pos);
-    baseLight->setSpotLightAtt(0, flashlightCoords, flashlightDir, vec3(0.2f), vec3(1), vec3(1));
+    baseLight->setSpotLightAtt(0, flashlightCoords, flashlightDir, vec3(0.2f), vec3(1, .6, .2), vec3(1));
     baseLight->spotLights[baseLight->nSpotLights - 1].cutOff = cos(Util::deg2Rad(24.f));
     baseLight->spotLights[baseLight->nSpotLights - 1].outerCutOff = cos(Util::deg2Rad(35.f));
+    // baseLight->spotLights[baseLight->nSpotLights - 1].constant = cos(Util::deg2Rad(35.f));
+    // baseLight->spotLights[baseLight->nSpotLights - 1].linear = cos(Util::deg2Rad(35.f));
+    // baseLight->spotLights[baseLight->nSpotLights - 1].quadratic = cos(Util::deg2Rad(35.f));
     baseLight->use();
-
-    // Transform each instance
-    for (auto b : boids) {
-        b->process(boids);
-    }
 
     const unsigned int numInstances = boids.size();
     mat4 models[numInstances];
     for (int i = 0; i < numInstances; i++) {
+        boids[i]->process(boids);
         models[i] = scale(Util::lookTowards(boids[i]->pos, boids[i]->dir), scales[i]);
     }
-    // meshes[1]->render(translate(mat4(1), vec3(0, -10, 0))); // floor
-    meshes[0]->render(numInstances, models, depths.data());  // draw cubes
+    mat4 cubes[4] = {translate(mat4(1), vec3(0, 0, 0)), translate(mat4(1), vec3(10, 0, 0)), translate(mat4(1), vec3(20, 0, 0)), translate(mat4(1), vec3(30, 0, 0))};
+    auto cubeds = std::vector<float>{0, 1, 2, 3}.data();
+    
+    meshes["boid"]->render(numInstances, models, depths.data());  // draw cubes
+    meshes["boid_display"]->render(4, cubes, cubeds); // display
+    meshes["ground"]->render(translate(mat4(1), vec3(0, -10, 0)), 1); // floor
 
     glutSwapBuffers();
 }
 
 void updateScene() {
     SM::updateDelta();
+    std::cout << 1 / SM::delta << std::endl; // fps
     camera.processMovement();
     flashlightCoords = SM::flashlightToggled ? camera.pos : vec3(-10000);
     flashlightDir = SM::flashlightToggled ? camera.front : vec3(0, -1, 0);
@@ -143,21 +150,15 @@ void keyPressed(unsigned char key, int x, int y) {
     }
 
     if (key == '.') {
-        float offset = 1.0f;
-        for (int z = -10; z < 10; z += 2) {
-            for (int y = -10; y < 10; y += 2) {
-                for (int x = -10; x < 10; x += 2) {
-                    vec3 translation;
-                    translation.x = (float)x + offset * (rand() % spread);
-                    translation.y = (float)y + offset * (rand() % spread);
-                    translation.z = (float)z + offset * (rand() % spread);
-                    translations.push_back(translation);
-                }
-            }
+        for (auto b : boids) {
+            b->pos = vec3(
+                (float)((rand() % 600) - 300),
+                (float)((rand() % 600) - 300),
+                (float)((rand() % 600) - 300));
         }
     }
 
-    if (key == 'q') SM::flashlightToggled = true;
+    if (key == 'q' || key == 'Q') SM::flashlightToggled = true;
     if (key == ' ') camera.UP = true;
     if (key == 'w' || key == 'W') camera.FORWARD = true;
     if (key == 's' || key == 'S') camera.BACK = true;
@@ -169,7 +170,7 @@ void keyPressed(unsigned char key, int x, int y) {
 
 // Function ran on key release
 void keyReleased(unsigned char key, int x, int y) {
-    if (key == 'q') SM::flashlightToggled = false;
+    if (key == 'q' || key == 'Q') SM::flashlightToggled = false;
     if (key == ' ') camera.UP = false;
     if (key == 'w' || key == 'W') camera.FORWARD = false;
     if (key == 's' || key == 'S') camera.BACK = false;

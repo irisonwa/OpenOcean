@@ -119,6 +119,7 @@ namespace Util {
         return to;
     };
 
+    // Point a matrix at `pos` in the direction of `dir`
     mat4 lookTowards(vec3 pos, vec3 dir) {
         mat4 mat = translate(mat4(1), pos);
         return mat * inverse(lookAt(pos, pos + dir, vec3(0, 1, 0)));

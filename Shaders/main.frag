@@ -1,9 +1,11 @@
 #version 430 core
 out vec4 FragColor;
 
+precision highp float;
+
 struct Material {
-    mediump sampler2DArray diffuse;
-    mediump sampler2DArray specular;
+    highp sampler2DArray diffuse;
+    highp sampler2DArray specular;
     float shininess;
 }; 
 
@@ -101,8 +103,10 @@ vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)
     // diffuse shading
     float diff = max(dot(normal, lightDir), 0.0);
     // specular shading
-    vec3 reflectDir = reflect(-lightDir, normal);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+    // vec3 reflectDir = reflect(-lightDir, normal);
+    // float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+    vec3 halfwayDir = normalize(lightDir + viewDir);
+    float spec = pow(max(dot(normal, halfwayDir), 0.0), material.shininess);
     // combine results
     vec3 ambient = light.ambient * vec3(texture(material.diffuse, vec3(TexCoords, tDepth)));
     vec3 diffuse = light.diffuse * diff * vec3(texture(material.diffuse, vec3(TexCoords, tDepth)));
@@ -145,8 +149,10 @@ vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
         // diffuse shading
         float diff = max(dot(normal, lightDir), 0.0);
         // specular shading
-        vec3 reflectDir = reflect(-lightDir, normal);
-        float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+        // vec3 reflectDir = reflect(-lightDir, normal);
+        // float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+        vec3 halfwayDir = normalize(lightDir + viewDir);
+        float spec = pow(max(dot(normal, halfwayDir), 0.0), material.shininess);
         // attenuation
         float distance = length(light.position - fragPos);
         float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));    
@@ -156,8 +162,8 @@ vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
         // combine results
         vec3 ambient = light.ambient * vec3(texture(material.diffuse, vec3(TexCoords, tDepth)));
         vec3 diffuse = light.diffuse * diff * vec3(texture(material.diffuse, vec3(TexCoords, tDepth)));
-        // vec3 specular = light.specular * spec * vec3(texture(material.specular, vec3(TexCoords, tDepth)));
-        vec3 specular = light.specular * spec * material.shininess/100; // no specular mapping, so use a factor of shininess/100 instead
+        vec3 specular = light.specular * spec * vec3(texture(material.specular, vec3(TexCoords, tDepth)));
+        // vec3 specular = light.specular * spec * material.shininess/100; // no specular mapping, so use a factor of shininess/100 instead
         // ambient *= attenuation;
         diffuse *= attenuation * intensity;
         specular *= attenuation * intensity;
