@@ -20,9 +20,9 @@ void init() {
     baseLight = new Lighting("stony light", shaders["base"], MATERIAL_SHINY);
 
     // Load meshes to be used
-    Mesh* m1 = new Mesh("boid", TEST_FISHB, 1024, 4);
+    Mesh* m1 = new Mesh("boid", TEST_BOID, 1024, 4);
     meshes[m1->name] = m1;
-    Mesh* m2 = new Mesh("boid_display", TEST_BOID, 1024, 4);
+    Mesh* m2 = new Mesh("boid_display", TEST_FISHB, 1024, 4);
     meshes[m2->name] = m2;
     Mesh* m3 = new Mesh("ground", TEST_GROUND, 1024, 1);
     meshes[m3->name] = m3;
@@ -34,7 +34,7 @@ void init() {
     // Set start time of program near when init() finishes loading
     SM::startTime = timeGetTime();
     float offset = 1.0f;
-    float lim = 10;
+    float lim = 4;
 
     vector<float> scls = {1.5, 1, 1.5, 2};
     for (int z = -lim / 2; z < lim / 2; z += 1) {
@@ -117,7 +117,7 @@ void display() {
 
 void updateScene() {
     SM::updateDelta();
-    std::cout << 1 / SM::delta << std::endl; // fps
+    // std::cout << 1 / SM::delta << std::endl; // fps
     camera.processMovement();
     flashlightCoords = SM::flashlightToggled ? camera.pos : vec3(-10000);
     flashlightDir = SM::flashlightToggled ? camera.front : vec3(0, -1, 0);

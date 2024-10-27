@@ -27,9 +27,11 @@ void Texture::bind() {
     }
 }
 
-void Texture::bind(GLenum textureUnit) {
+void Texture::bind(GLenum textureUnit) { 
     glActiveTexture(textureUnit);
     glBindTexture(textureEnum, texture);  // bind model's texture
+    glActiveTexture(GL_TEXTURE1); // unbind unused specular map
+    glBindTexture(textureEnum, 0); 
 }
 
 void Texture::bind(GLenum textureUnitA, GLenum textureUnitB) {
