@@ -38,9 +38,17 @@ namespace Util {
     }
 
     float lerp(float a, float b, float t) {
-        return t > 0 ? 
-            clamp(a + t, a, b) :
-            clamp(a + t, b, a);
+        if (t > 1) t = 1;
+        if (t < 0) t = 0;
+        return (a * (1 - t)) + b * t;
+    }
+    
+    vec3 lerpV(vec3 a, vec3 b, float dt) {
+        return vec3(
+            lerp(a.x, b.x, dt),
+            lerp(a.y, b.y, dt),
+            lerp(a.z, b.z, dt)
+        );
     }
 
     // Convert degrees to radians
@@ -135,5 +143,13 @@ namespace Util {
     
     void printVec3(vec3 v) {
         printf("(%f, %f, %f)\n", v.x, v.y, v.z);
+    }
+
+    void printMat4(mat4 m) {
+        printf("\n");
+        printf("[%.2f][%.2f][%.2f][%.2f]\n", m[0][0], m[1][0], m[2][0], m[3][0]);
+        printf("[%.2f][%.2f][%.2f][%.2f]\n", m[0][1], m[1][1], m[2][1], m[3][1]);
+        printf("[%.2f][%.2f][%.2f][%.2f]\n", m[0][2], m[1][2], m[2][2], m[3][2]);
+        printf("[%.2f][%.2f][%.2f][%.2f]\n", m[0][3], m[1][3], m[2][3], m[3][3]);
     }
 }

@@ -21,6 +21,7 @@
 #include <glm/gtx/matrix_decompose.hpp>
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtx/norm.hpp>
+#include <glm/gtx/matrix_interpolation.hpp>
 
 #include <assimp/scene.h>        // collects data
 #include <assimp/postprocess.h>  // various extra operations
@@ -46,10 +47,12 @@ namespace Util {
     extern vec3 getTranslation(mat4& mat);
     extern vec3 angleToVec3(float angle);
     extern float vec3ToAngle(vec3 v);
-    extern float lerp(float a, float b, float t);
+    extern float lerp(float a, float b, float dt);
+    extern vec3 lerpV(vec3 a, vec3 b, float dt);
     extern mat4 lookTowards(vec3 pos, vec3 to);
     extern mat4 lookTowards(vec3 pos, vec3 to, vec3 up);
     extern void printVec3(vec3 v);
+    extern void printMat4(mat4 m);
 };
 
 #endif  // UTIL_H

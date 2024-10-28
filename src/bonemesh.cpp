@@ -233,11 +233,6 @@ void BoneMesh::render(mat4 mm) {
     render(1, &mm);
 }
 
-const BoneMesh::Material& BoneMesh::getMaterial() {
-    // TODO: insert return statement here
-    return Material();
-}
-
 void BoneMesh::loadMeshBones(unsigned int mIndex, const aiMesh* aMesh) {
 }
 
@@ -424,4 +419,14 @@ void BoneMesh::calcInterpolatedRotation(aiQuaternion& out, float atime, const ai
     const aiQuaternion& end = node->mRotationKeys[rotationIndex + 1].mValue;  // end rotation value
     aiQuaternion::Interpolate(out, start, end, factor);
     out.Normalize();  // interpolated rotation
+}
+
+void BoneMesh::update(Shader* skinnedShader) {
+    std::vector<aiMatrix4x4> trans;
+    float animTime = ((float)(timeGetTime() - SM::startTime)) / 1000.0f;
+    getBoneTransforms(animTime, trans);
+    for (int i = 0; i < trans.size(); i++) {
+        mat4 t = Util::aiToGLM(&trans[i]);
+        skinnedShader->setMat4("bones[" + std::to_string(i) + "]", t);
+    }
 }

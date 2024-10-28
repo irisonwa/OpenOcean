@@ -2,20 +2,21 @@
 #define MAIN_H
 
 #define NOMINMAX
-#include <limits>
 
-// Windows includes (For Time, IO, etc.)
-#include <math.h>
+// C includes
 #include <windows.h>
 #include <mmsystem.h>
-#include <stddef.h>
-#include <stdio.h>
 
+// C++ includes
+#include <limits>
+#include <cmath>
+#include <cstddef>
+#include <cstdio>
 #include <fstream>
 #include <iostream>
 #include <map>
 #include <string>
-#include <vector>  // STL dynamic memory.
+#include <vector>
 
 // OpenGL includes
 #include <GL/glew.h>
@@ -25,9 +26,9 @@
 #include <glm/gtx/string_cast.hpp>
 
 // Assimp includes
-#include <assimp/cimport.h>      // scene importer
-#include <assimp/postprocess.h>  // various extra operations
-#include <assimp/scene.h>        // collects data
+#include <assimp/cimport.h>
+#include <assimp/postprocess.h>
+#include <assimp/scene.h>
 
 // Project includes
 #include "camera.h"

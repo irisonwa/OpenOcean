@@ -5,12 +5,14 @@
 #include "mesh.h"
 #include "bonemesh.h"
 #include "camera.h"
+#include "shader.h"
 
 class Camera;
 
 class Player {
    private:
-    /* data */
+    vec3 followPos; // follow position; used for interpolated movement
+    float acceleration = 3; // lerp acceleration factor; to be multiplied by delta
    public:
     Player(std::string _name, std::string mesh_path, int mesh_atlas_size, int mesh_atlas_tiles_used, vec3 _pos, vec3 _dir) {
         name = _name;
@@ -23,21 +25,21 @@ class Player {
     }
     ~Player() {}
 
-    void processMovement(Camera camera);
-    void lookAt(vec3 p);
-    void render();
+    void processMovement(Camera camera); // process the player's movement using a camera POV
+    void lookAt(vec3 p); // rotate the player to look at a point `p`
+    void render(); // display the player on screen
+    void setShader(Shader* shader); // set the shader for the player mesh
 
     // Mesh* mesh;
     BoneMesh* mesh;
-    // Shader* shader;
+    Shader* shader;
 
     std::string name;
     vec3 pos;
     vec3 dir;
     vec3 velocity;
-    mat4 transform;
+    mat4 transform = mat4(1);
     float MAX_SPEED = 10;
-    float acceleration = 10;
 
     float pitch = 0.0;           // x-axis rotation (vertical)
     float yaw = 0.0;             // y-axis rotation (horizontal)

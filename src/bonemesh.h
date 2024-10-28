@@ -3,10 +3,12 @@
 #pragma once
 #pragma warning(disable : 26495)
 
+#include <assert.h>
+#include <windows.h>
+#include <mmsystem.h>
 #include <map>
 #include <string>
 #include <vector>
-#include <assert.h>
 
 #include <assimp/cimport.h>  // scene importer
 #include <assimp/Importer.hpp>
@@ -18,7 +20,7 @@
 
 #include "util.h"
 #include "texture.h"
-
+#include "shader.h"
 #include "sm.h"
 
 #define MAX_NUM_BONES_PER_VERTEX 4
@@ -104,6 +106,7 @@ class BoneMesh {
     void calcInterpolatedTranslation(aiVector3D&, float, const aiNodeAnim*);
     void calcInterpolatedScale(aiVector3D&, float, const aiNodeAnim*);
     void calcInterpolatedRotation(aiQuaternion&, float, const aiNodeAnim*);
+    void update(Shader* skinnedShader);  // update the mesh's animations
 
 #define BPOSITION_LOC 0     // p_vbo
 #define BNORMAL_LOC 1       // n_vbo

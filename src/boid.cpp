@@ -108,19 +108,19 @@ void Boid::limitSpeed() {
 }
 
 void Boid::update() {
-    float lm = -50, rm = 50, tf = 0.2;
+    float tf = 0.2;
     velocity = normalize(velocity);
-    if (pos.x < lm)
+    if (pos.x < SM::WORLD_BOUND_LOW)
         velocity.x += tf;
-    if (pos.x > rm)
+    if (pos.x > SM::WORLD_BOUND_HIGH)
         velocity.x -= tf;
-    if (pos.y < lm)
+    if (pos.y < SM::WORLD_BOUND_LOW)
         velocity.y += tf;
-    if (pos.y > rm)
+    if (pos.y > SM::WORLD_BOUND_HIGH)
         velocity.y -= tf;
-    if (pos.z < lm)
+    if (pos.z < SM::WORLD_BOUND_LOW)
         velocity.z += tf;
-    if (pos.z > rm)
+    if (pos.z > SM::WORLD_BOUND_HIGH)
         velocity.z -= tf;
     // velocity = normalize(velocity);
     pos += velocity * Boid::MAX_SPEED * SM::delta;

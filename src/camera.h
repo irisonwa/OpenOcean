@@ -9,11 +9,18 @@
 class Player;
 
 class Camera {
+   private:
+    vec3 followPos;          // follow position; used for interpolated movement
+    float acceleration = 3;  // lerp acceleration factor; to be multiplied by delta
    public:
     Camera() {
         pos = vec3(0.0f);
         front = SM::FORWARD;
         up = SM::UP;
+
+        // setup rotation quaternion
+        processView();
+        view = getViewMatrix();
     }
 
     // Process and update the camera's view matrix. The mouse's x- and y-coordinates are used to dictate the direction the player is looking.
@@ -37,7 +44,8 @@ class Camera {
     vec3 up;                     // Camera up direction
     vec3 right;                  // Camera right direction
     vec3 target;                 // Camera target position
-    float targetDist = 12;        // Camera distance to target (fixed)
+    mat4 view;                   // Model view matrix
+    float targetDist = 12;       // Camera distance to target (fixed)
     float targetHorizontalDist;  // Camera horizontal distance to target
     float targetVerticalDist;    // Camera vertical distance to target
 
@@ -62,4 +70,5 @@ class Camera {
     bool CAN_FLY = true;   // can the player fly (i.e., move on y-axis at will)?
     bool SPRINT = false;   // is the player sprinting?
 };
+
 #endif /* CAMERA_H */

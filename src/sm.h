@@ -34,6 +34,9 @@ namespace SM {
     extern int width; // screen width
     extern int height; // screen height
 
+    extern float WORLD_BOUND_HIGH;
+    extern float WORLD_BOUND_LOW;
+
     extern int unnamedMeshCount;
     extern int unnamedBoneMeshCount;
 

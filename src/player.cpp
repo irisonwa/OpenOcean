@@ -1,13 +1,16 @@
 #include "player.h"
 
 void Player::lookAt(vec3 p) {
-    transform = Util::lookTowards(pos, p);
-    // dir = normalize(p);
+    transform = Util::lookTowards(followPos, p);
 }
 
 void Player::render() {
-    // mesh->render(transform, 0);
+    mesh->update(shader);
     mesh->render(transform);
+}
+
+void Player::setShader(Shader* shader) {
+    this->shader = shader;
 }
 
 void Player::processMovement(Camera camera) {
@@ -51,4 +54,22 @@ void Player::processMovement(Camera camera) {
     speed = SPRINT ? sprintSpeed : baseSpeed;
 
     if (!CAN_FLY) pos.y = t_cpos_y;  // if can't fly, don't change y_pos
+
+    followPos = Util::lerpV(followPos, pos, SM::delta * acceleration);
+
+    // Keep player within world bounds
+    float tf = 0.2;
+    if (followPos.x < SM::WORLD_BOUND_LOW)
+        followPos.x += tf;
+    if (followPos.x > SM::WORLD_BOUND_HIGH)
+        followPos.x -= tf;
+    if (followPos.y < SM::WORLD_BOUND_LOW)
+        followPos.y += tf;
+    if (followPos.y > SM::WORLD_BOUND_HIGH)
+        followPos.y -= tf;
+    if (followPos.z < SM::WORLD_BOUND_LOW)
+        followPos.z += tf;
+    if (followPos.z > SM::WORLD_BOUND_HIGH)
+        followPos.z -= tf;
+
 }
