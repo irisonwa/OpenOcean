@@ -136,12 +136,44 @@ bool Mesh::initMaterials(const aiScene* scene, std::string file_name) {
                         continue;
                     }
 
-                    m_Textures[i] = new Texture(fullPath, GL_TEXTURE_2D);
-                    if (m_Textures[i]->load()) {
-                        printf("%s: Loaded diffuse texture '%s'\n", name.c_str(), fullPath.c_str());
-                    } else {
-                        printf("Error loading diffuse texture '%s'\n", fullPath.c_str());
+                    // m_Textures[i] = new Texture(fullPath, GL_TEXTURE_2D);
+                    // if (m_Textures[i]->load()) {
+                    //     printf("%s: Loaded diffuse texture '%s'\n", name.c_str(), fullPath.c_str());
+                    // } else {
+                    //     printf("Error loading diffuse texture '%s'\n", fullPath.c_str());
+                    // }
+                }
+            }
+        }
+        
+        if (pMaterial->GetTextureCount(aiTextureType_SPECULAR) > 0) {
+            aiString Path;
+
+            if (pMaterial->GetTexture(aiTextureType_SPECULAR, 0, &Path, NULL, NULL, NULL, NULL, NULL) == AI_SUCCESS) {
+                const aiTexture* embeddedTex = scene->GetEmbeddedTexture(Path.C_Str());
+                if (embeddedTex) {
+                    m_Textures[i] = new Texture(GL_TEXTURE_2D);
+                    unsigned int buffer = embeddedTex->mWidth;
+                    m_Textures[i]->load(buffer, embeddedTex->pcData);
+                    printf("%s: embedded specular texture type %s\n", name.c_str(), embeddedTex->achFormatHint);
+                } else {
+                    std::string p(Path.data);
+                    // std::cout << p << std::endl;
+                    if (p.substr(0, 2) == ".\\") {
+                        p = p.substr(2, p.size() - 2);
                     }
+                    std::string fullPath = dir + p;
+                    if (usingAtlas) {
+                        paths.push_back(fullPath);
+                        continue;
+                    }
+
+                    // m_Textures[i] = new Texture(fullPath, GL_TEXTURE_2D);
+                    // if (m_Textures[i]->load()) {
+                    //     printf("%s: Loaded diffuse texture '%s'\n", name.c_str(), fullPath.c_str());
+                    // } else {
+                    //     printf("Error loading diffuse texture '%s'\n", fullPath.c_str());
+                    // }
                 }
             }
         }

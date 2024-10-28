@@ -5,7 +5,8 @@ using namespace std;
 
 void init() {
     // enable debug callback
-    glEnable(GL_DEBUG_OUTPUT);
+    // glEnable(GL_DEBUG_OUTPUT);
+    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
     glDebugMessageCallback(MessageCallback, 0);
 
     srand(time(nullptr));
@@ -16,16 +17,28 @@ void init() {
 
     Shader* s2 = new Shader("skybox", vert_sb, frag_sb);
     shaders[s2->name] = s2;
-    
+
+    Shader* s3 = new Shader("bones", vert_bmesh, frag_bmesh);
+    shaders[s3->name] = s3;
+
     baseLight = new Lighting("stony light", shaders["base"], MATERIAL_SHINY);
+    boneLight = new Lighting("boney light", shaders["bones"], MATERIAL_SHINY);
 
     // Load meshes to be used
-    Mesh* m1 = new Mesh("boid", TEST_BOID, 1024, 4);
+    Mesh* m1 = new Mesh("boid", TEST_FISHB, 1024, 4);
     meshes[m1->name] = m1;
-    Mesh* m2 = new Mesh("boid_display", TEST_FISHB, 1024, 4);
+    Mesh* m2 = new Mesh("boid_display", MESH_PLAYER, 2048, 1);
     meshes[m2->name] = m2;
     Mesh* m3 = new Mesh("ground", TEST_GROUND, 1024, 1);
     meshes[m3->name] = m3;
+    Mesh* m4 = new Mesh("cplayer", TEST_FISHB, 1024, 1);
+    meshes[m4->name] = m4;
+    Mesh* m5 = new Mesh("cube", TEST_FISHB, 1024, 4);
+    meshes[m5->name] = m5;
+    BoneMesh* bm1 = new BoneMesh("player2", MESH_PLAYER_ANIM);
+    bmeshes[bm1->name] = bm1;
+
+    player = new Player("Player", MESH_PLAYER_ANIM, 2048, 1, vec3(10), SM::FORWARD);
 
     // Create skybox
     cubemap = new Cubemap();
@@ -34,7 +47,7 @@ void init() {
     // Set start time of program near when init() finishes loading
     SM::startTime = timeGetTime();
     float offset = 1.0f;
-    float lim = 4;
+    float lim = 10;
 
     vector<float> scls = {1.5, 1, 1.5, 2};
     for (int z = -lim / 2; z < lim / 2; z += 1) {
@@ -55,16 +68,21 @@ void init() {
         }
     }
     for (int i = 0; i < translations.size(); ++i) {
-        Boid* boid = new Boid(translations[i], translations[i], BoidType::FISH_1, i);
+        Boid* boid = new Boid(translations[i], normalize(vec3(-5 + rand() % 10, -5 + rand() % 10, -5 + rand() % 10)), BoidType::FISH_1, i);
         boids.push_back(boid);
     }
 
     baseLight->addSpotLightAtt(flashlightCoords, flashlightDir, vec3(0.2f), vec3(1), vec3(1));
     baseLight->spotLights[baseLight->nSpotLights - 1].cutOff = cos(Util::deg2Rad(24.f));
     baseLight->spotLights[baseLight->nSpotLights - 1].outerCutOff = cos(Util::deg2Rad(35.f));
-    float fct = 1.f;
     baseLight->setDirLightsAtt(vector<vec3>{vec3(0, -1, 0)});
     baseLight->setDirLightColour(vec3(.1), vec3(.1), vec3(1));
+
+    boneLight->addSpotLightAtt(flashlightCoords, flashlightDir, vec3(0.2f), vec3(1), vec3(1));
+    boneLight->spotLights[boneLight->nSpotLights - 1].cutOff = cos(Util::deg2Rad(24.f));
+    boneLight->spotLights[boneLight->nSpotLights - 1].outerCutOff = cos(Util::deg2Rad(35.f));
+    boneLight->setDirLightsAtt(vector<vec3>{vec3(0, -1, 0)});
+    boneLight->setDirLightColour(vec3(.1), vec3(.1), vec3(1));
 }
 
 void display() {
@@ -105,38 +123,74 @@ void display() {
         boids[i]->process(boids);
         models[i] = scale(Util::lookTowards(boids[i]->pos, boids[i]->dir), scales[i]);
     }
-    mat4 cubes[4] = {translate(mat4(1), vec3(0, 0, 0)), translate(mat4(1), vec3(10, 0, 0)), translate(mat4(1), vec3(20, 0, 0)), translate(mat4(1), vec3(30, 0, 0))};
+    mat4 cubes[4] = {translate(mat4(1), vec3(20, 0, 10)), translate(mat4(1), vec3(10, 0, 0)), translate(mat4(1), vec3(20, 0, 0)), translate(mat4(1), vec3(30, 0, 0))};
     auto cubeds = std::vector<float>{0, 1, 2, 3}.data();
-    
+
     meshes["boid"]->render(numInstances, models, depths.data());  // draw cubes
     meshes["boid_display"]->render(4, cubes, cubeds); // display
-    meshes["ground"]->render(translate(mat4(1), vec3(0, -10, 0)), 1); // floor
+    meshes["ground"]->render(translate(mat4(1), vec3(0, -10, 0)), 1);
+    meshes["cube"]->render(translate(mat4(1), vec3(0, 0, 13)), 1);
 
+    // vec3 cPos = vec3(10, 0, 0);
+    // vec3 targetPos = boids[0]->pos;
+    // // mat4 playerMat = translate(rotate(Util::lookTowards(targetPos - cPos, targetPos, vec3(0,1,0)), Util::deg2Rad(90), vec3(0, 1, 0)), targetPos + vec3(0, 2, -5));
+    // mat4 playerMat = Util::lookTowards(targetPos - cPos, targetPos, vec3(0, 1, 0));
+    // meshes["player"]->render(playerMat, 1);
+    
+    // camera.followTarget(vec3(playerMat[3]), SM::FORWARD);
+    // player->pos += vec3(0.01);
+    // camera.followTarget(vec3(models[0][3]), SM::FORWARD);
+    // Util::printVec3(boids[0]->pos - camera.pos);
+    // camera.followTarget(SM::Z * 10.f, SM::FORWARD);
+    // camera.pos = boids[12]->pos;
+    // Util::printVec3(camera.pos);
+
+    boneLight->use();
+    std::vector<aiMatrix4x4> trans;
+    float animTime = ((float)(timeGetTime() - SM::startTime)) / 1000.0f;
+    bmeshes["player2"]->getBoneTransforms(animTime, trans);
+    for (int i = 0; i < trans.size(); i++) {
+        mat4 t = Util::aiToGLM(&trans[i]);
+        boneLight->shader->setMat4("bones[" + std::to_string(i) + "]", t);
+    }
+    boneLight->setLightAtt(view, persp_proj, camera.pos);
+    boneLight->setSpotLightAtt(0, flashlightCoords, flashlightDir, vec3(0.2f), vec3(1, .6, .2), vec3(1));
+    boneLight->spotLights[boneLight->nSpotLights - 1].cutOff = cos(Util::deg2Rad(24.f));
+    boneLight->spotLights[boneLight->nSpotLights - 1].outerCutOff = cos(Util::deg2Rad(35.f));
+    boneLight->use();
+    // bmeshes["player2"]->render(translate(rotate(mat4(1), Util::deg2Rad(-90), vec3(1, 0, 0)), vec3(0, 0, 10)));
+    bmeshes["player2"]->render(translate(mat4(1), vec3(0, 0, 10)));
+    player->lookAt(camera.front);
+        player->render();
+        camera.followTarget(player);
     glutSwapBuffers();
 }
 
 void updateScene() {
     SM::updateDelta();
     // std::cout << 1 / SM::delta << std::endl; // fps
-    camera.processMovement();
-    flashlightCoords = SM::flashlightToggled ? camera.pos : vec3(-10000);
+    player->processMovement(camera);
+    flashlightCoords = SM::flashlightToggled ? player->transform[3] : vec3(-10000);
     flashlightDir = SM::flashlightToggled ? camera.front : vec3(0, -1, 0);
     // Draw the next frame
     glutPostRedisplay();
 }
 
 // Process the mouse moving without button input
-void passiveMouseMoved(int x, int y) { camera.processView(x, y); }
+void passiveMouseMoved(int x, int y) { 
+    SM::updateMouse(x, y);
+    camera.processView();
+}
 
 void specKeyPressed(int key, int x, int y) {
     if (key == GLUT_KEY_SHIFT_L) {
-        camera.DOWN = true;
+        player->DOWN = true;
     }
 }
 
 void specKeyReleased(int key, int x, int y) {
     if (key == GLUT_KEY_SHIFT_L) {
-        camera.DOWN = false;
+        player->DOWN = false;
     }
 }
 
@@ -159,30 +213,34 @@ void keyPressed(unsigned char key, int x, int y) {
     }
 
     if (key == 'q' || key == 'Q') SM::flashlightToggled = true;
-    if (key == ' ') camera.UP = true;
-    if (key == 'w' || key == 'W') camera.FORWARD = true;
-    if (key == 's' || key == 'S') camera.BACK = true;
-    if (key == 'a' || key == 'A') camera.LEFT = true;
-    if (key == 'd' || key == 'D') camera.RIGHT = true;
-    if (key == 'e' || key == 'E') camera.SPRINT = true;
-    if (key == 'p' || key == 'P') camera.CAN_FLY = !camera.CAN_FLY;
+    if (key == ' ') player->UP = true;
+    if (key == 'w' || key == 'W') player->FORWARD = true;
+    if (key == 's' || key == 'S') player->BACK = true;
+    if (key == 'a' || key == 'A') player->LEFT = true;
+    if (key == 'd' || key == 'D') player->RIGHT = true;
+    if (key == 'e' || key == 'E') player->SPRINT = true;
+    if (key == 'p' || key == 'P') player->CAN_FLY = !player->CAN_FLY;
+    // if (key == 'r' || key == 'R') player->CAN_FLY = !player->CAN_FLY;
 }
 
 // Function ran on key release
 void keyReleased(unsigned char key, int x, int y) {
     if (key == 'q' || key == 'Q') SM::flashlightToggled = false;
-    if (key == ' ') camera.UP = false;
-    if (key == 'w' || key == 'W') camera.FORWARD = false;
-    if (key == 's' || key == 'S') camera.BACK = false;
-    if (key == 'a' || key == 'A') camera.LEFT = false;
-    if (key == 'd' || key == 'D') camera.RIGHT = false;
-    if (key == 'e' || key == 'E') camera.SPRINT = false;
+    if (key == ' ') player->UP = false;
+    if (key == 'w' || key == 'W') player->FORWARD = false;
+    if (key == 's' || key == 'S') player->BACK = false;
+    if (key == 'a' || key == 'A') player->LEFT = false;
+    if (key == 'd' || key == 'D') player->RIGHT = false;
+    if (key == 'e' || key == 'E') player->SPRINT = false;
+    // if (key == 'r' || key == 'R') player->SPRINT = false;
 }
 
 int main(int argc, char** argv) {
     // Set up the window
     glutInit(&argc, argv);
-    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_STENCIL | GLUT_DEPTH);
+    glutInitContextVersion(3, 3);
+    glutInitContextProfile(GLUT_CORE_PROFILE);
+    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
     glutInitWindowSize(SM::width, SM::height);
     glutCreateWindow("Open Ocean");
 

@@ -1,51 +1,84 @@
 #include "camera.h"
 using namespace glm;
-using namespace SM;
 
-void Camera::processView(int x, int y) {
-    float xPos = SM::width / 2.0;
-    float yPos = SM::height / 2.0;
-    pitch = std::clamp(pitch + ((y - yPos) * -sensitivity), -89.0f, 89.0f);
-    yaw = Util::wrap(yaw + ((x - xPos) * sensitivity), 0.0f, 359.0f);
-    glutWarpPointer(xPos, yPos);
-
+void Camera::processView() {
+    // Euler angles
+    pitch = std::clamp(pitch + (SM::mouseDY /* SM::delta */ * -sensitivity), -89.5f, 89.5f);
+    yaw = Util::wrap(yaw + (SM::mouseDX /* SM::delta */ * sensitivity), 0.0f, 359.0f);
     front =
         normalize(vec3(cos(Util::deg2Rad(yaw)) * cos(Util::deg2Rad(pitch)),
                        sin(Util::deg2Rad(pitch)),
                        sin(Util::deg2Rad(yaw)) * cos(Util::deg2Rad(pitch))));
 
-    right = normalize(cross(front, wUP));
+    right = normalize(cross(front, SM::UP));
     up = normalize(cross(right, front));
+
+    // Follow checks
+    targetVerticalDist = targetDist * sin(Util::deg2Rad(pitch));
+    targetHorizontalDist = targetDist * cos(Util::deg2Rad(pitch));
+}
+
+void Camera::followTarget(vec3 tPos, vec3 tDir) {
+    // todo: camera lags behind as target moves further away from origin
+    target = tPos; // cache
+    // Util::printVec3(tDir);
+    vec3 fDir = normalize(tDir);
+    // rotation from z axis, calculated using rotation about y-axis
+    // yaw needs to be negated because as the camera turns right, we want to move leftwards around it, and vice versa
+    float angle = atan2f(fDir.z, fDir.x) - Util::deg2Rad(yaw); 
+    float xDist = targetHorizontalDist * sin(angle);
+    float zDist = targetHorizontalDist * cos(angle);
+    pos = vec3(
+        tPos.x + xDist,
+        tPos.y - targetVerticalDist,
+        tPos.z + zDist
+    );
+}
+
+void Camera::followTarget(Player* player) {
+    target = player->transform[3]; // cache
+    // Util::printVec3(tDir);
+    vec3 fDir = normalize(player->dir);
+    // rotation from z axis, calculated using rotation about y-axis
+    // yaw needs to be negated because as the camera turns right, we want to move leftwards around it, and vice versa
+    float angle = atan2f(fDir.z, fDir.x) - Util::deg2Rad(yaw); 
+    float xDist = targetHorizontalDist * sin(angle);
+    float zDist = targetHorizontalDist * cos(angle);
+    pos = vec3(
+        target.x + xDist,
+        target.y - targetVerticalDist,
+        target.z + zDist
+    );
 }
 
 void Camera::processMovement() {
     float t_cpos_y = pos.y;  // y-pos of camera before updates
     if (FORWARD) {
         if (CAN_FLY)
-            pos += normalize(front) * speed * delta;
+            pos += normalize(front) * speed * SM::delta;
         else
-            pos += normalize(vec3(front.x, 0, front.z)) * speed * delta;
+            pos += normalize(vec3(front.x, 0, front.z)) * speed * SM::delta;
     }
     if (BACK) {
         if (CAN_FLY)
-            pos -= normalize(front) * speed * delta;
+            pos -= normalize(front) * speed * SM::delta;
         else
-            pos -= normalize(vec3(front.x, 0, front.z)) * speed * delta;
+            pos -= normalize(vec3(front.x, 0, front.z)) * speed * SM::delta;
     }
     if (LEFT) {
         if (CAN_FLY)
-            pos -= normalize(cross(front, up)) * speed * delta;
+            pos -= normalize(cross(front, up)) * speed * SM::delta;
         else {
             vec3 c = cross(front, up);
-            pos -= normalize(vec3(c.x, 0, c.z)) * speed * delta;
+            pos -= normalize(vec3(c.x, 0, c.z)) * speed * SM::delta;
         }
     }
     if (RIGHT) {
         if (CAN_FLY)
-            pos += normalize(cross(front, up)) * speed * delta;
+            pos += normalize(cross(front, up)) * speed * SM::delta;
         else {
             vec3 c = cross(front, up);
-            pos += normalize(vec3(c.x, 0, c.z)) * speed * delta;
+            pos += normalize(vec3(c.x, 0, c.z)) * speed * SM::delta;
         }
     }
     if (UP) {
@@ -66,4 +99,7 @@ void Camera::processMovement() {
     if (!CAN_FLY) pos.y = t_cpos_y;  // if can't fly, don't change y_pos
 }
 
-mat4 Camera::getViewMatrix() { return lookAt(pos, pos + front, up); }
+mat4 Camera::getViewMatrix() { 
+    return lookAt(pos, pos + front, up);
+    // return Util::lookTowards(pos, target, SM::UP);
+}

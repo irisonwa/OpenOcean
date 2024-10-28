@@ -22,6 +22,8 @@ Texture::Texture(const std::vector<std::string> fnames, GLenum texType = GL_TEXT
 void Texture::bind() {
     if (file_names.size() == 1 || !isAtlas) {
         bind(GL_TEXTURE0);
+        glActiveTexture(GL_TEXTURE1);  // unbind unused specular map
+        glBindTexture(textureEnum, 0);
     } else if (file_names.size() == 2) {
         bind(GL_TEXTURE0, GL_TEXTURE1);
     }
@@ -30,8 +32,6 @@ void Texture::bind() {
 void Texture::bind(GLenum textureUnit) { 
     glActiveTexture(textureUnit);
     glBindTexture(textureEnum, texture);  // bind model's texture
-    glActiveTexture(GL_TEXTURE1); // unbind unused specular map
-    glBindTexture(textureEnum, 0); 
 }
 
 void Texture::bind(GLenum textureUnitA, GLenum textureUnitB) {
@@ -185,12 +185,13 @@ bool Texture::loadCubemap(std::vector<std::string> faces) {
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);  // u coordinate (x)
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);  // v coordinate (y)
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);  // w coordinate (z)
-    return true;
+    return glGetError() == GL_NO_ERROR;
 }
 
 bool Texture::load(unsigned int buffer, void* img_data) {
     void* data = stbi_load_from_memory((const stbi_uc*)img_data, buffer, &_width, &_height, &_nrChannels, 0);
     stbi_set_flip_vertically_on_load(true);
+    glGenTextures(1, &texture);
     glBindTexture(textureEnum, texture);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);  // align data to 1-byte. used to prevent warping of certain textures.
     switch (_nrChannels) {
@@ -205,7 +206,8 @@ bool Texture::load(unsigned int buffer, void* img_data) {
             break;
         default:
             printf("unsupported image bits per pixel");
-            break;
+            stbi_image_free(data);
+            return false;
     }
 
     // set texture parameters
@@ -213,5 +215,5 @@ bool Texture::load(unsigned int buffer, void* img_data) {
     glTexParameteri(textureEnum, GL_TEXTURE_MAG_FILTER, GL_LINEAR);  // magnification
     glTexParameteri(textureEnum, GL_TEXTURE_WRAP_S, GL_REPEAT);      // u coordinate (x)
     glTexParameteri(textureEnum, GL_TEXTURE_WRAP_T, GL_REPEAT);      // v coordinate (y)
-    return true;
+    return glGetError() == GL_NO_ERROR;
 }

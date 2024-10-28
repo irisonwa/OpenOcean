@@ -2,6 +2,7 @@
 #define BOID_H
 
 #include "util.h"
+#include "sm.h"
 #include <deque>
 using namespace glm;
 

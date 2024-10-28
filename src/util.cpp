@@ -119,9 +119,21 @@ namespace Util {
         return to;
     };
 
-    // Point a matrix at `pos` in the direction of `dir`
-    mat4 lookTowards(vec3 pos, vec3 dir) {
-        mat4 mat = translate(mat4(1), pos);
-        return mat * inverse(lookAt(pos, pos + dir, vec3(0, 1, 0)));
+    // Create a matrix at position `from` looking in the direction `to`. Uses the global up direction (0, 1, 0)
+    mat4 lookTowards(vec3 from, vec3 to) {
+        mat4 mat = translate(mat4(1), from);
+        to = normalize(to);
+        return mat * inverse(lookAt(from, from + to, vec3(0, 1, 0)));
+    }
+    
+    // Create a matrix at position `from` looking in the direction `at`. 
+    mat4 lookTowards(vec3 from, vec3 to, vec3 up) {
+        mat4 mat = translate(mat4(1), from);
+        to = normalize(to);
+        return mat * inverse(lookAt(from, from + to, up));
+    }
+    
+    void printVec3(vec3 v) {
+        printf("(%f, %f, %f)\n", v.x, v.y, v.z);
     }
 }

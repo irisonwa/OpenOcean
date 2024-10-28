@@ -38,7 +38,8 @@
 #include "cubemap.h"
 #include "lighting.h"
 #include "boid.h"
-// #include "bonemesh.h"
+#include "bonemesh.h"
+#include "player.h"
 
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -55,10 +56,11 @@
 #define TEST_FISHB "fsh2.obj"
 #define TEST_BOID "boid.obj"
 #define TEST_GROUND "test_ground.obj"
+#define MESH_PLAYER_ANIM "sub.gltf"
+#define MESH_PLAYER "sub.obj"
 #pragma endregion
 
 
-std::map<std::string, Shader*> shaders;
 const char* vert_main = PROJDIR "Shaders/main.vert";
 const char* frag_main = PROJDIR "Shaders/main.frag";
 const char* vert_sb = PROJDIR "Shaders/cubemap.vert";
@@ -72,13 +74,16 @@ const char* frag_blank = PROJDIR "Shaders/blank.frag";
 
 Cubemap* cubemap;
 Camera camera = Camera();
-Lighting *baseLight;
+Lighting *baseLight, *boneLight;
 
 std::deque<Boid*> boids;
+Player *player;
 
 vec3 flashlightCoords = vec3(-10000);
 vec3 flashlightDir = vec3(0, -1, 0);
+std::map<std::string, Shader*> shaders;
 std::map<std::string, Mesh*> meshes;
+std::map<std::string, BoneMesh*> bmeshes;
 std::vector<vec3> translations, scales;
 std::vector<int> mat_idxs;
 std::vector<float> depths;

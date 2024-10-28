@@ -20,6 +20,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
 #include <glm/gtx/string_cast.hpp>
+#include <glm/gtx/norm.hpp>
 
 #include <assimp/scene.h>        // collects data
 #include <assimp/postprocess.h>  // various extra operations
@@ -31,7 +32,7 @@
 #define MODELDIR(m) PROJDIR "Models/" + m.substr(0, m.find(".")) + "/"
 
 using namespace glm;
-using namespace SM;
+// using namespace SM;
 
 namespace Util {
     extern std::string readFile(const char* path);
@@ -46,7 +47,9 @@ namespace Util {
     extern vec3 angleToVec3(float angle);
     extern float vec3ToAngle(vec3 v);
     extern float lerp(float a, float b, float t);
-    extern mat4 lookTowards(vec3 pos, vec3 at);
+    extern mat4 lookTowards(vec3 pos, vec3 to);
+    extern mat4 lookTowards(vec3 pos, vec3 to, vec3 up);
+    extern void printVec3(vec3 v);
 };
 
 #endif  // UTIL_H

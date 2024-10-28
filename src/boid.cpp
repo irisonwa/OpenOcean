@@ -70,13 +70,12 @@ void Boid::move(std::deque<Boid*> boids) {
 
                 // cohesion
                 avgCentre += otherBoid->pos;
-                
+
                 // separation
                 if (distFromBoid < minSepDistance) {
                     avgMove += pos - otherBoid->pos;
                 }
             }
-
         }
     }
 
@@ -89,18 +88,22 @@ void Boid::move(std::deque<Boid*> boids) {
             // cohesion
             avgCentre /= numFamily;
             velocity += (avgCentre - pos) * centeringFactor;
-            
+
             // separation
             velocity += avgMove * avoidFactor;
         }
-
     }
 }
 
 void Boid::limitSpeed() {
-    float tspeed = length(velocity);
-    if (tspeed > Boid::MAX_SPEED) {
-        velocity = (velocity / vec3(tspeed)) * Boid::MAX_SPEED;
+    // can use glsl's isnan in a compute shader, so this is fine: https://registry.khronos.org/OpenGL-Refpages/gl4/html/isnan.xhtml
+    if (glm::all(glm::isnan(velocity))) {
+        velocity = vec3(0.01);
+    } else {
+        float tspeed = length(velocity);
+        if (tspeed > Boid::MAX_SPEED) {
+            velocity = (velocity / vec3(tspeed)) * Boid::MAX_SPEED;
+        }
     }
 }
 
