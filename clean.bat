@@ -1,5 +1,8 @@
-rmdir /s /q CMakeFiles
+@REM remove build folder
 rmdir /s /q build
+
+@REM remove other files if outside build folder, such as visual studio files
+rmdir /s /q CMakeFiles
 rm main.exe
 rm Makefile
 rm CMakeCache.txt

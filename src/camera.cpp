@@ -13,8 +13,7 @@ void Camera::processView() {
     up = normalize(cross(right, front));
 
     // Update view matrix
-    view = lookAt(followPos, followPos + front, up);
-    // Util::printVec3(followPos);
+    view = SM::isFreeCam ? lookAt(pos, pos + front, up) : lookAt(followPos, followPos + front, up);
 
     // Follow checks
     targetVerticalDist = targetDist * sin(Util::deg2Rad(pitch));
@@ -104,4 +103,9 @@ void Camera::processMovement() {
 
 mat4 Camera::getViewMatrix() { 
     return view;
+}
+
+void Camera::setPosition(vec3 p) {
+    pos = p;
+    followPos = p;
 }

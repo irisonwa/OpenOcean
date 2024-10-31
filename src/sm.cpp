@@ -32,6 +32,8 @@ namespace SM {
     // Camera activeCamera = Camera();
     CAMERA_MODE camMode = CAMERA_MODE::THIRD;
 
+    int MAX_NUM_BOIDS = 10000;
+
     void updateDelta() {
         static DWORD last_time = 0;
         DWORD curr_time = timeGetTime();
@@ -64,9 +66,10 @@ namespace SM {
         isThirdPerson = true;
     }
     void changeCameraState() {
-        camMode = (CAMERA_MODE)Util::wrap(camMode + 1, CAMERA_MODE::FIRST, CAMERA_MODE::FREE);
+        camMode = (CAMERA_MODE)Util::wrap(camMode + 1, CAMERA_MODE::FIRST, CAMERA_MODE::FREE + 1);
         isFirstPerson = camMode == CAMERA_MODE::FIRST;
         isThirdPerson = camMode == CAMERA_MODE::THIRD;
         isFreeCam = camMode == CAMERA_MODE::FREE;
+        printf("SWITCHED CAMERA MODE: %s\n", isFirstPerson ? "first person" : isThirdPerson ? "third person" : "free camera");
     }
 }

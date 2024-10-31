@@ -11,8 +11,7 @@ Boid::Boid(vec3 _pos, vec3 vel, BoidType t, int id) {
     ID = id;
 }
 
-Boid::~Boid() {
-}
+Boid::~Boid() { }
 
 void Boid::process(std::deque<Boid*> boids) {
     dir = normalize(velocity);
@@ -43,7 +42,7 @@ void Boid::move(std::deque<Boid*> boids) {
     // float moveY = 0;
     vec3 avgMove(0);
 
-    float minSepDistance = 2;
+    float minSepDistance = .5;
     float matchingFactor = 0.05;
     float centeringFactor = 0.005;
     float avoidFactor = 0.05;

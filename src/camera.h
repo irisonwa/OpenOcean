@@ -35,8 +35,11 @@ class Camera {
     // Follow the target position `pos` who is pointing in the direction `dir` at some fixed distance
     void followTarget(vec3 pos, vec3 dir);
 
-    // Follow the a player
+    // Follow the player
     void followTarget(Player*);
+    
+    // Set the camera position to some location
+    void setPosition(vec3 p);
 
     // Variables
     vec3 pos;                    // Camera position

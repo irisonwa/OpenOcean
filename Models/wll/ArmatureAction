@@ -1,0 +1,24 @@
+MD5Version 10 // Parameters used during export: Reorient: False; Scale: 1.0
+commandline ""
+
+numFrames 1
+numJoints 1
+frameRate 24
+numAnimatedComponents 6
+
+hierarchy {
+  "Bone" -1 63 0 //
+}
+
+bounds {
+  ( -2.0329322815 -6.0336723328 -6.0336723328 ) ( 2.0329322815 6.0336723328 6.0336723328 )
+}
+
+baseframe {
+  ( 0.0000000000 0.0000000000 0.0000000000 ) ( -0.5512375236 -0.4973216653 0.4973216951 )
+}
+
+frame 0 {
+  0.0000000000 0.0000000000 0.0000000000 -0.5512375236 -0.4973216653 0.4973216951
+}
+

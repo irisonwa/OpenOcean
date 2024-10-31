@@ -25,20 +25,28 @@ void init() {
     boneLight = new Lighting("boney light", shaders["bones"], MATERIAL_SHINY);
 
     // Load meshes to be used
-    Mesh* m1 = new Mesh("boid", TEST_FISHB, 1024, 4);
-    meshes[m1->name] = m1;
-    Mesh* m2 = new Mesh("boid_display", MESH_PLAYER, 2048, 1);
-    meshes[m2->name] = m2;
-    Mesh* m3 = new Mesh("ground", TEST_GROUND, 1024, 1);
-    meshes[m3->name] = m3;
-    Mesh* m4 = new Mesh("cplayer", TEST_FISHB, 1024, 1);
-    meshes[m4->name] = m4;
-    Mesh* m5 = new Mesh("cube", TEST_SPEC, 1024, 4);
-    meshes[m5->name] = m5;
-    BoneMesh* bm1 = new BoneMesh("player2", MESH_PLAYER_ANIM);
+    StaticMesh* m1 = new StaticMesh("boid", TEST_FISHB, 1024, 4);
+    smeshes[m1->name] = m1;
+    StaticMesh* m2 = new StaticMesh("boid_display", MESH_SHARK, 1024, 1);
+    smeshes[m2->name] = m2;
+    StaticMesh* m3 = new StaticMesh("ground", TEST_GROUND, 1024, 1);
+    smeshes[m3->name] = m3;
+    StaticMesh* m4 = new StaticMesh("cplayer", TEST_FISHB, 1024, 1);
+    smeshes[m4->name] = m4;
+    StaticMesh* m5 = new StaticMesh("cube", TEST_SPEC, 1024, 4);
+    smeshes[m5->name] = m5;
+    StaticMesh* m6 = new StaticMesh("room", TEST_ROOM, 1024, 1);
+    smeshes[m6->name] = m6;
+    StaticMesh* m7 = new StaticMesh("shark", MESH_SHARK, 1024, 1);
+    smeshes[m7->name] = m7;
+    BoneMesh* bm1 = new BoneMesh("test wall", MESH_WLL_ANIM, shaders["bones"]);
     bmeshes[bm1->name] = bm1;
+    BoneMesh* bm2 = new BoneMesh("test guy", MESH_GUY_ANIM, shaders["bones"]);
+    bmeshes[bm2->name] = bm2;
+    BoneMesh* bm3 = new BoneMesh("test shark", MESH_SHARK_ANIM, shaders["bones"]);
+    bmeshes[bm3->name] = bm3;
 
-    player = new Player("Player", MESH_PLAYER_ANIM, 2048, 1, vec3(10), SM::FORWARD);
+    player = new Player("Player", MESH_PLAYER_ANIM, 1024, 1, vec3(10), SM::FORWARD);
     player->setShader(shaders["bones"]);
 
     // Create skybox
@@ -50,7 +58,7 @@ void init() {
     float offset = 1.0f;
     float lim = 10;
 
-    vector<float> scls = {1.5, 1, 1.5, 2};
+    vector<float> scls = {.25, .75, 1, 2};
     for (int z = -lim / 2; z < lim / 2; z += 1) {
         for (int y = -lim / 2; y < lim / 2; y += 1) {
             for (int x = -lim / 2; x < lim / 2; x += 1) {
@@ -78,16 +86,19 @@ void init() {
     baseLight->spotLights[baseLight->nSpotLights - 1].outerCutOff = cos(Util::deg2Rad(35.f));
     baseLight->setDirLightsAtt(vector<vec3>{vec3(0, -1, 0)});
     baseLight->setDirLightColour(vec3(.05), vec3(.05), vec3(1));
+    baseLight->addPointLightAtt(vec3(0), vec3(0.2f), vec3(1), vec3(1));
 
     boneLight->addSpotLightAtt(flashlightCoords, flashlightDir, vec3(0.2f), vec3(1), vec3(1));
     boneLight->spotLights[boneLight->nSpotLights - 1].cutOff = cos(Util::deg2Rad(24.f));
     boneLight->spotLights[boneLight->nSpotLights - 1].outerCutOff = cos(Util::deg2Rad(35.f));
     boneLight->setDirLightsAtt(vector<vec3>{vec3(0, -1, 0)});
-    boneLight->setDirLightColour(vec3(.05), vec3(.05), vec3(1));
+    boneLight->setDirLightColour(vec3(.2), vec3(.2), vec3(1));
+    // boneLight->addPointLightAtt(vec3(0), vec3(0.2f), vec3(1), vec3(1));
 }
 
 void display() {
     // tell GL to only draw onto a pixel if the shape is closer to the viewer
+    // glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);  // enable depth-testing
     glEnable(GL_BLEND);       // enable colour blending
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -115,20 +126,13 @@ void display() {
     baseLight->spotLights[baseLight->nSpotLights - 1].outerCutOff = cos(Util::deg2Rad(35.f));
     baseLight->use();
 
-    const unsigned int numInstances = boids.size();
-    mat4 models[numInstances];
-    for (int i = 0; i < numInstances; i++) {
-        boids[i]->process(boids);
-        models[i] = scale(Util::lookTowards(boids[i]->pos, boids[i]->dir), scales[i]);
-    }
     mat4 cubes[4] = {translate(mat4(1), vec3(20, 0, 10)), translate(mat4(1), vec3(10, 0, 0)), translate(mat4(1), vec3(20, 0, 0)), translate(mat4(1), vec3(30, 0, 0))};
     auto cubeds = std::vector<float>{0, 1, 2, 3}.data();
 
-    meshes["boid"]->render(numInstances, models, depths.data());  // draw cubes
-    // meshes["boid_display"]->render(4, cubes, cubeds); // display
-    // meshes["ground"]->render(translate(mat4(1), vec3(0, -10, 0)), 1);
-    meshes["cube"]->render(scale(mat4(1), vec3(250)), 1);
-
+    // meshes["shark"]->render(numInstances, models, depths.data());  // draw cubes
+    smeshes["boid_display"]->render(4, cubes, cubeds); // display
+    smeshes["ground"]->render(translate(mat4(1), vec3(0, -10, 0)), 1);
+    smeshes["room"]->render(scale(mat4(1), vec3(250)), 1);
 
     /// ---------------- SKINNED MESHES ---------------- ///
     boneLight->setLightAtt(view, persp_proj, camera.pos);
@@ -137,38 +141,66 @@ void display() {
     boneLight->spotLights[boneLight->nSpotLights - 1].outerCutOff = cos(Util::deg2Rad(35.f));
     boneLight->use();
 
-    player->lookAt(camera.front);
-    player->render();
-    camera.followTarget(player);
+    bmeshes["test wall"]->update();
+    bmeshes["test wall"]->render(translate(mat4(1), vec3(-10)));
+    bmeshes["test guy"]->update();
+    bmeshes["test guy"]->render(translate(mat4(1), vec3(-20)));
     
+    const unsigned int numInstances = boids.size();
+    mat4 models[numInstances];
+    for (int i = 0; i < numInstances; i++) {
+        boids[i]->process(boids);
+        models[i] = scale(Util::lookTowards(boids[i]->pos, boids[i]->dir), scales[i]);
+    }
+    bmeshes["test shark"]->update();
+    bmeshes["test shark"]->render(numInstances, models);
+
+    player->render();
+    if (!SM::isFreeCam) {
+        player->lookAt(camera.front);
+        camera.followTarget(player);
+    }
+
     glutSwapBuffers();
 }
 
 void updateScene() {
     SM::updateDelta();
     // std::cout << 1 / SM::delta << std::endl; // fps
-    player->processMovement(camera);
-    flashlightCoords = SM::flashlightToggled ? player->transform[3] : vec3(-10000);
+    if (!SM::isFreeCam) {
+        player->processMovement(camera);
+    } else {
+        camera.processMovement();
+    }
+    flashlightCoords = SM::flashlightToggled ? (SM::isFreeCam ? camera.pos : player->transform[3]) : vec3(-10000);
     flashlightDir = SM::flashlightToggled ? camera.front : vec3(0, -1, 0);
     // Draw the next frame
     glutPostRedisplay();
 }
 
 // Process the mouse moving without button input
-void passiveMouseMoved(int x, int y) { 
+void passiveMouseMoved(int x, int y) {
     SM::updateMouse(x, y);
     camera.processView();
 }
 
 void specKeyPressed(int key, int x, int y) {
     if (key == GLUT_KEY_SHIFT_L) {
-        player->DOWN = true;
+        if (!SM::isFreeCam) {
+            player->DOWN = true;
+        } else {
+            camera.DOWN = true;
+        }
     }
 }
 
 void specKeyReleased(int key, int x, int y) {
     if (key == GLUT_KEY_SHIFT_L) {
-        player->DOWN = false;
+        if (!SM::isFreeCam) {
+            player->DOWN = false;
+        } else {
+            camera.DOWN = false;
+        }
     }
 }
 
@@ -187,30 +219,52 @@ void keyPressed(unsigned char key, int x, int y) {
                 (float)((rand() % 600) - 300),
                 (float)((rand() % 600) - 300),
                 (float)((rand() % 600) - 300));
+            player->pos = vec3(0);
+            camera.setPosition(vec3(0));
         }
     }
 
-    if (key == 'q' || key == 'Q') SM::flashlightToggled = true;
-    if (key == ' ') player->UP = true;
-    if (key == 'w' || key == 'W') player->FORWARD = true;
-    if (key == 's' || key == 'S') player->BACK = true;
-    if (key == 'a' || key == 'A') player->LEFT = true;
-    if (key == 'd' || key == 'D') player->RIGHT = true;
-    if (key == 'e' || key == 'E') player->SPRINT = true;
-    if (key == 'p' || key == 'P') player->CAN_FLY = !player->CAN_FLY;
-    // if (key == 'r' || key == 'R') player->CAN_FLY = !player->CAN_FLY;
+    if (key == 'r' || key == 'R') SM::changeCameraState();
+    if (!SM::isFreeCam) {
+        if (key == 'q' || key == 'Q') SM::flashlightToggled = true;
+        if (key == ' ') player->UP = true;
+        if (key == 'w' || key == 'W') player->FORWARD = true;
+        if (key == 's' || key == 'S') player->BACK = true;
+        if (key == 'a' || key == 'A') player->LEFT = true;
+        if (key == 'd' || key == 'D') player->RIGHT = true;
+        if (key == 'e' || key == 'E') player->SPRINT = true;
+    } else {
+        if (key == 'q' || key == 'Q') SM::flashlightToggled = true;
+        if (key == ' ') camera.UP = true;
+        if (key == 'w' || key == 'W') camera.FORWARD = true;
+        if (key == 's' || key == 'S') camera.BACK = true;
+        if (key == 'a' || key == 'A') camera.LEFT = true;
+        if (key == 'd' || key == 'D') camera.RIGHT = true;
+        if (key == 'e' || key == 'E') camera.SPRINT = true;
+    }
 }
 
 // Function ran on key release
 void keyReleased(unsigned char key, int x, int y) {
-    if (key == 'q' || key == 'Q') SM::flashlightToggled = false;
-    if (key == ' ') player->UP = false;
-    if (key == 'w' || key == 'W') player->FORWARD = false;
-    if (key == 's' || key == 'S') player->BACK = false;
-    if (key == 'a' || key == 'A') player->LEFT = false;
-    if (key == 'd' || key == 'D') player->RIGHT = false;
-    if (key == 'e' || key == 'E') player->SPRINT = false;
-    // if (key == 'r' || key == 'R') player->SPRINT = false;
+    if (!SM::isFreeCam) {
+        if (key == 'q' || key == 'Q') SM::flashlightToggled = false;
+        if (key == ' ') player->UP = false;
+        if (key == 'w' || key == 'W') player->FORWARD = false;
+        if (key == 's' || key == 'S') player->BACK = false;
+        if (key == 'a' || key == 'A') player->LEFT = false;
+        if (key == 'd' || key == 'D') player->RIGHT = false;
+        if (key == 'e' || key == 'E') player->SPRINT = false;
+        if (key == 'p' || key == 'P') player->CAN_FLY = !player->CAN_FLY;
+    } else {
+        if (key == 'q' || key == 'Q') SM::flashlightToggled = false;
+        if (key == ' ') camera.UP = false;
+        if (key == 'w' || key == 'W') camera.FORWARD = false;
+        if (key == 's' || key == 'S') camera.BACK = false;
+        if (key == 'a' || key == 'A') camera.LEFT = false;
+        if (key == 'd' || key == 'D') camera.RIGHT = false;
+        if (key == 'e' || key == 'E') camera.SPRINT = false;
+        if (key == 'p' || key == 'P') camera.CAN_FLY = !camera.CAN_FLY;
+    }
 }
 
 int main(int argc, char** argv) {

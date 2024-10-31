@@ -69,26 +69,19 @@ vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
 
 void main()
 {    
-    // properties
     vec3 norm = normalize(Normal);
     vec3 viewDir = normalize(viewPos - FragPos);
     
-    // == =====================================================
-    // Our lighting is set up in 3 phases: directional, point lights and an optional flashlight
-    // For each phase, a calculate function is defined that calculates the corresponding color
-    // per lamp. In the main() function we take all the calculated colors and sum them up for
-    // this fragment's final color.
-    // == =====================================================
-    // phase 1: directional lighting
-    vec3 result = vec3(0.0, 0.0, 0.0);
+    // directional lights
+    vec3 result = vec3(0.0);
     for(int i = 0; i < nDirLights; i++)
         result += CalcDirLight(dirLights[i], norm, viewDir);
 
-    // phase 2: point lights
+    // point lights
     for(int i = 0; i < nPointLights; i++)
-        result += CalcPointLight(pointLights[i], norm, FragPos, viewDir);    
+        result += CalcPointLight(pointLights[i], norm, FragPos, viewDir);
 
-    // phase 3: spot light
+    // spot lights
     for(int i = 0; i < nSpotLights; i++)
         result += CalcSpotLight(spotLights[i], norm, FragPos, viewDir);
     
@@ -163,40 +156,5 @@ vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
     diffuse *= attenuation * intensity;
     specular *= attenuation * intensity;
     return (ambient + diffuse + specular);
-
-    // vec3 lightDir = normalize(light.position - fragPos);
-    
-    // // check if lighting is inside the spotlight cone
-    // float theta = dot(lightDir, normalize(-light.direction)); 
-
-    // if(theta > light.cutOff) // remember that we're working with angles as cosines instead of degrees so a '>' is used.
-    // {    
-    //     // diffuse shading
-    //     float diff = max(dot(normal, lightDir), 0.0);
-    //     // specular shading
-    //     // vec3 reflectDir = reflect(-lightDir, normal);
-    //     // float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
-    //     vec3 halfwayDir = normalize(lightDir + viewDir);
-    //     float spec = pow(max(dot(normal, halfwayDir), 0.0), material.shininess);
-    //     // attenuation
-    //     float distance = length(light.position - fragPos);
-    //     float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));    
-    //     // spotlight intensity
-    //     float epsilon = light.cutOff - light.outerCutOff;
-    //     float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
-    //     // combine results
-    //     vec3 ambient = light.ambient * vec3(texture(material.diffuse, TexCoords));
-    //     vec3 diffuse = light.diffuse * diff * vec3(texture(material.diffuse, TexCoords));
-    //     vec3 specular = light.specular * spec * vec3(texture(material.specular, TexCoords));
-    //     // ambient *= attenuation;
-    //     diffuse *= attenuation * intensity;
-    //     specular *= attenuation * intensity;
-    //     return (ambient + diffuse + specular);
-    // }
-    // else 
-    // {
-    //     // else, use ambient light so scene isn't completely dark outside the spotlight.
-    //     return light.ambient * texture(material.diffuse, TexCoords).rgb * 0.1;
-    // }
 }
 

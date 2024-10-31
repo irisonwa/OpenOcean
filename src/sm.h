@@ -56,6 +56,8 @@ namespace SM {
     // extern Camera activeCamera;
     extern CAMERA_MODE camMode;
 
+    extern int MAX_NUM_BOIDS; // maximum count of boids allowed to be rendered. 
+
 };
 
 #endif /* SM_H */

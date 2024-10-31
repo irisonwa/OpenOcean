@@ -1,15 +1,10 @@
 #include "bonemesh.h"
-using namespace std;
 
-bool BoneMesh::loadMesh(std::string mesh_name) {
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
-    glGenBuffers(1, &p_VBO);
-    glGenBuffers(1, &n_VBO);
-    glGenBuffers(1, &t_VBO);
-    glGenBuffers(1, &EBO);
-    glGenBuffers(1, &IBO);
-    glGenBuffers(1, &BBO);
+BoneMesh::~BoneMesh() {}
+
+// load a mesh located at `mesh_path`. can optionally disable populating shader buffers.
+bool BoneMesh::loadMesh(std::string mesh_name, bool popBuffers) {
+    shouldPopulateBuffers = popBuffers;
 
     std::string rpath = MODELDIR(mesh_name) + mesh_name;
     scene = importer.ReadFile(rpath.c_str(), B_AI_LOAD_FLAGS);
@@ -66,7 +61,7 @@ bool BoneMesh::initScene(const aiScene* scene, std::string mesh_name) {
         return false;
     }
 
-    populateBuffers();
+    if (shouldPopulateBuffers) populateBuffers();
     return glGetError() == GL_NO_ERROR;
 }
 
@@ -115,7 +110,7 @@ void BoneMesh::loadDiffuseTexture(const aiMaterial* pMaterial, std::string dir, 
         if (pMaterial->GetTexture(aiTextureType_DIFFUSE, 0, &Path, NULL, NULL, NULL, NULL, NULL) == AI_SUCCESS) {
             const aiTexture* cTex = scene->GetEmbeddedTexture(Path.C_Str());
             if (cTex) {
-                printf("BMesh: embedded diffuse texture type %s\n", cTex->achFormatHint);
+                printf("%s: embedded diffuse texture type %s\n", name.c_str(), cTex->achFormatHint);
                 m_Materials[index].diffTex = new Texture(GL_TEXTURE_2D);
                 unsigned int buffer = cTex->mWidth;
                 m_Materials[index].diffTex->load(buffer, cTex->pcData);
@@ -130,7 +125,7 @@ void BoneMesh::loadDiffuseTexture(const aiMaterial* pMaterial, std::string dir, 
                 if (!m_Materials[index].diffTex->load()) {
                     printf("Error loading diffuse texture '%s'\n", fullPath.c_str());
                 } else {
-                    printf("BMesh: Loaded diffuse texture '%s'\n", fullPath.c_str());
+                    printf("%s: Loaded diffuse texture '%s'\n", name.c_str(), fullPath.c_str());
                 }
             }
         }
@@ -140,13 +135,6 @@ void BoneMesh::loadDiffuseTexture(const aiMaterial* pMaterial, std::string dir, 
 void BoneMesh::loadSpecularTexture(const aiMaterial* pMaterial, std::string dir, unsigned int index) {
     m_Materials[index].specExp = NULL;
 
-    printf("HERE CHECK\n");
-    if (pMaterial->GetTextureCount(aiTextureType_SPECULAR) > 0) {
-        printf("HERE SPEC\n");
-    }
-    if (pMaterial->GetTextureCount(aiTextureType_SHININESS) > 0) {
-        printf("HERE SHIN\n");
-    }
     if (pMaterial->GetTextureCount(aiTextureType_SPECULAR) > 0) {
         aiString Path;
 
@@ -163,44 +151,53 @@ void BoneMesh::loadSpecularTexture(const aiMaterial* pMaterial, std::string dir,
             if (!m_Materials[index].specExp->load()) {
                 printf("Error loading specular texture '%s'\n", fullPath.c_str());
             } else {
-                printf("BMesh: Loaded specular texture '%s'\n", fullPath.c_str());
+                printf("%s: Loaded specular texture '%s'\n", name.c_str(), fullPath.c_str());
             }
         }
     }
 }
 
 void BoneMesh::populateBuffers() {
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
+    glGenBuffers(1, &p_VBO);
+    glGenBuffers(1, &n_VBO);
+    glGenBuffers(1, &t_VBO);
+    glGenBuffers(1, &EBO);
+    glGenBuffers(1, &IBO);
+    glGenBuffers(1, &BBO);
+
     glBindBuffer(GL_ARRAY_BUFFER, p_VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(m_Positions[0]) * m_Positions.size(), &m_Positions[0], GL_STATIC_DRAW);
-    glEnableVertexAttribArray(BPOSITION_LOC);
-    glVertexAttribPointer(BPOSITION_LOC, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(SK_POSITION_LOC);
+    glVertexAttribPointer(SK_POSITION_LOC, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
     glBindBuffer(GL_ARRAY_BUFFER, n_VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(m_Normals[0]) * m_Normals.size(), &m_Normals[0], GL_STATIC_DRAW);
-    glEnableVertexAttribArray(BNORMAL_LOC);
-    glVertexAttribPointer(BNORMAL_LOC, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(m_Normals[0]) * m_Normals.size(), &m_Normals[0], GL_DYNAMIC_DRAW);
+    glEnableVertexAttribArray(SK_NORMAL_LOC);
+    glVertexAttribPointer(SK_NORMAL_LOC, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
     glBindBuffer(GL_ARRAY_BUFFER, t_VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(m_TexCoords[0]) * m_TexCoords.size(), &m_TexCoords[0], GL_STATIC_DRAW);
-    glEnableVertexAttribArray(BTEXTURE_LOC);
-    glVertexAttribPointer(BTEXTURE_LOC, 2, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(SK_TEXTURE_LOC);
+    glVertexAttribPointer(SK_TEXTURE_LOC, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
     glBindBuffer(GL_ARRAY_BUFFER, BBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(m_Bones[0]) * m_Bones.size(), &m_Bones[0], GL_STATIC_DRAW);
-    glEnableVertexAttribArray(BBONE_LOC);
-    glVertexAttribIPointer(BBONE_LOC, MAX_NUM_BONES_PER_VERTEX, GL_INT, sizeof(VertexBoneData), (const GLvoid*)0);
-
-    glEnableVertexAttribArray(BBONE_WEIGHT_LOC);
-    glVertexAttribPointer(BBONE_WEIGHT_LOC, MAX_NUM_BONES_PER_VERTEX, GL_FLOAT, GL_FALSE,
-                          sizeof(VertexBoneData), (const GLvoid*)(MAX_NUM_BONES_PER_VERTEX * sizeof(int32_t)));
+    glEnableVertexAttribArray(SK_BONE_LOC);
+    glVertexAttribIPointer(SK_BONE_LOC, MAX_NUM_BONES_PER_VERTEX, GL_INT, sizeof(VertexBoneData), (const GLvoid*)0);
+    glEnableVertexAttribArray(SK_BONE_WEIGHT_LOC);
+    glVertexAttribPointer(SK_BONE_WEIGHT_LOC, MAX_NUM_BONES_PER_VERTEX, GL_FLOAT, GL_FALSE,
+                          sizeof(VertexBoneData), (const GLvoid*)(MAX_NUM_BONES_PER_VERTEX * sizeof(unsigned int)));
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(m_Indices[0]) * m_Indices.size(), &m_Indices[0], GL_STATIC_DRAW);
+
     glBindBuffer(GL_ARRAY_BUFFER, IBO);
     for (unsigned int i = 0; i < 4; i++) {
-        glEnableVertexAttribArray(BINSTANCE_LOC + i);
-        glVertexAttribPointer(BINSTANCE_LOC + i, 4, GL_FLOAT, GL_FALSE, sizeof(mat4), (const void*)(i * sizeof(vec4)));
-        glVertexAttribDivisor(BINSTANCE_LOC + i, 1);  // tell OpenGL this is an instanced vertex attribute.
+        glEnableVertexAttribArray(SK_INSTANCE_LOC + i);
+        glVertexAttribPointer(SK_INSTANCE_LOC + i, 4, GL_FLOAT, GL_FALSE, sizeof(mat4), (const void*)(i * sizeof(vec4)));
+        glVertexAttribDivisor(SK_INSTANCE_LOC + i, 1);  // tell OpenGL this is an instanced vertex attribute.
     }
 }
 
@@ -233,9 +230,6 @@ void BoneMesh::render(mat4 mm) {
     render(1, &mm);
 }
 
-void BoneMesh::loadMeshBones(unsigned int mIndex, const aiMesh* aMesh) {
-}
-
 void BoneMesh::loadSingleBone(unsigned int mIndex, const aiBone* pBone) {
     int boneID = getBoneID(pBone);
 
@@ -255,7 +249,7 @@ void BoneMesh::loadSingleBone(unsigned int mIndex, const aiBone* pBone) {
 
 int BoneMesh::getBoneID(const aiBone* pBone) {
     int bIndex = 0;
-    string bName = pBone->mName.C_Str();
+    std::string bName = pBone->mName.C_Str();
 
     if (boneToIndexMap.find(bName) == boneToIndexMap.end()) {
         bIndex = boneToIndexMap.size();
@@ -271,7 +265,7 @@ void BoneMesh::getBoneTransforms(float time, std::vector<aiMatrix4x4>& trans) {
     float animTime = 0.0f;
     if (scene->HasAnimations()) {
         tps = scene->mAnimations[0]->mTicksPerSecond != 0 ? (float)scene->mAnimations[0]->mTicksPerSecond : 24;  // ticks per second
-        animTime = fmod(time * tps, (float)scene->mAnimations[0]->mDuration);                                       // animation time in ticks
+        animTime = fmod(time * tps, (float)scene->mAnimations[0]->mDuration);                                    // animation time in ticks
     }
 
     readNodeHierarchy(animTime, scene->mRootNode, aiMatrix4x4());
@@ -283,7 +277,7 @@ void BoneMesh::getBoneTransforms(float time, std::vector<aiMatrix4x4>& trans) {
 }
 
 void BoneMesh::readNodeHierarchy(float atime, const aiNode* node, const aiMatrix4x4& parent) {
-    string nodeName(node->mName.data);
+    std::string nodeName(node->mName.data);
     aiMatrix4x4 nodeTrans = node->mTransformation;
 
     if (scene->HasAnimations()) {
@@ -328,7 +322,7 @@ void BoneMesh::readNodeHierarchy(float atime, const aiNode* node, const aiMatrix
 const aiNodeAnim* BoneMesh::findNodeAnim(const aiAnimation* anim, const std::string nodeName) {
     for (int i = 0; i < anim->mNumChannels; i++) {
         const aiNodeAnim* tnode = anim->mChannels[i];
-        if (string(tnode->mNodeName.data) == nodeName) return tnode;
+        if (std::string(tnode->mNodeName.data) == nodeName) return tnode;
     }
     return NULL;
 }
@@ -418,7 +412,7 @@ void BoneMesh::calcInterpolatedRotation(aiQuaternion& out, float atime, const ai
     const aiQuaternion& start = node->mRotationKeys[rotationIndex].mValue;    // start rotation value
     const aiQuaternion& end = node->mRotationKeys[rotationIndex + 1].mValue;  // end rotation value
     aiQuaternion::Interpolate(out, start, end, factor);
-    out.Normalize();  // interpolated rotation
+    out = out.Normalize();  // interpolated rotation
 }
 
 void BoneMesh::update(Shader* skinnedShader) {
@@ -428,5 +422,15 @@ void BoneMesh::update(Shader* skinnedShader) {
     for (int i = 0; i < trans.size(); i++) {
         mat4 t = Util::aiToGLM(&trans[i]);
         skinnedShader->setMat4("bones[" + std::to_string(i) + "]", t);
+    }
+}
+
+void BoneMesh::update() {
+    std::vector<aiMatrix4x4> trans;
+    float animTime = ((float)(timeGetTime() - SM::startTime)) / 1000.0f;
+    getBoneTransforms(animTime, trans);
+    for (int i = 0; i < trans.size(); i++) {
+        mat4 t = Util::aiToGLM(&trans[i]);
+        shader->setMat4("bones[" + std::to_string(i) + "]", t);
     }
 }

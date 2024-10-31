@@ -2,6 +2,7 @@
 
 void Player::lookAt(vec3 p) {
     transform = Util::lookTowards(followPos, p);
+    // dir = p;
 }
 
 void Player::render() {

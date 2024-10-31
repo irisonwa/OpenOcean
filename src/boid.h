@@ -27,7 +27,7 @@ class Boid {
     void update();
 
     const float FAMILY_RANGE = 10; /* the distance the boid will check for other boids */
-    const float MAX_SPEED = 20;   /* the maximum speed of the boid */
+    const float MAX_SPEED = 4;   /* the maximum speed of the boid */
     // static final int MAX_CHASE_SPEED = 800; /* the maximum speed of the boid */
     const float originalViewCone = 180; /* view angle */
 

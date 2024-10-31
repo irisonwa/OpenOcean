@@ -1,11 +1,13 @@
-#include "mesh.h"
+#include "staticmesh.h"
 
-/* /// <summary>
+StaticMesh::~StaticMesh() {}
+
+/// <summary>
 /// Load a mesh with a given name.
 /// </summary>
 /// <param name="file_name">The full name of the model to load.</param>
 /// <returns>A boolean. True if loading succeeds, false otherwise.</returns>
-bool Mesh::loadMesh(std::string file_name) {
+bool StaticMesh::loadMesh(std::string file_name) {
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
     glGenBuffers(1, &p_VBO);
@@ -33,7 +35,7 @@ bool Mesh::loadMesh(std::string file_name) {
     return valid_scene;
 }
 
-bool Mesh::initScene(const aiScene* scene, std::string file_name) {
+bool StaticMesh::initScene(const aiScene* scene, std::string file_name) {
     m_Meshes.resize(scene->mNumMeshes);
     m_Textures.resize(scene->mNumMaterials);
     m_Materials.resize(scene->mNumMaterials);
@@ -77,7 +79,7 @@ bool Mesh::initScene(const aiScene* scene, std::string file_name) {
 /// Initialise a single mesh object and add its values (vertices, indices, positions, normals, and texture coordinates) to the parent mesh.
 /// </summary>
 /// <param name="amesh">The mesh to initialise.</param>
-void Mesh::initSingleMesh(const aiMesh* amesh) {
+void StaticMesh::initSingleMesh(const aiMesh* amesh) {
     const aiVector3D Zero3D(0.0f, 0.0f, 0.0f);
 
     // Populate the vertex attribute vectors
@@ -107,7 +109,7 @@ void Mesh::initSingleMesh(const aiMesh* amesh) {
 /// <param name="scene">The mesh to load.</param>
 /// <param name="file_name">The name of the model file.</param>
 /// <returns>A boolean. <code>true</code> if everything loaded correctly, false otherwise.</returns>
-bool Mesh::initMaterials(const aiScene* scene, std::string file_name) {
+bool StaticMesh::initMaterials(const aiScene* scene, std::string file_name) {
     std::string dir = MODELDIR(file_name);
     std::vector<std::string> paths;
     for (unsigned int i = 0; i < scene->mNumMaterials; i++) {
@@ -145,7 +147,7 @@ bool Mesh::initMaterials(const aiScene* scene, std::string file_name) {
                 }
             }
         }
-        
+
         if (pMaterial->GetTextureCount(aiTextureType_SPECULAR) > 0) {
             aiString Path;
 
@@ -200,21 +202,21 @@ bool Mesh::initMaterials(const aiScene* scene, std::string file_name) {
 /// <summary>
 /// Bind and enable the VAO, VBOs, and EBO for usage.
 /// </summary>
-void Mesh::populateBuffers() {
+void StaticMesh::populateBuffers() {
     glBindBuffer(GL_ARRAY_BUFFER, p_VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(m_Positions[0]) * m_Positions.size(), &m_Positions[0], GL_STATIC_DRAW);
-    glEnableVertexAttribArray(POSITION_LOC);
-    glVertexAttribPointer(POSITION_LOC, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(ST_POSITION_LOC);
+    glVertexAttribPointer(ST_POSITION_LOC, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
     glBindBuffer(GL_ARRAY_BUFFER, n_VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(m_Normals[0]) * m_Normals.size(), &m_Normals[0], GL_STATIC_DRAW);
-    glEnableVertexAttribArray(NORMAL_LOC);
-    glVertexAttribPointer(NORMAL_LOC, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(ST_NORMAL_LOC);
+    glVertexAttribPointer(ST_NORMAL_LOC, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
     glBindBuffer(GL_ARRAY_BUFFER, t_VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(m_TexCoords[0]) * m_TexCoords.size(), &m_TexCoords[0], GL_STATIC_DRAW);
-    glEnableVertexAttribArray(TEXTURE_LOC);
-    glVertexAttribPointer(TEXTURE_LOC, 2, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(ST_TEXTURE_LOC);
+    glVertexAttribPointer(ST_TEXTURE_LOC, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(m_Indices[0]) * m_Indices.size(), &m_Indices[0], GL_STATIC_DRAW);
@@ -222,38 +224,16 @@ void Mesh::populateBuffers() {
     glBindBuffer(GL_ARRAY_BUFFER, IBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(mat4) * SM::MAX_NUM_BOIDS, NULL, GL_DYNAMIC_DRAW);
     for (unsigned int i = 0; i < 4; i++) {
-        glEnableVertexAttribArray(INSTANCE_LOC + i);
-        glVertexAttribPointer(INSTANCE_LOC + i, 4, GL_FLOAT, GL_FALSE, sizeof(mat4), (const void*)(i * sizeof(vec4)));
-        glVertexAttribDivisor(INSTANCE_LOC + i, 1);  // tell OpenGL this is an instanced vertex attribute.
+        glEnableVertexAttribArray(ST_INSTANCE_LOC + i);
+        glVertexAttribPointer(ST_INSTANCE_LOC + i, 4, GL_FLOAT, GL_FALSE, sizeof(mat4), (const void*)(i * sizeof(vec4)));
+        glVertexAttribDivisor(ST_INSTANCE_LOC + i, 1);  // tell OpenGL this is an instanced vertex attribute.
     }
 
     glBindBuffer(GL_ARRAY_BUFFER, d_VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * SM::MAX_NUM_BOIDS, NULL, GL_DYNAMIC_DRAW);
-    glEnableVertexAttribArray(DEPTH_LOC);
-    glVertexAttribPointer(DEPTH_LOC, 1, GL_FLOAT, GL_FALSE, sizeof(float), 0);
-    glVertexAttribDivisor(DEPTH_LOC, 1);  // tell OpenGL this is an instanced vertex attribute.
-}
-
-/// <summary>
-/// Render the mesh by binding its VAO and drawing each index of every submesh.
-/// </summary>
-void Mesh::render() {
-    glBindVertexArray(VAO);
-
-    for (int i = 0; i < m_Meshes.size(); i++) {
-        unsigned int mIndex = m_Meshes[i].materialIndex;
-        assert(mIndex < m_Textures.size());
-
-        if (m_Textures[mIndex]) m_Textures[mIndex]->bind(GL_TEXTURE0);
-
-        glDrawElementsBaseVertex(
-            GL_TRIANGLES,
-            m_Meshes[i].n_Indices,
-            GL_UNSIGNED_INT,
-            (void*)(sizeof(unsigned int) * m_Meshes[i].baseIndex),
-            m_Meshes[i].baseVertex);
-    }
-    glBindVertexArray(0);  // prevent VAO from being changed externally
+    glEnableVertexAttribArray(ST_DEPTH_LOC);
+    glVertexAttribPointer(ST_DEPTH_LOC, 1, GL_FLOAT, GL_FALSE, sizeof(float), 0);
+    glVertexAttribDivisor(ST_DEPTH_LOC, 1);  // tell OpenGL this is an instanced vertex attribute.
 }
 
 /// <summary>
@@ -261,7 +241,7 @@ void Mesh::render() {
 /// </summary>
 /// <param name="nInstances">The number of instances you would like to draw.</param>
 /// <param name="model_matrix">The matrices you would like to transform each instance with.</param>
-void Mesh::render(unsigned int nInstances, const mat4* model_matrix) {
+void StaticMesh::render(unsigned int nInstances, const mat4* model_matrix) {
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, IBO);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(mat4) * nInstances, &model_matrix[0]);
@@ -294,7 +274,7 @@ void Mesh::render(unsigned int nInstances, const mat4* model_matrix) {
 /// </summary>
 /// <param name="nInstances">The number of instances you would like to draw.</param>
 /// <param name="model_matrix">The matrices you would like to transform each instance with.</param>
-void Mesh::render(unsigned int nInstances, const mat4* model_matrix, const float* atlasDepths) {
+void StaticMesh::render(unsigned int nInstances, const mat4* model_matrix, const float* atlasDepths) {
     if (nInstances > SM::MAX_NUM_BOIDS) {
         printf("PROGRAM ERROR: TOO MANY OBJECTS TOO RENDER. USE A COUNT OF N <= 10000. N = %d. N WAS LIMITED TO 10000.\n\n", nInstances);
     }
@@ -329,7 +309,7 @@ void Mesh::render(unsigned int nInstances, const mat4* model_matrix, const float
 /// Render the mesh by binding its VAO and drawing each index of every submesh. This is a special case that will render exactly one instance of your mesh.
 /// </summary>
 /// <param name="mat">The transform you would like to apply to your instance.</param>
-void Mesh::render(mat4 mat) {
+void StaticMesh::render(mat4 mat) {
     this->mat = mat;
     render(1, &mat);
 }
@@ -338,9 +318,8 @@ void Mesh::render(mat4 mat) {
 /// Render the mesh by binding its VAO and drawing each index of every submesh. This is a special case that will render exactly one instance of your mesh.
 /// </summary>
 /// <param name="mat">The transform you would like to apply to your instance.</param>
-void Mesh::render(mat4 mat, float depth) {
+void StaticMesh::render(mat4 mat, float depth) {
     this->mat = mat;
     const float ds[1] = {depth};
     render(1, &mat, ds);
 }
- */
