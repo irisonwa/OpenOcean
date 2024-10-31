@@ -10,11 +10,12 @@ class Player;
 
 class Camera {
    private:
-    vec3 followPos;          // follow position; used for interpolated movement
-    float acceleration = 3;  // lerp acceleration factor; to be multiplied by delta
+    float acceleration = 10;  // lerp acceleration factor; to be multiplied by delta
    public:
+    vec3 followPos;           // follow position; used for interpolated movement
     Camera() {
         pos = vec3(0.0f);
+        followPos = vec3(0.0f);
         front = SM::FORWARD;
         up = SM::UP;
 
@@ -37,7 +38,7 @@ class Camera {
 
     // Follow the player
     void followTarget(Player*);
-    
+
     // Set the camera position to some location
     void setPosition(vec3 p);
 

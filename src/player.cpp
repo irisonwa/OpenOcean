@@ -15,7 +15,6 @@ void Player::setShader(Shader* shader) {
 }
 
 void Player::processMovement(Camera camera) {
-    // todo: give camera front and up
     float t_cpos_y = pos.y;  // y-pos of camera before updates
     if (FORWARD) {
         if (CAN_FLY)

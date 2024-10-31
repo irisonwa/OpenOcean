@@ -9,7 +9,7 @@
 #include "shader.h"
 
 #define MAX_NUM_BONES_PER_VERTEX 4
-#define B_AI_LOAD_FLAGS aiProcess_Triangulate | aiProcess_SortByPType | aiProcess_RemoveRedundantMaterials | aiProcess_OptimizeMeshes | aiProcess_OptimizeGraph | aiProcess_SortByPType | aiProcess_FixInfacingNormals
+#define B_AI_LOAD_FLAGS aiProcess_Triangulate | aiProcess_SortByPType | aiProcess_RemoveRedundantMaterials | aiProcess_OptimizeMeshes | aiProcess_OptimizeGraph | aiProcess_SortByPType | aiProcess_GenNormals
 
 class BoneMesh : public Mesh {
    public:

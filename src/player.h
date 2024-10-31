@@ -17,6 +17,7 @@ class Player {
     Player(std::string _name, std::string mesh_path, int mesh_atlas_size, int mesh_atlas_tiles_used, vec3 _pos, vec3 _dir) {
         name = _name;
         pos = _pos;
+        followPos = _pos;
         dir = _dir;
         velocity = vec3(0);
         // mesh = new Mesh(name, mesh_path, mesh_atlas_size, mesh_atlas_tiles_used);

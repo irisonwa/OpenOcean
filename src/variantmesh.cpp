@@ -33,13 +33,7 @@ void VariantMesh::populateBuffers() {
     glEnableVertexAttribArray(VA_TEXTURE_LOC);
     glVertexAttribPointer(VA_TEXTURE_LOC, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
-    glBindBuffer(GL_ARRAY_BUFFER, BBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(m_Bones[0]) * m_Bones.size(), &m_Bones[0], GL_STATIC_DRAW);
-    glEnableVertexAttribArray(VA_BONE_LOC);
-    glVertexAttribIPointer(VA_BONE_LOC, MAX_NUM_BONES_PER_VERTEX, GL_INT, sizeof(VertexBoneData), (const GLvoid*)0);
-    glEnableVertexAttribArray(VA_BONE_WEIGHT_LOC);
-    glVertexAttribPointer(VA_BONE_WEIGHT_LOC, MAX_NUM_BONES_PER_VERTEX, GL_FLOAT, GL_FALSE,
-                          sizeof(VertexBoneData), (const GLvoid*)(MAX_NUM_BONES_PER_VERTEX * sizeof(unsigned int)));
+    // todo: bones, bone weights
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(m_Indices[0]) * m_Indices.size(), &m_Indices[0], GL_STATIC_DRAW);

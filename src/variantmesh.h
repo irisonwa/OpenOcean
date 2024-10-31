@@ -14,50 +14,8 @@
 
 class VariantMesh : public Mesh {
    public:
-    struct MeshObject {
-        MeshObject() {
-            n_Indices = 0;
-            baseVertex = 0;
-            baseIndex = 0;
-            materialIndex = 0;
-        }
-        unsigned int n_Indices;
-        unsigned int baseVertex;
-        unsigned int baseIndex;
-        unsigned int materialIndex;
-    };
-
-    struct VertexBoneData {
-        VertexBoneData() {
-            for (int i = 0; i < MAX_NUM_BONES_PER_VERTEX; ++i) {
-                BoneIDs[i] = -1;
-                Weights[i] = 0.0f;
-            }
-        }
-
-        unsigned int BoneIDs[MAX_NUM_BONES_PER_VERTEX];
-        float Weights[MAX_NUM_BONES_PER_VERTEX];
-
-        void addBoneData(unsigned int BoneID, float Weight) {
-            for (unsigned int i = 0; i < MAX_NUM_BONES_PER_VERTEX; i++) {
-                if (Weights[i] < 0.00001f) {
-                    BoneIDs[i] = BoneID;
-                    Weights[i] = Weight;
-                    return;
-                }
-            }
-            assert(false && "too many bones per vertex (> 4)");
-        }
-    };
-
-    struct BoneInfo {
-        aiMatrix4x4 offsetMatrix;
-        aiMatrix4x4 lastTransformation;
-
-        BoneInfo(const aiMatrix4x4& offset) {
-            offsetMatrix = offset;
-            lastTransformation = Util::GLMtoAI(mat4(0));
-        }
+    struct DrawCommandBuffer {
+        
     };
 
     VariantMesh() { name = "NewVariantMesh" + std::to_string(SM::unnamedBoneMeshCount++); }
@@ -91,19 +49,7 @@ class VariantMesh : public Mesh {
 #define VA_BONE_WEIGHT_LOC 5  // bone weight location
 #define VA_INSTANCE_LOC 6     // instance location
 
-    aiMatrix4x4 globalInverseTrans;  // inverse matrix
-    unsigned int BBO;                // bone vbo
-
-    std::vector<VertexBoneData> m_Bones;
-    std::vector<BoneInfo*> m_BoneInfo;
-
-    std::map<std::string, unsigned int> boneToIndexMap;
-
-    const aiScene* scene;
-    Assimp::Importer importer;
-
     Shader* shader;
-
     std::vector<std::string> paths;
     std::vector<BoneMesh*> meshes;
 };

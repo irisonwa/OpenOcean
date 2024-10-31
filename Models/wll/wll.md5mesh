@@ -9,7 +9,7 @@ joints {
 }
 
 mesh {
-  shader "diff"
+  shader "diffs.tga"
 
   numverts 24
   vert 0 ( 0.3372880220 0.4997839928 ) 0 1

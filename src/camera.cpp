@@ -108,4 +108,5 @@ mat4 Camera::getViewMatrix() {
 void Camera::setPosition(vec3 p) {
     pos = p;
     followPos = p;
+    processView();
 }

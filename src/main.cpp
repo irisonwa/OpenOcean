@@ -22,7 +22,7 @@ void init() {
     shaders[s3->name] = s3;
 
     baseLight = new Lighting("stony light", shaders["base"], MATERIAL_SHINY);
-    boneLight = new Lighting("boney light", shaders["bones"], MATERIAL_SHINY);
+    boneLight = new Lighting("boney light", shaders["bones"], MATERIAL_RUBBER);
 
     // Load meshes to be used
     StaticMesh* m1 = new StaticMesh("boid", TEST_FISHB, 1024, 4);
@@ -160,6 +160,9 @@ void display() {
         player->lookAt(camera.front);
         camera.followTarget(player);
     }
+    Util::printVec3(camera.pos);
+    Util::printVec3(camera.followPos);
+    printf("\n");
 
     glutSwapBuffers();
 }
@@ -270,7 +273,7 @@ void keyReleased(unsigned char key, int x, int y) {
 int main(int argc, char** argv) {
     // Set up the window
     glutInit(&argc, argv);
-    glutInitContextVersion(3, 3);
+    glutInitContextVersion(4, 3);
     glutInitContextProfile(GLUT_CORE_PROFILE);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
     glutInitWindowSize(SM::width, SM::height);

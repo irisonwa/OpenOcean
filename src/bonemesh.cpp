@@ -264,8 +264,9 @@ void BoneMesh::getBoneTransforms(float time, std::vector<aiMatrix4x4>& trans) {
     float tps = 0.0f;
     float animTime = 0.0f;
     if (scene->HasAnimations()) {
-        tps = scene->mAnimations[0]->mTicksPerSecond != 0 ? (float)scene->mAnimations[0]->mTicksPerSecond : 24;  // ticks per second
-        animTime = fmod(time * tps, (float)scene->mAnimations[0]->mDuration);                                    // animation time in ticks
+        /* mAnimations[0] -> the first animation. change the index to access other animations */
+        tps = scene->mAnimations[0]->mTicksPerSecond != 0 ? (float)scene->mAnimations[0]->mTicksPerSecond : 24;  // ticks per second = tps
+        animTime = fmod(time * tps, (float)scene->mAnimations[0]->mDuration);                                    // animation time in tps
     }
 
     readNodeHierarchy(animTime, scene->mRootNode, aiMatrix4x4());
