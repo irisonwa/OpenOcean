@@ -1,9 +1,10 @@
 #ifndef BOID_H
 #define BOID_H
 
+#include <deque>
 #include "util.h"
 #include "sm.h"
-#include <deque>
+#include "variantmesh.h"
 using namespace glm;
 
 enum BoidType {
@@ -47,6 +48,7 @@ class Boid {
     // std::vector<std::vector<vec3>> history;
     int ID; /* ID of boid [can be replaced by with glInstance_ID in GLSL] */
     BoidType type;
+    VariantMesh* vmesh;
 };
 
 

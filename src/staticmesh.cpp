@@ -31,6 +31,7 @@ bool StaticMesh::loadMesh(std::string file_name) {
         valid_scene = initScene(scene, file_name);
     }
 
+    printf("Successfully loaded static mesh \"%s\"\n", name.c_str());
     glBindVertexArray(0);  // avoid modifying VAO between loads
     return valid_scene;
 }
@@ -80,13 +81,11 @@ bool StaticMesh::initScene(const aiScene* scene, std::string file_name) {
 /// </summary>
 /// <param name="amesh">The mesh to initialise.</param>
 void StaticMesh::initSingleMesh(const aiMesh* amesh) {
-    const aiVector3D Zero3D(0.0f, 0.0f, 0.0f);
-
     // Populate the vertex attribute vectors
     for (unsigned int i = 0; i < amesh->mNumVertices; i++) {
         const aiVector3D& pPos = amesh->mVertices[i];
         const aiVector3D& pNormal = amesh->mNormals ? amesh->mNormals[i] : aiVector3D(0.0f, 1.0f, 0.0f);
-        const aiVector3D& pTexCoord = amesh->HasTextureCoords(0) ? amesh->mTextureCoords[0][i] : Zero3D;
+        const aiVector3D& pTexCoord = amesh->HasTextureCoords(0) ? amesh->mTextureCoords[0][i] : aiVector3D(0.0f, 0.0f, 0.0f);
 
         m_Positions.push_back(vec3(pPos.x, pPos.y, pPos.z));
         m_Normals.push_back(vec3(pNormal.x, pNormal.y, pNormal.z));
@@ -184,15 +183,17 @@ bool StaticMesh::initMaterials(const aiScene* scene, std::string file_name) {
     if (usingAtlas) {
         if (paths.size() == 1) {
             if (texture->loadAtlas(paths[0], atlasTileSize, atlasTilesUsed)) {
-                printf("%s: Loaded diffuse texture '%s' from '%s'\n", name.c_str(), paths[0].c_str(), dir.c_str());
+                // printf("%s: Loaded diffuse texture '%s' from '%s'\n", name.c_str(), paths[0].c_str(), dir.c_str());
             } else {
                 printf("Error loading diffuse atlas textures from '%s'\n", dir.c_str());
+                return false;
             }
         } else if (paths.size() == 2) {
             if (texture->loadAtlas(paths[0], paths[1], atlasTileSize, atlasTilesUsed)) {
-                printf("%s: Loaded diffuse atlas texture '%s' and specular texture '%s' from '%s'\n", name.c_str(), paths[0].c_str(), paths[1].c_str(), dir.c_str());
+                // printf("%s: Loaded diffuse atlas texture '%s' and specular texture '%s' from '%s'\n", name.c_str(), paths[0].c_str(), paths[1].c_str(), dir.c_str());
             } else {
                 printf("Error loading diffuse atlas textures from '%s'\n", dir.c_str());
+                return false;
             }
         }
     }

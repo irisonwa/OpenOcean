@@ -68,7 +68,7 @@ class Mesh {
     unsigned int d_VBO = 0;  // texture depth vbo
     unsigned int EBO = 0;    // index (element) vbo (ebo)
     unsigned int IBO = 0;    // instance vbo (ibo)
-    int atlasTileSize = 0, atlasTilesUsed = 1;
+    int atlasTileSize = -1, atlasTilesUsed = -1;
     bool usingAtlas = false;       // flag if the mesh is using an array texture
     bool isAtlasVertical = false;  // flag if the mesh is using a verticalarray texture
 

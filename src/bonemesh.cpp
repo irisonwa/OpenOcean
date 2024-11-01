@@ -21,7 +21,9 @@ bool BoneMesh::loadMesh(std::string mesh_name, bool popBuffers) {
             fprintf(stderr, "ERROR: reading mesh %s\n%s", rpath.c_str(), importer.GetErrorString());
         }
     }
+
     glBindVertexArray(0);  // avoid modifying VAO between loads
+    printf("Successfully loaded boned mesh \"%s\"\n", name.c_str());
     return valid_scene;
 }
 
@@ -93,68 +95,79 @@ void BoneMesh::initSingleMesh(unsigned int mIndex, const aiMesh* amesh) {
 
 bool BoneMesh::initMaterials(const aiScene* scene, std::string mesh_name) {
     std::string dir = MODELDIR(mesh_name);
+    bool flag = true;
     for (unsigned int i = 0; i < scene->mNumMaterials; i++) {
         const aiMaterial* pMaterial = scene->mMaterials[i];
-        loadDiffuseTexture(pMaterial, dir, i);
-        loadSpecularTexture(pMaterial, dir, i);
+
+        if (pMaterial->GetTextureCount(aiTextureType_DIFFUSE) > 0) {
+            printf("GOT DIFFUSE\n");
+        }
+        if (pMaterial->GetTextureCount(aiTextureType_METALNESS) > 0) {
+            printf("GOT METALNESS\n");
+        }
+
+        flag &= loadDiffuseTexture(pMaterial, dir, i);
+        flag &= loadSpecularTexture(pMaterial, dir, i);
     }
-    return glGetError() == GL_NO_ERROR;
+    return flag;
 }
 
-void BoneMesh::loadDiffuseTexture(const aiMaterial* pMaterial, std::string dir, unsigned int index) {
+bool BoneMesh::loadDiffuseTexture(const aiMaterial* pMaterial, std::string dir, unsigned int index) {
     m_Materials[index].diffTex = NULL;
 
     if (pMaterial->GetTextureCount(aiTextureType_DIFFUSE) > 0) {
         aiString Path;
-        printf("HERE\n");
         if (pMaterial->GetTexture(aiTextureType_DIFFUSE, 0, &Path, NULL, NULL, NULL, NULL, NULL) == AI_SUCCESS) {
             const aiTexture* cTex = scene->GetEmbeddedTexture(Path.C_Str());
             if (cTex) {
-                printf("%s: embedded diffuse texture type %s\n", name.c_str(), cTex->achFormatHint);
+                // printf("%s: embedded diffuse texture type %s\n", name.c_str(), cTex->achFormatHint);
                 m_Materials[index].diffTex = new Texture(GL_TEXTURE_2D);
                 unsigned int buffer = cTex->mWidth;
                 m_Materials[index].diffTex->load(buffer, cTex->pcData);
             } else {
                 std::string p(Path.data);
-                std::cout << p << std::endl;
                 if (p.substr(0, 2) == ".\\") {
                     p = p.substr(2, p.size() - 2);
                 }
                 std::string fullPath = dir + p;
-                m_Materials[index].diffTex = new Texture(fullPath, GL_TEXTURE_2D);
-                if (!m_Materials[index].diffTex->load()) {
-                    printf("Error loading diffuse texture '%s'\n", fullPath.c_str());
+                m_Materials[index].diffTex = new Texture(GL_TEXTURE_2D_ARRAY);
+                if (m_Materials[index].diffTex->loadAtlas(fullPath, atlasTileSize, atlasTilesUsed)) {
+                    // printf("%s: Loaded diffuse texture '%s'\n", name.c_str(), fullPath.c_str());
                 } else {
-                    printf("%s: Loaded diffuse texture '%s'\n", name.c_str(), fullPath.c_str());
+                    printf("Error loading diffuse texture '%s'\n", fullPath.c_str());
+                    return false;
                 }
             }
         }
     }
+
+    return glGetError() == GL_NO_ERROR;
 }
 
-void BoneMesh::loadSpecularTexture(const aiMaterial* pMaterial, std::string dir, unsigned int index) {
+bool BoneMesh::loadSpecularTexture(const aiMaterial* pMaterial, std::string dir, unsigned int index) {
     m_Materials[index].specExp = NULL;
 
-    if (pMaterial->GetTextureCount(aiTextureType_SPECULAR) > 0) {
+    if (pMaterial->GetTextureCount(aiTextureType_METALNESS) > 0) {
         aiString Path;
 
-        if (pMaterial->GetTexture(aiTextureType_SPECULAR, 0, &Path, NULL, NULL, NULL, NULL, NULL) == AI_SUCCESS) {
+        if (pMaterial->GetTexture(aiTextureType_METALNESS, 0, &Path, NULL, NULL, NULL, NULL, NULL) == AI_SUCCESS) {
             std::string p(Path.data);
-            std::cout << p << std::endl;
             if (p.substr(0, 2) == ".\\") {
                 p = p.substr(2, p.size() - 2);
             }
 
             std::string fullPath = dir + p;
-            m_Materials[index].specExp = new Texture(fullPath, GL_TEXTURE_2D);
-
-            if (!m_Materials[index].specExp->load()) {
-                printf("Error loading specular texture '%s'\n", fullPath.c_str());
+            m_Materials[index].specExp = new Texture(GL_TEXTURE_2D_ARRAY);
+            if (m_Materials[index].specExp->loadAtlas(fullPath, atlasTileSize, atlasTilesUsed)) {
+                // printf("%s: Loaded specular texture '%s'\n", name.c_str(), fullPath.c_str());
             } else {
-                printf("%s: Loaded specular texture '%s'\n", name.c_str(), fullPath.c_str());
+                printf("Error loading specular texture '%s'\n", fullPath.c_str());
+                return false;
             }
         }
     }
+
+    return glGetError() == GL_NO_ERROR;
 }
 
 void BoneMesh::populateBuffers() {
@@ -163,6 +176,7 @@ void BoneMesh::populateBuffers() {
     glGenBuffers(1, &p_VBO);
     glGenBuffers(1, &n_VBO);
     glGenBuffers(1, &t_VBO);
+    glGenBuffers(1, &d_VBO);
     glGenBuffers(1, &EBO);
     glGenBuffers(1, &IBO);
     glGenBuffers(1, &BBO);
@@ -199,12 +213,17 @@ void BoneMesh::populateBuffers() {
         glVertexAttribPointer(SK_INSTANCE_LOC + i, 4, GL_FLOAT, GL_FALSE, sizeof(mat4), (const void*)(i * sizeof(vec4)));
         glVertexAttribDivisor(SK_INSTANCE_LOC + i, 1);  // tell OpenGL this is an instanced vertex attribute.
     }
+
+    glBindBuffer(GL_ARRAY_BUFFER, d_VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * SM::MAX_NUM_BOIDS, NULL, GL_DYNAMIC_DRAW);
+    glEnableVertexAttribArray(SK_DEPTH_LOC);
+    glVertexAttribPointer(SK_DEPTH_LOC, 1, GL_FLOAT, GL_FALSE, sizeof(float), 0);
+    glVertexAttribDivisor(SK_DEPTH_LOC, 1);  // tell OpenGL this is an instanced vertex attribute.
 }
 
-void BoneMesh::render(unsigned int nInstances, const mat4* bone_trans_matrix) {
+void BoneMesh::render(unsigned int nInstances, const mat4* bone_trans_matrix, const float* depths) {
     mat = bone_trans_matrix[0];
     glBindVertexArray(VAO);
-
     glBindBuffer(GL_ARRAY_BUFFER, IBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(mat4) * nInstances, &bone_trans_matrix[0], GL_DYNAMIC_DRAW);
 
@@ -212,8 +231,14 @@ void BoneMesh::render(unsigned int nInstances, const mat4* bone_trans_matrix) {
         unsigned int mIndex = m_Meshes[i].materialIndex;
         assert(mIndex < m_Materials.size());
 
-        if (m_Materials[mIndex].diffTex) m_Materials[mIndex].diffTex->bind(GL_TEXTURE0);
+        if (m_Materials[mIndex].diffTex) {
+            m_Materials[mIndex].diffTex->bind(GL_TEXTURE0);
+            glBindBuffer(GL_ARRAY_BUFFER, d_VBO);
+            glBufferData(GL_ARRAY_BUFFER, sizeof(float) * nInstances, &depths[0], GL_DYNAMIC_DRAW);
+            // glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * nInstances, &idxs.data()[0]);
+        }
         if (m_Materials[mIndex].specExp) m_Materials[mIndex].specExp->bind(GL_TEXTURE1);
+        
         glDrawElementsInstancedBaseVertex(
             GL_TRIANGLES,
             m_Meshes[i].n_Indices,
@@ -225,8 +250,12 @@ void BoneMesh::render(unsigned int nInstances, const mat4* bone_trans_matrix) {
     glBindVertexArray(0);  // prevent VAO from being changed externally
 }
 
+void BoneMesh::render(unsigned int nInstances, const mat4* bone_trans_matrix) {
+    std::vector<float> dpths(nInstances, 0);
+    render(nInstances, bone_trans_matrix, dpths.data());
+}
+
 void BoneMesh::render(mat4 mm) {
-    this->mat = mm;
     render(1, &mm);
 }
 

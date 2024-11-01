@@ -10,7 +10,7 @@ class Player;
 
 class Camera {
    private:
-    float acceleration = 10;  // lerp acceleration factor; to be multiplied by delta
+    float acceleration = 5;  // lerp acceleration factor; to be multiplied by delta
    public:
     vec3 followPos;           // follow position; used for interpolated movement
     Camera() {

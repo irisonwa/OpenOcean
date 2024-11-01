@@ -48,8 +48,6 @@ bool Texture::_loadAtlas(std::string path, int tileSize, int tiles, unsigned int
         if (textureEnum == GL_TEXTURE_2D_ARRAY) {
             glGenTextures(1, &buffer);
             glBindTexture(textureEnum, buffer);
-            // printf(path.c_str());
-            // printf("\n");
             glPixelStorei(GL_UNPACK_ALIGNMENT, 1);  // align data to 1-byte. used to prevent warping of certain textures.
             GLint bpp = 0;
             switch (_nrChannels) {
@@ -67,9 +65,11 @@ bool Texture::_loadAtlas(std::string path, int tileSize, int tiles, unsigned int
                     stbi_image_free(data);
                     return glGetError() == GL_NO_ERROR;
             }
-            
+            int tsz = tileSize == -1 ? _width : tileSize;
+            int ts = tiles == -1 ? 1 : tiles;
+
             // texture arrays
-            glTexImage3D(textureEnum, 0, bpp, tileSize, tileSize, tiles, 0, bpp, GL_UNSIGNED_BYTE, data);
+            glTexImage3D(textureEnum, 0, bpp, tsz, tsz, ts, 0, bpp, GL_UNSIGNED_BYTE, data);
             glTexParameteri(textureEnum, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
             glTexParameteri(textureEnum, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
             // set the texture wrapping/filtering options (on the currently bound texture object)
@@ -84,13 +84,21 @@ bool Texture::_loadAtlas(std::string path, int tileSize, int tiles, unsigned int
         std::cout << "Failed to load texture " << path.c_str() << std::endl;
     }
     stbi_image_free(data);
-    // glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
     return glGetError() == GL_NO_ERROR;
 }
 
 bool Texture::loadAtlas(std::string path, int tileSize, int tiles) {
     file_names.push_back(path);
     return _loadAtlas(path, tileSize, tiles, texture);
+}
+
+bool Texture::loadAtlas(std::string path) {
+    return _loadAtlas(path, -1, -1, texture);
+}
+
+bool Texture::loadAtlas() {
+    return _loadAtlas(file_name, -1, -1, texture);
 }
 
 bool Texture::loadAtlas(std::string diffuseTexture, std::string specularTexture, int tileSize, int tiles) {
@@ -171,7 +179,7 @@ bool Texture::loadCubemap(std::vector<std::string> faces) {
                     break;
             }
             stbi_image_free(data);
-            std::cout << "Cubemap: Loaded texture " << faces[i] << std::endl;
+            // std::cout << "Cubemap: Loaded texture " << faces[i] << std::endl;
         } else {
             std::cout << "Failed to load texture " << faces[i] << std::endl;
             std::cout << stbi_failure_reason() << std::endl;

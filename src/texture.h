@@ -28,6 +28,12 @@ class Texture {
 
     // load an atlas of textures. `tiles` is the number of actual, non-empty tiles in the atlas, and `tileSize` is the width (and height) of a single tile.
     bool loadAtlas(std::string tex, int tileSize, int tiles);
+    
+    // load an atlas of textures. it is assumed that the image is an atlas with one cell
+    bool loadAtlas(std::string tex);
+    
+    // load the atlas of textures given in the constructor. it is assumed that the image is an atlas with one cell
+    bool loadAtlas();
 
     // load an atlas of textures. `tiles` is the number of actual, non-empty tiles in the atlas, and `tileSize` is the width (and height) of a single tile. 
     // loads a diffuse and specular texture

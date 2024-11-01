@@ -24,8 +24,17 @@ class Player {
         mesh = new BoneMesh(name, mesh_path);
         transform = translate(transform, _pos);
     }
+    Player(std::string _name, vec3 _pos, vec3 _dir) {
+        name = _name;
+        pos = _pos;
+        followPos = _pos;
+        dir = _dir;
+        velocity = vec3(0);
+        transform = translate(transform, _pos);
+    }
     ~Player() {}
 
+    void setMesh(std::string mesh_path, int _atlasTileSize, int _atlasTilesUsed);
     void processMovement(Camera camera); // process the player's movement using a camera POV
     void lookAt(vec3 p); // rotate the player to look at a point `p`
     void render(); // display the player on screen

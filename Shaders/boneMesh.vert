@@ -5,10 +5,12 @@ layout(location = 2) in vec2 vertex_texture;
 layout(location = 3) in ivec4 bone_ids;
 layout(location = 4) in vec4 bone_weights;
 layout(location = 5) in mat4 instance_trans; // transform of mesh instance
+layout(location = 9) in float texture_depth;
 
 out vec3 FragPos;
 out vec3 Normal;
 out vec2 TexCoords;
+out float tDepth;
 
 uniform mat4 view;
 uniform mat4 proj;
@@ -31,7 +33,8 @@ void main() {
   }
 
   FragPos = vec3(instance_trans * localPos);
-  Normal = localNormal;
+  Normal = vec3(normalize(instance_trans * vec4(localNormal, 0.0)));
   TexCoords = vertex_texture;
+  tDepth = texture_depth;
   gl_Position = proj * view * instance_trans * localPos;
 }

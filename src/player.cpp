@@ -1,17 +1,20 @@
 #include "player.h"
 
+void Player::setMesh(std::string mesh_path, int _atlasTileSize, int _atlasTilesUsed) {
+    mesh = new BoneMesh(name, mesh_path, _atlasTileSize, _atlasTilesUsed);
+}
+
+void Player::setShader(Shader* shader) {
+    this->shader = shader;
+}
+
 void Player::lookAt(vec3 p) {
     transform = Util::lookTowards(followPos, p);
-    // dir = p;
 }
 
 void Player::render() {
     mesh->update(shader);
     mesh->render(transform);
-}
-
-void Player::setShader(Shader* shader) {
-    this->shader = shader;
 }
 
 void Player::processMovement(Camera camera) {

@@ -27,7 +27,7 @@ void init() {
     // Load meshes to be used
     StaticMesh* m1 = new StaticMesh("boid", TEST_FISHB, 1024, 4);
     smeshes[m1->name] = m1;
-    StaticMesh* m2 = new StaticMesh("boid_display", MESH_SHARK, 1024, 1);
+    StaticMesh* m2 = new StaticMesh("boid_display", MESH_SUB, 2048, 1);
     smeshes[m2->name] = m2;
     StaticMesh* m3 = new StaticMesh("ground", TEST_GROUND, 1024, 1);
     smeshes[m3->name] = m3;
@@ -41,12 +41,14 @@ void init() {
     smeshes[m7->name] = m7;
     BoneMesh* bm1 = new BoneMesh("test wall", MESH_WLL_ANIM, shaders["bones"]);
     bmeshes[bm1->name] = bm1;
-    BoneMesh* bm2 = new BoneMesh("test guy", MESH_GUY_ANIM, shaders["bones"]);
-    bmeshes[bm2->name] = bm2;
-    BoneMesh* bm3 = new BoneMesh("test shark", MESH_SHARK_ANIM, shaders["bones"]);
+    // BoneMesh* bm2 = new BoneMesh("test guy", MESH_GUY_ANIM, shaders["bones"]);
+    // bmeshes[bm2->name] = bm2;
+    BoneMesh* bm3 = new BoneMesh("test shark", MESH_SHARK_ANIM, shaders["bones"], 1024, 4);
     bmeshes[bm3->name] = bm3;
 
-    player = new Player("Player", MESH_PLAYER_ANIM, 1024, 1, vec3(10), SM::FORWARD);
+    // player = new Player("Player", MESH_PLAYER_ANIM, 1024, 1, vec3(10), SM::FORWARD);
+    player = new Player("Player", vec3(10), SM::FORWARD);
+    player->setMesh(MESH_PLAYER_ANIM, 2048, 1);
     player->setShader(shaders["bones"]);
 
     // Create skybox
@@ -58,7 +60,7 @@ void init() {
     float offset = 1.0f;
     float lim = 10;
 
-    vector<float> scls = {.25, .75, 1, 2};
+    vector<float> scls = {.25, .5, 1, 2};
     for (int z = -lim / 2; z < lim / 2; z += 1) {
         for (int y = -lim / 2; y < lim / 2; y += 1) {
             for (int x = -lim / 2; x < lim / 2; x += 1) {
@@ -88,17 +90,17 @@ void init() {
     baseLight->setDirLightColour(vec3(.05), vec3(.05), vec3(1));
     baseLight->addPointLightAtt(vec3(0), vec3(0.2f), vec3(1), vec3(1));
 
-    boneLight->addSpotLightAtt(flashlightCoords, flashlightDir, vec3(0.2f), vec3(1), vec3(1));
+    boneLight->addSpotLightAtt(flashlightCoords, flashlightDir, vec3(0.2f), vec3(1), vec3(0.2));
     boneLight->spotLights[boneLight->nSpotLights - 1].cutOff = cos(Util::deg2Rad(24.f));
     boneLight->spotLights[boneLight->nSpotLights - 1].outerCutOff = cos(Util::deg2Rad(35.f));
     boneLight->setDirLightsAtt(vector<vec3>{vec3(0, -1, 0)});
-    boneLight->setDirLightColour(vec3(.2), vec3(.2), vec3(1));
+    boneLight->setDirLightColour(vec3(.2), vec3(.2), vec3(.2));
     // boneLight->addPointLightAtt(vec3(0), vec3(0.2f), vec3(1), vec3(1));
 }
 
 void display() {
     // tell GL to only draw onto a pixel if the shape is closer to the viewer
-    // glEnable(GL_CULL_FACE);
+    glEnable(GL_CULL_FACE); 
     glEnable(GL_DEPTH_TEST);  // enable depth-testing
     glEnable(GL_BLEND);       // enable colour blending
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -136,15 +138,15 @@ void display() {
 
     /// ---------------- SKINNED MESHES ---------------- ///
     boneLight->setLightAtt(view, persp_proj, camera.pos);
-    boneLight->setSpotLightAtt(0, flashlightCoords, flashlightDir, vec3(0.2f), vec3(1, .6, .2), vec3(1));
+    boneLight->setSpotLightAtt(0, flashlightCoords, flashlightDir, vec3(0.2f), vec3(1, .6, .2), vec3(.2));
     boneLight->spotLights[boneLight->nSpotLights - 1].cutOff = cos(Util::deg2Rad(24.f));
     boneLight->spotLights[boneLight->nSpotLights - 1].outerCutOff = cos(Util::deg2Rad(35.f));
     boneLight->use();
 
     bmeshes["test wall"]->update();
     bmeshes["test wall"]->render(translate(mat4(1), vec3(-10)));
-    bmeshes["test guy"]->update();
-    bmeshes["test guy"]->render(translate(mat4(1), vec3(-20)));
+    // bmeshes["test guy"]->update();
+    // bmeshes["test guy"]->render(translate(mat4(1), vec3(-20)));
     
     const unsigned int numInstances = boids.size();
     mat4 models[numInstances];
@@ -153,17 +155,14 @@ void display() {
         models[i] = scale(Util::lookTowards(boids[i]->pos, boids[i]->dir), scales[i]);
     }
     bmeshes["test shark"]->update();
-    bmeshes["test shark"]->render(numInstances, models);
+    bmeshes["test shark"]->render(numInstances, models, depths.data());
 
     player->render();
     if (!SM::isFreeCam) {
         player->lookAt(camera.front);
         camera.followTarget(player);
     }
-    Util::printVec3(camera.pos);
-    Util::printVec3(camera.followPos);
-    printf("\n");
-
+    
     glutSwapBuffers();
 }
 

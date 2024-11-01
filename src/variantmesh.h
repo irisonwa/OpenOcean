@@ -12,10 +12,12 @@
 
 #define MAX_NUM_BONES_PER_VERTEX 4
 
+// Inherits the Mesh class. Can be used with instantiate any variant of meshes and textures using instancing, which allows for the retaining of 
+// data read from the GPU via SSBOs.
 class VariantMesh : public Mesh {
    public:
     struct DrawCommandBuffer {
-        
+
     };
 
     VariantMesh() { name = "NewVariantMesh" + std::to_string(SM::unnamedBoneMeshCount++); }
@@ -52,6 +54,8 @@ class VariantMesh : public Mesh {
     Shader* shader;
     std::vector<std::string> paths;
     std::vector<BoneMesh*> meshes;
+
+    unsigned int ssbo;
 };
 
 #endif /* VARIANTMESH_H */

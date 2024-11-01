@@ -59,7 +59,7 @@
 #define TEST_BOID "boid.obj"
 #define TEST_GROUND "test_ground.obj"
 #define TEST_ROOM "box.obj"
-#define MESH_PLAYER "sub.obj"
+#define MESH_SUB "sub.obj"
 #define MESH_SHARK "shark.obj"
 
 #define MESH_PLAYER_ANIM "sub.gltf"

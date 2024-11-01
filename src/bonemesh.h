@@ -9,7 +9,7 @@
 #include "shader.h"
 
 #define MAX_NUM_BONES_PER_VERTEX 4
-#define B_AI_LOAD_FLAGS aiProcess_Triangulate | aiProcess_SortByPType | aiProcess_RemoveRedundantMaterials | aiProcess_OptimizeMeshes | aiProcess_OptimizeGraph | aiProcess_SortByPType | aiProcess_GenNormals
+#define B_AI_LOAD_FLAGS aiProcess_Triangulate
 
 class BoneMesh : public Mesh {
    public:
@@ -50,12 +50,25 @@ class BoneMesh : public Mesh {
     BoneMesh(std::string nm) { name = nm; }
     BoneMesh(std::string nm, std::string mesh_path) {
         name = nm;
-        if (!loadMesh(mesh_path, true)) std::cout << "\n\nfailed to load mesh \"" << nm.c_str() << "\" :(\n";
+        if (!loadMesh(mesh_path, true)) std::cout << "\nfailed to load mesh \"" << nm.c_str() << "\" :(\n\n";
     }
     BoneMesh(std::string nm, std::string mesh_path, Shader* s) {
         name = nm;
-        if (!loadMesh(mesh_path, true)) std::cout << "\n\nfailed to load mesh \"" << nm.c_str() << "\" :(\n";
+        if (!loadMesh(mesh_path, true)) std::cout << "\nfailed to load mesh \"" << nm.c_str() << "\" :(\n\n";
         shader = s;
+    }
+    BoneMesh(std::string nm, std::string mesh_path, int _atlasTileSize, int _atlasTilesUsed) {
+        name = nm;
+        atlasTileSize = _atlasTileSize;
+        atlasTilesUsed = _atlasTilesUsed;
+        if (!loadMesh(mesh_path, true)) std::cout << "\nfailed to load mesh \"" << nm.c_str() << "\" :(\n\n";
+    }
+    BoneMesh(std::string nm, std::string mesh_path, Shader* s, int _atlasTileSize, int _atlasTilesUsed) {
+        name = nm;
+        shader = s;
+        atlasTileSize = _atlasTileSize;
+        atlasTilesUsed = _atlasTilesUsed;
+        if (!loadMesh(mesh_path, true)) std::cout << "\nfailed to load mesh \"" << nm.c_str() << "\" :(\n\n";
     }
 
     ~BoneMesh();
@@ -65,9 +78,10 @@ class BoneMesh : public Mesh {
     bool initScene(const aiScene*, std::string);
     void initSingleMesh(unsigned int, const aiMesh*);
     bool initMaterials(const aiScene*, std::string);
-    void loadDiffuseTexture(const aiMaterial* pMaterial, std::string dir, unsigned int index);
-    void loadSpecularTexture(const aiMaterial* pMaterial, std::string dir, unsigned int index);
+    bool loadDiffuseTexture(const aiMaterial* pMaterial, std::string dir, unsigned int index);
+    bool loadSpecularTexture(const aiMaterial* pMaterial, std::string dir, unsigned int index);
     void populateBuffers();
+    void render(unsigned int nInstances, const mat4* bone_trans_matrix, const float* depths);
     void render(unsigned int, const mat4*);
     void render(mat4);
     void loadSingleBone(unsigned int, const aiBone*);
@@ -87,6 +101,7 @@ class BoneMesh : public Mesh {
 #define SK_BONE_LOC 3         // bone vbo
 #define SK_BONE_WEIGHT_LOC 4  // bone weight location
 #define SK_INSTANCE_LOC 5     // instance location
+#define SK_DEPTH_LOC 9     // instance location
 
     aiMatrix4x4 globalInverseTrans;  // inverse matrix
     unsigned int BBO;                // bone vbo
