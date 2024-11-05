@@ -43,11 +43,10 @@
 #include "boid.h"
 #include "player.h"
 
-
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
 
-#pragma region MESH_NAMES
+/* Static meshes */
 #define MESH_WALL "wall.gltf"
 #define MESH_LONGWALL "wall_4x1.gltf"
 #define TEST_CUBE "test_cube.obj"
@@ -62,12 +61,13 @@
 #define MESH_SUB "sub.obj"
 #define MESH_SHARK "shark.obj"
 
+/* Animated meshes */
 #define MESH_PLAYER_ANIM "sub.gltf"
 #define MESH_SHARK_ANIM "shark.gltf"
+#define MESH_SHARK_ANIM2 "shark2.gltf"
 #define MESH_GUY_ANIM "boblampclean.md5mesh"
-#define MESH_WLL_ANIM "wll.md5mesh"
-#pragma endregion
-
+#define MESH_WLL_ANIM "wll.gltf"
+#define MESH_KELP_ANIM "kelp.gltf"
 
 const char* vert_main = PROJDIR "Shaders/main.vert";
 const char* frag_main = PROJDIR "Shaders/main.frag";

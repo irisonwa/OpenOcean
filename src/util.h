@@ -31,11 +31,26 @@
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 #define PROJDIR "../"
 #define MODELDIR(m) PROJDIR "Models/" + m.substr(0, m.find(".")) + "/"
+#define MIN_FLOAT_DIFF 0.00000001f
 
 using namespace glm;
 // using namespace SM;
 
+// Enum values for float comparison, for ease of use
+enum FloatComp {
+    EQ,
+    LT,
+    GT
+};
+
 namespace Util {
+    extern vec3 UP;  // World up
+    extern vec3 FORWARD;  // World forward
+    extern vec3 RIGHT;  // World right
+    extern vec3 X;  // Value of 1 on x axis
+    extern vec3 Y;  // Value of 1 on y axis
+    extern vec3 Z;  // Value of 1 on z axis
+
     extern std::string readFile(const char* path);
     extern float wrap(float val, float min, float max);
     extern float clamp(float val, float min, float max);
@@ -53,6 +68,7 @@ namespace Util {
     extern mat4 lookTowards(vec3 pos, vec3 to, vec3 up);
     extern void printVec3(vec3 v);
     extern void printMat4(mat4 m);
+    extern FloatComp compareFloat(float a, float b);
 };
 
 #endif  // UTIL_H

@@ -16,13 +16,6 @@ namespace SM {
     int unnamedMeshCount = 0;
     int unnamedBoneMeshCount = 0;
 
-    glm::vec3 UP = glm::vec3(0.f, 1.f, 0.f);
-    glm::vec3 FORWARD = glm::vec3(0.f, 0.f, -1.f);
-    glm::vec3 RIGHT = glm::vec3(1.f, 0.f, 0.f);
-    glm::vec3 X = glm::vec3(1.f, 0.f, 0.f);
-    glm::vec3 Y = glm::vec3(0.f, 1.f, 0.f);
-    glm::vec3 Z = glm::vec3(0.f, 0.f, 1.f);
-
     float mouseDX = 0;
     float mouseDY = 0;
 
@@ -33,6 +26,7 @@ namespace SM {
     CAMERA_MODE camMode = CAMERA_MODE::THIRD;
 
     int MAX_NUM_BOIDS = 10000;
+    bool showNormal = false;
 
     void updateDelta() {
         static DWORD last_time = 0;

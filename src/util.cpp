@@ -6,6 +6,14 @@
 #define ONE_RAD_IN_DEG 57.2957795
 
 namespace Util {
+    vec3 UP = vec3(0.f, 1.f, 0.f);
+    vec3 FORWARD = vec3(0.f, 0.f, -1.f);
+    vec3 RIGHT = vec3(1.f, 0.f, 0.f);
+    vec3 X = vec3(1.f, 0.f, 0.f);
+    vec3 Y = vec3(0.f, 1.f, 0.f);
+    vec3 Z = vec3(0.f, 0.f, 1.f);
+
+
     std::string readFile(const char* path) {
         std::ifstream file(path);
         if (!file.is_open()) {
@@ -65,6 +73,12 @@ namespace Util {
     // Convert a vector to an angle in degrees. The angle will use the y-axis as the floor; i.e., the y-axis value will be ignored during the calculation.
     float vec3ToAngle(vec3 v) {
         return rad2Deg(atan2(v.y, v.x));
+    }
+
+    FloatComp compareFloat(float a, float b) {
+        if (std::abs(a - b) < MIN_FLOAT_DIFF) return FloatComp::EQ;
+        else if (a < b) return FloatComp::LT;
+        else return FloatComp::GT;
     }
 
     // Decompose a mat4 into a vec3 scale, quat rotation, vec3 translation, vec3 skew, and vec4 perspective

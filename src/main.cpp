@@ -22,7 +22,7 @@ void init() {
     shaders[s3->name] = s3;
 
     baseLight = new Lighting("stony light", shaders["base"], MATERIAL_SHINY);
-    boneLight = new Lighting("boney light", shaders["bones"], MATERIAL_RUBBER);
+    boneLight = new Lighting("boney light", shaders["bones"], MATERIAL_SHINY);
 
     // Load meshes to be used
     StaticMesh* m1 = new StaticMesh("boid", TEST_FISHB, 1024, 4);
@@ -39,15 +39,15 @@ void init() {
     smeshes[m6->name] = m6;
     StaticMesh* m7 = new StaticMesh("shark", MESH_SHARK, 1024, 1);
     smeshes[m7->name] = m7;
-    BoneMesh* bm1 = new BoneMesh("test wall", MESH_WLL_ANIM, shaders["bones"]);
+    BoneMesh* bm1 = new BoneMesh("test wall", MESH_KELP_ANIM, shaders["bones"]);
     bmeshes[bm1->name] = bm1;
     // BoneMesh* bm2 = new BoneMesh("test guy", MESH_GUY_ANIM, shaders["bones"]);
     // bmeshes[bm2->name] = bm2;
-    BoneMesh* bm3 = new BoneMesh("test shark", MESH_SHARK_ANIM, shaders["bones"], 1024, 4);
+    BoneMesh* bm3 = new BoneMesh("test shark", MESH_SHARK_ANIM2, shaders["bones"], 1024, 4);
     bmeshes[bm3->name] = bm3;
 
     // player = new Player("Player", MESH_PLAYER_ANIM, 1024, 1, vec3(10), SM::FORWARD);
-    player = new Player("Player", vec3(10), SM::FORWARD);
+    player = new Player("Player", vec3(10), Util::FORWARD);
     player->setMesh(MESH_PLAYER_ANIM, 2048, 1);
     player->setShader(shaders["bones"]);
 
@@ -86,21 +86,34 @@ void init() {
     baseLight->addSpotLightAtt(flashlightCoords, flashlightDir, vec3(0.2f), vec3(1), vec3(1));
     baseLight->spotLights[baseLight->nSpotLights - 1].cutOff = cos(Util::deg2Rad(24.f));
     baseLight->spotLights[baseLight->nSpotLights - 1].outerCutOff = cos(Util::deg2Rad(35.f));
-    baseLight->setDirLightsAtt(vector<vec3>{vec3(0, -1, 0)});
-    baseLight->setDirLightColour(vec3(.05), vec3(.05), vec3(1));
-    baseLight->addPointLightAtt(vec3(0), vec3(0.2f), vec3(1), vec3(1));
+    baseLight->addSpotLightAtt(vec3(0, 300, 0), vec3(0, -1, 0), vec3(.3), vec3(1), vec3(1));
+    baseLight->spotLights[baseLight->nSpotLights - 1].linear = /* 0.022; */ 0.00022;
+    baseLight->spotLights[baseLight->nSpotLights - 1].quadratic = /* 0.0019; */ 0.000019;
+    baseLight->spotLights[baseLight->nSpotLights - 1].cutOff = cos(Util::deg2Rad(24.f));
+    baseLight->spotLights[baseLight->nSpotLights - 1].outerCutOff = cos(Util::deg2Rad(35.f));
+    // baseLight->addPointLightAtt(vec3(0), vec3(0.2f), vec3(1), vec3(1));
+    // baseLight->setDirLightsAtt(vector<vec3>{vec3(0, -1, 0)});
+    // baseLight->setDirLightColour(vec3(.05), vec3(.05), vec3(1));
+    // baseLight->spotLights[baseLight->nSpotLights - 1].linear = 0.9;
+    // baseLight->spotLights[baseLight->nSpotLights - 1].quadratic = 0.3;
 
-    boneLight->addSpotLightAtt(flashlightCoords, flashlightDir, vec3(0.2f), vec3(1), vec3(0.2));
+    boneLight->addSpotLightAtt(flashlightCoords, flashlightDir, vec3(0.2f), vec3(1), vec3(1));
     boneLight->spotLights[boneLight->nSpotLights - 1].cutOff = cos(Util::deg2Rad(24.f));
     boneLight->spotLights[boneLight->nSpotLights - 1].outerCutOff = cos(Util::deg2Rad(35.f));
-    boneLight->setDirLightsAtt(vector<vec3>{vec3(0, -1, 0)});
-    boneLight->setDirLightColour(vec3(.2), vec3(.2), vec3(.2));
+    boneLight->addSpotLightAtt(vec3(0, 300, 0), vec3(0, -1, 0), vec3(.3), vec3(1), vec3(1));
+    boneLight->spotLights[boneLight->nSpotLights - 1].linear = /* 0.022; */ 0.00022;
+    boneLight->spotLights[boneLight->nSpotLights - 1].quadratic = /* 0.0019; */ 0.000019;
+    boneLight->spotLights[boneLight->nSpotLights - 1].cutOff = cos(Util::deg2Rad(24.f));
+    boneLight->spotLights[boneLight->nSpotLights - 1].outerCutOff = cos(Util::deg2Rad(35.f));
+    // boneLight->addPointLightAtt(vec3(0), vec3(0.2f), vec3(1), vec3(1));
+    // boneLight->setDirLightsAtt(vector<vec3>{vec3(0, -1, 0)});
+    // boneLight->setDirLightColour(vec3(.2), vec3(.2), vec3(.2));
     // boneLight->addPointLightAtt(vec3(0), vec3(0.2f), vec3(1), vec3(1));
 }
 
 void display() {
     // tell GL to only draw onto a pixel if the shape is closer to the viewer
-    glEnable(GL_CULL_FACE); 
+    glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);  // enable depth-testing
     glEnable(GL_BLEND);       // enable colour blending
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -124,30 +137,31 @@ void display() {
     // update camera view and flashlight
     baseLight->setLightAtt(view, persp_proj, camera.pos);
     baseLight->setSpotLightAtt(0, flashlightCoords, flashlightDir, vec3(0.2f), vec3(1, .6, .2), vec3(1));
-    baseLight->spotLights[baseLight->nSpotLights - 1].cutOff = cos(Util::deg2Rad(24.f));
-    baseLight->spotLights[baseLight->nSpotLights - 1].outerCutOff = cos(Util::deg2Rad(35.f));
+    // baseLight->spotLights[baseLight->nSpotLights - 1].cutOff = cos(Util::deg2Rad(24.f));
+    // baseLight->spotLights[baseLight->nSpotLights - 1].outerCutOff = cos(Util::deg2Rad(35.f));
     baseLight->use();
 
     mat4 cubes[4] = {translate(mat4(1), vec3(20, 0, 10)), translate(mat4(1), vec3(10, 0, 0)), translate(mat4(1), vec3(20, 0, 0)), translate(mat4(1), vec3(30, 0, 0))};
     auto cubeds = std::vector<float>{0, 1, 2, 3}.data();
 
     // meshes["shark"]->render(numInstances, models, depths.data());  // draw cubes
-    smeshes["boid_display"]->render(4, cubes, cubeds); // display
+    smeshes["boid_display"]->render(4, cubes, cubeds);  // display
     smeshes["ground"]->render(translate(mat4(1), vec3(0, -10, 0)), 1);
-    smeshes["room"]->render(scale(mat4(1), vec3(250)), 1);
+    // smeshes["room"]->render(scale(mat4(1), vec3(250)), 1);
 
     /// ---------------- SKINNED MESHES ---------------- ///
     boneLight->setLightAtt(view, persp_proj, camera.pos);
-    boneLight->setSpotLightAtt(0, flashlightCoords, flashlightDir, vec3(0.2f), vec3(1, .6, .2), vec3(.2));
-    boneLight->spotLights[boneLight->nSpotLights - 1].cutOff = cos(Util::deg2Rad(24.f));
-    boneLight->spotLights[boneLight->nSpotLights - 1].outerCutOff = cos(Util::deg2Rad(35.f));
+    boneLight->setSpotLightAtt(0, flashlightCoords, flashlightDir, vec3(0.2f), vec3(1, .6, .2), vec3(1));
+    // boneLight->spotLights[boneLight->nSpotLights - 1].cutOff = cos(Util::deg2Rad(24.f));
+    // boneLight->spotLights[boneLight->nSpotLights - 1].outerCutOff = cos(Util::deg2Rad(35.f));
+    boneLight->shader->setBool("showNormal", SM::showNormal);
     boneLight->use();
 
     bmeshes["test wall"]->update();
     bmeshes["test wall"]->render(translate(mat4(1), vec3(-10)));
     // bmeshes["test guy"]->update();
     // bmeshes["test guy"]->render(translate(mat4(1), vec3(-20)));
-    
+
     const unsigned int numInstances = boids.size();
     mat4 models[numInstances];
     for (int i = 0; i < numInstances; i++) {
@@ -162,7 +176,7 @@ void display() {
         player->lookAt(camera.front);
         camera.followTarget(player);
     }
-    
+
     glutSwapBuffers();
 }
 
@@ -215,12 +229,20 @@ void keyPressed(unsigned char key, int x, int y) {
         exit(0);
     }
 
+    if (key == ',') {
+        SM::showNormal = !SM::showNormal;
+    }
+
     if (key == '.') {
         for (auto b : boids) {
             b->pos = vec3(
-                (float)((rand() % 600) - 300),
-                (float)((rand() % 600) - 300),
-                (float)((rand() % 600) - 300));
+                (float)((rand() % (int)(SM::WORLD_BOUND_HIGH * 2)) + SM::WORLD_BOUND_LOW),
+                (float)((rand() % (int)(SM::WORLD_BOUND_HIGH * 2)) + SM::WORLD_BOUND_LOW),
+                (float)((rand() % (int)(SM::WORLD_BOUND_HIGH * 2)) + SM::WORLD_BOUND_LOW));
+            b->velocity = normalize(vec3(
+                (float)(rand() % 100) / 100,
+                (float)(rand() % 100) / 100,
+                (float)(rand() % 100) / 100));
             player->pos = vec3(0);
             camera.setPosition(vec3(0));
         }

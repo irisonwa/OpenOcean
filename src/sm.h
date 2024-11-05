@@ -39,13 +39,6 @@ namespace SM {
 
     extern int unnamedMeshCount;
     extern int unnamedBoneMeshCount;
-
-    extern glm::vec3 UP;  // World up
-    extern glm::vec3 FORWARD;  // World forward
-    extern glm::vec3 RIGHT;  // World right
-    extern glm::vec3 X;  // Value of 1 on x axis
-    extern glm::vec3 Y;  // Value of 1 on y axis
-    extern glm::vec3 Z;  // Value of 1 on z axis
     
     extern float mouseDX; // mouse delta x
     extern float mouseDY; // mouse delta y
@@ -55,6 +48,7 @@ namespace SM {
     extern bool isThirdPerson;
     // extern Camera activeCamera;
     extern CAMERA_MODE camMode;
+    extern bool showNormal;
 
     extern int MAX_NUM_BOIDS; // maximum count of boids allowed to be rendered. 
 

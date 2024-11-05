@@ -16,8 +16,8 @@ class Camera {
     Camera() {
         pos = vec3(0.0f);
         followPos = vec3(0.0f);
-        front = SM::FORWARD;
-        up = SM::UP;
+        front = Util::FORWARD;
+        up = Util::UP;
 
         // setup rotation quaternion
         processView();

@@ -9,7 +9,7 @@ void Camera::processView() {
         normalize(vec3(cos(Util::deg2Rad(yaw)) * cos(Util::deg2Rad(pitch)),
                        sin(Util::deg2Rad(pitch)),
                        sin(Util::deg2Rad(yaw)) * cos(Util::deg2Rad(pitch))));
-    right = normalize(cross(front, SM::UP));
+    right = normalize(cross(front, Util::UP));
     up = normalize(cross(right, front));
 
     // Update view matrix

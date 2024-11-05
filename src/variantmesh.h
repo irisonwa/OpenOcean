@@ -16,8 +16,12 @@
 // data read from the GPU via SSBOs.
 class VariantMesh : public Mesh {
    public:
-    struct DrawCommandBuffer {
-
+    struct IndirectCommandBuffer {
+        unsigned int indexCount;
+        unsigned int instanceCount;
+        unsigned int baseIndex;
+        unsigned int baseVertex;
+        unsigned int baseInstance;
     };
 
     VariantMesh() { name = "NewVariantMesh" + std::to_string(SM::unnamedBoneMeshCount++); }

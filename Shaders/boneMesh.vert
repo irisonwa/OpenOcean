@@ -11,30 +11,37 @@ out vec3 FragPos;
 out vec3 Normal;
 out vec2 TexCoords;
 out float tDepth;
+out int toggleNormal;
 
 uniform mat4 view;
 uniform mat4 proj;
 uniform mat4 bones[200];
+uniform int showNormal;
 
 void main() {
-  vec4 localPos = vec4(0.0);
-  vec3 localNormal = vec3(0.0);
-
+  vec4 totalPos = vec4(0.0);
+  vec3 totalNormal = vec3(0.0);
+  int cnt = 0;
   for (int i = 0; i < 4; i++) {
     if (bone_ids[i] == -1) // ignore unbound bones
       continue;
-
+    cnt++;
     mat4 bone = bones[bone_ids[i]];
-    vec4 trans = (bone * bone_weights[i]) * vec4(vertex_position, 1.0);
-    localPos += trans;
+    vec4 trans = bone * vec4(vertex_position, 1.0);
+    totalPos += bone_weights[i] * trans;
 
     vec3 worldNormal = mat3(transpose(inverse(bone))) * vertex_normal;
-    localNormal += worldNormal * bone_weights[i];
+    totalNormal += worldNormal * bone_weights[i];
   }
 
-  FragPos = vec3(instance_trans * localPos);
-  Normal = vec3(normalize(instance_trans * vec4(localNormal, 0.0)));
+  if (cnt == 0) {
+    totalPos = vec4(vertex_position, 0.0);
+    totalNormal = vertex_normal;
+  }
+  FragPos = (instance_trans * totalPos).xyz;
+  Normal = vec3(normalize(instance_trans * vec4(totalNormal, 0.0)));
   TexCoords = vertex_texture;
   tDepth = texture_depth;
-  gl_Position = proj * view * instance_trans * localPos;
+  toggleNormal = showNormal;
+  gl_Position = proj * view * instance_trans * totalPos;
 }

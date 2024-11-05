@@ -16,29 +16,37 @@ class BoneMesh : public Mesh {
     struct VertexBoneData {
         VertexBoneData() {
             for (int i = 0; i < MAX_NUM_BONES_PER_VERTEX; ++i) {
-                BoneIDs[i] = -1;
-                Weights[i] = 0.0f;
+                boneIDs[i] = -1;
+                weights[i] = 0.0f;
             }
         }
 
-        unsigned int BoneIDs[MAX_NUM_BONES_PER_VERTEX];
-        float Weights[MAX_NUM_BONES_PER_VERTEX];
+        unsigned int boneIDs[MAX_NUM_BONES_PER_VERTEX];
+        float weights[MAX_NUM_BONES_PER_VERTEX];
 
-        void addBoneData(unsigned int BoneID, float Weight) {
-            for (unsigned int i = 0; i < MAX_NUM_BONES_PER_VERTEX; i++) {
-                if (Weights[i] < 0.00001f) {
-                    BoneIDs[i] = BoneID;
-                    Weights[i] = Weight;
+        void addBoneData(unsigned int bID, float weight) {
+            int cnt = 0;
+            for (int i = 0; i < MAX_NUM_BONES_PER_VERTEX; ++i) {
+                if (weights[i] < MIN_FLOAT_DIFF) { // don't compare float values
+                    boneIDs[i] = bID;
+                    weights[i] = weight;
                     return;
-                }
+                } 
+                cnt++;
             }
-            assert(false && "too many bones per vertex (> 4)");
+            if (cnt >= MAX_NUM_BONES_PER_VERTEX) assert(false && "too many bones per vertex (> 4)");
+            assert(false && "no vertices affected by this bone");
         }
     };
 
     struct BoneInfo {
         aiMatrix4x4 offsetMatrix;
         aiMatrix4x4 lastTransformation;
+
+        BoneInfo() {
+            offsetMatrix = aiMatrix4x4();
+            lastTransformation = aiMatrix4x4();
+        }
 
         BoneInfo(const aiMatrix4x4& offset) {
             offsetMatrix = offset;
@@ -84,7 +92,6 @@ class BoneMesh : public Mesh {
     void render(unsigned int nInstances, const mat4* bone_trans_matrix, const float* depths);
     void render(unsigned int, const mat4*);
     void render(mat4);
-    void loadSingleBone(unsigned int, const aiBone*);
     int getBoneID(const aiBone*);
     void getBoneTransforms(float, std::vector<aiMatrix4x4>&);
     void readNodeHierarchy(float, const aiNode*, const aiMatrix4x4&);
