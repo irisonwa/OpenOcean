@@ -21,25 +21,28 @@ void init() {
     Shader* s3 = new Shader("bones", vert_bmesh, frag_bmesh);
     shaders[s3->name] = s3;
 
+    Shader* s4 = new Shader("variant", vert_variant, frag_variant);
+    shaders[s4->name] = s4;
+
     baseLight = new Lighting("stony light", shaders["base"], MATERIAL_SHINY);
     boneLight = new Lighting("boney light", shaders["bones"], MATERIAL_SHINY);
 
     // Load meshes to be used
-    StaticMesh* m1 = new StaticMesh("boid", TEST_FISHB, 1024, 4);
-    smeshes[m1->name] = m1;
+    // StaticMesh* m1 = new StaticMesh("boid", TEST_FISHB, 1024, 4);
+    // smeshes[m1->name] = m1;
     StaticMesh* m2 = new StaticMesh("boid_display", MESH_SUB, 2048, 1);
     smeshes[m2->name] = m2;
     StaticMesh* m3 = new StaticMesh("ground", TEST_GROUND, 1024, 1);
     smeshes[m3->name] = m3;
-    StaticMesh* m4 = new StaticMesh("cplayer", TEST_FISHB, 1024, 1);
-    smeshes[m4->name] = m4;
-    StaticMesh* m5 = new StaticMesh("cube", TEST_SPEC, 1024, 4);
-    smeshes[m5->name] = m5;
+    // StaticMesh* m4 = new StaticMesh("cplayer", TEST_FISHB, 1024, 1);
+    // smeshes[m4->name] = m4;
+    // StaticMesh* m5 = new StaticMesh("cube", TEST_SPEC, 1024, 4);
+    // smeshes[m5->name] = m5;
     StaticMesh* m6 = new StaticMesh("room", TEST_ROOM, 1024, 1);
     smeshes[m6->name] = m6;
     StaticMesh* m7 = new StaticMesh("shark", MESH_SHARK, 1024, 1);
     smeshes[m7->name] = m7;
-    BoneMesh* bm1 = new BoneMesh("test wall", MESH_KELP_ANIM, shaders["bones"]);
+    BoneMesh* bm1 = new BoneMesh("test kelp", MESH_KELP_ANIM, shaders["bones"]);
     bmeshes[bm1->name] = bm1;
     // BoneMesh* bm2 = new BoneMesh("test guy", MESH_GUY_ANIM, shaders["bones"]);
     // bmeshes[bm2->name] = bm2;
@@ -51,15 +54,27 @@ void init() {
     player->setMesh(MESH_PLAYER_ANIM, 2048, 1);
     player->setShader(shaders["bones"]);
 
+    // VariantMesh::VariantInfo* vInfo = new VariantMesh::VariantInfo();
+    VariantMesh* vMesh = new VariantMesh(
+        "vmesh", shaders["variant"],
+        {
+            {MESH_SHARK_ANIM2, 100, 1024, 4, std::vector<unsigned int>(100, 0)},
+            {MESH_SHARK_ANIM2, 10, 1024, 4, std::vector<unsigned int>(10, 0)},
+            {MESH_PLAYER_ANIM, 1, 2048, 1, std::vector<unsigned int>(1, 0)},
+            {MESH_SHARK_ANIM2, 1000, 1024, 4, std::vector<unsigned int>(1000, 0)},
+            {MESH_SHARK_ANIM2, 3, 1024, 4, std::vector<unsigned int>(3, 0)},
+            {MESH_KELP_ANIM, 5, 1024, 1, std::vector<unsigned int>(5, 0)},
+        });
+
     // Create skybox
     cubemap = new Cubemap();
     cubemap->loadCubemap(cubemap_faces);
 
     // Set start time of program near when init() finishes loading
     SM::startTime = timeGetTime();
+
     float offset = 1.0f;
     float lim = 10;
-
     vector<float> scls = {.25, .5, 1, 2};
     for (int z = -lim / 2; z < lim / 2; z += 1) {
         for (int y = -lim / 2; y < lim / 2; y += 1) {
@@ -157,8 +172,8 @@ void display() {
     boneLight->shader->setBool("showNormal", SM::showNormal);
     boneLight->use();
 
-    bmeshes["test wall"]->update();
-    bmeshes["test wall"]->render(translate(mat4(1), vec3(-10)));
+    bmeshes["test kelp"]->update();
+    bmeshes["test kelp"]->render(translate(mat4(1), vec3(-10)));
     // bmeshes["test guy"]->update();
     // bmeshes["test guy"]->render(translate(mat4(1), vec3(-20)));
 
@@ -171,12 +186,17 @@ void display() {
     bmeshes["test shark"]->update();
     bmeshes["test shark"]->render(numInstances, models, depths.data());
 
-    player->render();
-    if (!SM::isFreeCam) {
+    if (SM::isFirstPerson) {
         player->lookAt(camera.front);
         camera.followTarget(player);
+    } else if (SM::isThirdPerson) {
+        player->render();
+        player->lookAt(camera.front);
+        camera.followTarget(player);
+    } else /* isFreeCam */ {
+        player->render();
     }
-
+    
     glutSwapBuffers();
 }
 

@@ -8,52 +8,10 @@
 #include "mesh.h"
 #include "shader.h"
 
-#define MAX_NUM_BONES_PER_VERTEX 4
 #define B_AI_LOAD_FLAGS aiProcess_Triangulate
 
 class BoneMesh : public Mesh {
    public:
-    struct VertexBoneData {
-        VertexBoneData() {
-            for (int i = 0; i < MAX_NUM_BONES_PER_VERTEX; ++i) {
-                boneIDs[i] = -1;
-                weights[i] = 0.0f;
-            }
-        }
-
-        unsigned int boneIDs[MAX_NUM_BONES_PER_VERTEX];
-        float weights[MAX_NUM_BONES_PER_VERTEX];
-
-        void addBoneData(unsigned int bID, float weight) {
-            int cnt = 0;
-            for (int i = 0; i < MAX_NUM_BONES_PER_VERTEX; ++i) {
-                if (weights[i] < MIN_FLOAT_DIFF) { // don't compare float values
-                    boneIDs[i] = bID;
-                    weights[i] = weight;
-                    return;
-                } 
-                cnt++;
-            }
-            if (cnt >= MAX_NUM_BONES_PER_VERTEX) assert(false && "too many bones per vertex (> 4)");
-            assert(false && "no vertices affected by this bone");
-        }
-    };
-
-    struct BoneInfo {
-        aiMatrix4x4 offsetMatrix;
-        aiMatrix4x4 lastTransformation;
-
-        BoneInfo() {
-            offsetMatrix = aiMatrix4x4();
-            lastTransformation = aiMatrix4x4();
-        }
-
-        BoneInfo(const aiMatrix4x4& offset) {
-            offsetMatrix = offset;
-            lastTransformation = Util::GLMtoAI(mat4(0));
-        }
-    };
-
     BoneMesh() { name = "NewBoneMesh" + std::to_string(SM::unnamedBoneMeshCount++); }
     BoneMesh(std::string nm) { name = nm; }
     BoneMesh(std::string nm, std::string mesh_path) {
@@ -65,22 +23,25 @@ class BoneMesh : public Mesh {
         if (!loadMesh(mesh_path, true)) std::cout << "\nfailed to load mesh \"" << nm.c_str() << "\" :(\n\n";
         shader = s;
     }
-    BoneMesh(std::string nm, std::string mesh_path, int _atlasTileSize, int _atlasTilesUsed) {
+    BoneMesh(std::string nm, std::string _mesh_path, int _atlasTileSize, int _atlasTilesUsed, bool load = true) {
         name = nm;
+        mesh_path = _mesh_path;
         atlasTileSize = _atlasTileSize;
         atlasTilesUsed = _atlasTilesUsed;
-        if (!loadMesh(mesh_path, true)) std::cout << "\nfailed to load mesh \"" << nm.c_str() << "\" :(\n\n";
+        if (load) if (!loadMesh(mesh_path, true)) std::cout << "\nfailed to load mesh \"" << nm.c_str() << "\" :(\n\n";
     }
-    BoneMesh(std::string nm, std::string mesh_path, Shader* s, int _atlasTileSize, int _atlasTilesUsed) {
+    BoneMesh(std::string nm, std::string _mesh_path, Shader* s, int _atlasTileSize, int _atlasTilesUsed, bool load = true) {
         name = nm;
         shader = s;
+        mesh_path = _mesh_path;
         atlasTileSize = _atlasTileSize;
         atlasTilesUsed = _atlasTilesUsed;
-        if (!loadMesh(mesh_path, true)) std::cout << "\nfailed to load mesh \"" << nm.c_str() << "\" :(\n\n";
+        if (load) if (!loadMesh(mesh_path, true)) std::cout << "\nfailed to load mesh \"" << nm.c_str() << "\" :(\n\n";
     }
 
     ~BoneMesh();
 
+    bool loadMesh(bool populateBuffer) { return loadMesh(mesh_path, populateBuffer); }  // load the mesh stored in the constructor
     bool loadMesh(std::string mesh_path) { return loadMesh(mesh_path, true); }  // load a mesh located at `mesh_path`
     bool loadMesh(std::string mesh_path, bool populateBuffer);
     bool initScene(const aiScene*, std::string);

@@ -30,6 +30,7 @@
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 #define PROJDIR "../"
+#define MODEL_NO_DIR(m) m.substr(0, m.find("."))
 #define MODELDIR(m) PROJDIR "Models/" + m.substr(0, m.find(".")) + "/"
 #define MIN_FLOAT_DIFF 0.00000001f
 

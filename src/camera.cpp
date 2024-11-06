@@ -16,8 +16,13 @@ void Camera::processView() {
     view = SM::isFreeCam ? lookAt(pos, pos + front, up) : lookAt(followPos, followPos + front, up);
 
     // Follow checks
-    targetVerticalDist = targetDist * sin(Util::deg2Rad(pitch));
-    targetHorizontalDist = targetDist * cos(Util::deg2Rad(pitch));
+    if(SM::isFirstPerson) {
+        targetVerticalDist = -0.25;
+        targetHorizontalDist = fps_zm;
+    } else {
+        targetVerticalDist = targetDist * sin(Util::deg2Rad(pitch));
+        targetHorizontalDist = targetDist * cos(Util::deg2Rad(pitch));
+    }
 }
 
 void Camera::followTarget(vec3 tPos, vec3 tDir) {

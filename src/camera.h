@@ -12,7 +12,7 @@ class Camera {
    private:
     float acceleration = 5;  // lerp acceleration factor; to be multiplied by delta
    public:
-    vec3 followPos;           // follow position; used for interpolated movement
+    vec3 followPos;  // follow position; used for interpolated movement
     Camera() {
         pos = vec3(0.0f);
         followPos = vec3(0.0f);
@@ -50,6 +50,7 @@ class Camera {
     vec3 target;                 // Camera target position
     mat4 view;                   // Model view matrix
     float targetDist = 12;       // Camera distance to target (fixed)
+    float fps_zm = -3;           // Camera zoom in first person mode
     float targetHorizontalDist;  // Camera horizontal distance to target
     float targetVerticalDist;    // Camera vertical distance to target
 

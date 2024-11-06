@@ -2,13 +2,13 @@
 #define MESH_H
 #pragma warning(disable : 26495)
 
-#include <string>
+#include <cassert>  // STL dynamic memory.
+#include <cstdio>
 #include <map>
-#include <stdio.h>
+#include <string>
+#include <vector>  // STL dynamic memory.
+#include <cmath>
 #include <stddef.h>
-#include <math.h>
-#include <vector>    // STL dynamic memory.
-#include <assert.h>  // STL dynamic memory.
 
 #include <assimp/cimport.h>  // scene importer
 #include <assimp/Importer.hpp>
@@ -21,6 +21,8 @@
 #include "util.h"
 #include "sm.h"
 #include "texture.h"
+
+#define MAX_NUM_BONES_PER_VERTEX 4
 
 class Mesh {
    public:
@@ -41,17 +43,56 @@ class Mesh {
         vec3 ambientColour = vec3(0.0f);
         vec3 diffuseColour = vec3(0.0f);
         vec3 specularColour = vec3(0.0f);
-        Texture* diffTex = NULL;
-        Texture* specExp = NULL;
+        Texture* diffTex = NULL;  // diffuse texture
+        Texture* mtlsTex = NULL;  // metalness map
+    };
+
+    struct VertexBoneData {
+        VertexBoneData() {
+            for (int i = 0; i < MAX_NUM_BONES_PER_VERTEX; ++i) {
+                boneIDs[i] = -1;
+                weights[i] = 0.0f;
+            }
+        }
+
+        unsigned int boneIDs[MAX_NUM_BONES_PER_VERTEX];
+        float weights[MAX_NUM_BONES_PER_VERTEX];
+
+        void addBoneData(unsigned int bID, float weight) {
+            int cnt = 0;
+            for (int i = 0; i < MAX_NUM_BONES_PER_VERTEX; ++i) {
+                if (weights[i] < MIN_FLOAT_DIFF) {  // don't compare float values
+                    boneIDs[i] = bID;
+                    weights[i] = weight;
+                    return;
+                }
+                cnt++;
+            }
+            if (cnt >= MAX_NUM_BONES_PER_VERTEX) assert(false && "too many bones per vertex (> 4)");
+            assert(false && "no vertices affected by this bone");
+        }
+    };
+
+    struct BoneInfo {
+        aiMatrix4x4 offsetMatrix;
+        aiMatrix4x4 lastTransformation;
+
+        BoneInfo() {
+            offsetMatrix = aiMatrix4x4();
+            lastTransformation = aiMatrix4x4();
+        }
+
+        BoneInfo(const aiMatrix4x4& offset) {
+            offsetMatrix = offset;
+            lastTransformation = Util::GLMtoAI(mat4(0));
+        }
     };
 
     // Create a new Mesh object without a mesh
     Mesh() { name = "NewMesh" + std::to_string(SM::unnamedMeshCount++); }
 
     // Create a new unnamed Mesh object
-    Mesh(std::string nm) {
-        name = nm;
-    }
+    Mesh(std::string nm) { name = nm; }
 
     virtual ~Mesh() = default;
 
@@ -59,27 +100,27 @@ class Mesh {
     virtual void populateBuffers() = 0;
 
     std::string name;
+    std::string mesh_path;
     mat4 mat;
     vec3 dir = vec3(1, 0, 0);
-    unsigned int VAO = 0;    // mesh vao
-    unsigned int p_VBO = 0;  // position vbo
-    unsigned int n_VBO = 0;  // normal vbo
-    unsigned int t_VBO = 0;  // texture vbo
-    unsigned int d_VBO = 0;  // texture depth vbo
-    unsigned int EBO = 0;    // index (element) vbo (ebo)
-    unsigned int IBO = 0;    // instance vbo (ibo)
-    int atlasTileSize = -1, atlasTilesUsed = -1;
+    unsigned int VAO = 0;          // mesh vao
+    unsigned int p_VBO = 0;        // position vbo
+    unsigned int n_VBO = 0;        // normal vbo
+    unsigned int t_VBO = 0;        // texture vbo
+    unsigned int d_VBO = 0;        // texture depth vbo
+    unsigned int EBO = 0;          // index (element) vbo (ebo)
+    unsigned int IBO = 0;          // instance vbo (ibo)
+    int atlasTileSize = -1;        // size of a single tile in array texture (must be square)
+    int atlasTilesUsed = -1;       // number of tiles in array texture (must be at last 1)
     bool usingAtlas = false;       // flag if the mesh is using an array texture
-    bool isAtlasVertical = false;  // flag if the mesh is using a verticalarray texture
+    bool isAtlasVertical = false;  // flag if the mesh is using a vertical array texture
 
-    std::vector<vec3> m_Positions;
-    std::vector<vec3> m_Normals;
-    std::vector<vec2> m_TexCoords;
-    std::vector<unsigned int> m_Indices;
-    std::vector<MeshObject> m_Meshes;
-    std::vector<Texture*> m_Textures;
-    Texture* texture;
-    std::vector<Material> m_Materials;
+    std::vector<vec3> m_Positions;        // vertex positions
+    std::vector<vec3> m_Normals;          // vertex normals
+    std::vector<vec2> m_TexCoords;        // vertex texture coords
+    std::vector<unsigned int> m_Indices;  // vertex indices
+    std::vector<MeshObject> m_Meshes;     // submeshes in mesh
+    std::vector<Material> m_Materials;    // textures and colours in mesh
 };
 
 #endif /* MESH_H */

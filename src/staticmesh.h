@@ -34,7 +34,6 @@ class StaticMesh : public Mesh {
         atlasTileSize = _atlasTileSize;
         atlasTilesUsed = _atlasTilesUsed;
         isAtlasVertical = isVerticalTexture;
-        texture = new Texture(GL_TEXTURE_2D_ARRAY);
         if (!loadMesh(mesh_path)) std::cout << "\n\nfailed to load mesh \"" << nm.c_str() << "\" :(\n";
     }
 

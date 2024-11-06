@@ -38,7 +38,6 @@ bool StaticMesh::loadMesh(std::string file_name) {
 
 bool StaticMesh::initScene(const aiScene* scene, std::string file_name) {
     m_Meshes.resize(scene->mNumMeshes);
-    m_Textures.resize(scene->mNumMaterials);
     m_Materials.resize(scene->mNumMaterials);
 
     unsigned int nvertices = 0;
@@ -113,7 +112,6 @@ bool StaticMesh::initMaterials(const aiScene* scene, std::string file_name) {
     std::vector<std::string> paths;
     for (unsigned int i = 0; i < scene->mNumMaterials; i++) {
         const aiMaterial* pMaterial = scene->mMaterials[i];
-        m_Textures[i] = NULL;
 
         if (pMaterial->GetTextureCount(aiTextureType_DIFFUSE) > 0) {
             aiString Path;
@@ -121,9 +119,9 @@ bool StaticMesh::initMaterials(const aiScene* scene, std::string file_name) {
             if (pMaterial->GetTexture(aiTextureType_DIFFUSE, 0, &Path, NULL, NULL, NULL, NULL, NULL) == AI_SUCCESS) {
                 const aiTexture* embeddedTex = scene->GetEmbeddedTexture(Path.C_Str());
                 if (embeddedTex) {
-                    m_Textures[i] = new Texture(GL_TEXTURE_2D);
+                    m_Materials[i].diffTex = new Texture(GL_TEXTURE_2D);
                     unsigned int buffer = embeddedTex->mWidth;
-                    m_Textures[i]->load(buffer, embeddedTex->pcData);
+                    m_Materials[i].diffTex->load(buffer, embeddedTex->pcData);
                     printf("%s: embedded diffuse texture type %s\n", name.c_str(), embeddedTex->achFormatHint);
                 } else {
                     std::string p(Path.data);
@@ -132,31 +130,27 @@ bool StaticMesh::initMaterials(const aiScene* scene, std::string file_name) {
                         p = p.substr(2, p.size() - 2);
                     }
                     std::string fullPath = dir + p;
-                    if (usingAtlas) {
-                        paths.push_back(fullPath);
-                        continue;
+                    m_Materials[i].diffTex = new Texture(GL_TEXTURE_2D_ARRAY);
+                    if (m_Materials[i].diffTex->loadAtlas(fullPath, atlasTileSize, atlasTilesUsed)) {
+                        // printf("%s: Loaded diffuse texture '%s'\n", name.c_str(), fullPath.c_str());
+                    } else {
+                        printf("Error loading diffuse texture '%s'\n", fullPath.c_str());
+                        return false;
                     }
-
-                    // m_Textures[i] = new Texture(fullPath, GL_TEXTURE_2D);
-                    // if (m_Textures[i]->load()) {
-                    //     printf("%s: Loaded diffuse texture '%s'\n", name.c_str(), fullPath.c_str());
-                    // } else {
-                    //     printf("Error loading diffuse texture '%s'\n", fullPath.c_str());
-                    // }
                 }
             }
         }
 
-        if (pMaterial->GetTextureCount(aiTextureType_SPECULAR) > 0) {
+        if (pMaterial->GetTextureCount(aiTextureType_METALNESS) > 0) {
             aiString Path;
 
-            if (pMaterial->GetTexture(aiTextureType_SPECULAR, 0, &Path, NULL, NULL, NULL, NULL, NULL) == AI_SUCCESS) {
+            if (pMaterial->GetTexture(aiTextureType_METALNESS, 0, &Path, NULL, NULL, NULL, NULL, NULL) == AI_SUCCESS) {
                 const aiTexture* embeddedTex = scene->GetEmbeddedTexture(Path.C_Str());
                 if (embeddedTex) {
-                    m_Textures[i] = new Texture(GL_TEXTURE_2D);
+                    m_Materials[i].mtlsTex = new Texture(GL_TEXTURE_2D);
                     unsigned int buffer = embeddedTex->mWidth;
-                    m_Textures[i]->load(buffer, embeddedTex->pcData);
-                    printf("%s: embedded specular texture type %s\n", name.c_str(), embeddedTex->achFormatHint);
+                    m_Materials[i].mtlsTex->load(buffer, embeddedTex->pcData);
+                    printf("%s: embedded metalness texture type %s\n", name.c_str(), embeddedTex->achFormatHint);
                 } else {
                     std::string p(Path.data);
                     // std::cout << p << std::endl;
@@ -164,39 +158,18 @@ bool StaticMesh::initMaterials(const aiScene* scene, std::string file_name) {
                         p = p.substr(2, p.size() - 2);
                     }
                     std::string fullPath = dir + p;
-                    if (usingAtlas) {
-                        paths.push_back(fullPath);
-                        continue;
+                    m_Materials[i].mtlsTex = new Texture(GL_TEXTURE_2D_ARRAY);
+                    if (m_Materials[i].mtlsTex->loadAtlas(fullPath, atlasTileSize, atlasTilesUsed)) {
+                        // printf("%s: Loaded metalness texture '%s'\n", name.c_str(), fullPath.c_str());
+                    } else {
+                        printf("Error loading metalness texture '%s'\n", fullPath.c_str());
+                        return false;
                     }
-
-                    // m_Textures[i] = new Texture(fullPath, GL_TEXTURE_2D);
-                    // if (m_Textures[i]->load()) {
-                    //     printf("%s: Loaded diffuse texture '%s'\n", name.c_str(), fullPath.c_str());
-                    // } else {
-                    //     printf("Error loading diffuse texture '%s'\n", fullPath.c_str());
-                    // }
                 }
             }
         }
     }
 
-    if (usingAtlas) {
-        if (paths.size() == 1) {
-            if (texture->loadAtlas(paths[0], atlasTileSize, atlasTilesUsed)) {
-                // printf("%s: Loaded diffuse texture '%s' from '%s'\n", name.c_str(), paths[0].c_str(), dir.c_str());
-            } else {
-                printf("Error loading diffuse atlas textures from '%s'\n", dir.c_str());
-                return false;
-            }
-        } else if (paths.size() == 2) {
-            if (texture->loadAtlas(paths[0], paths[1], atlasTileSize, atlasTilesUsed)) {
-                // printf("%s: Loaded diffuse atlas texture '%s' and specular texture '%s' from '%s'\n", name.c_str(), paths[0].c_str(), paths[1].c_str(), dir.c_str());
-            } else {
-                printf("Error loading diffuse atlas textures from '%s'\n", dir.c_str());
-                return false;
-            }
-        }
-    }
     return glGetError() == GL_NO_ERROR;
 }
 
@@ -238,39 +211,6 @@ void StaticMesh::populateBuffers() {
 }
 
 /// <summary>
-/// Render the mesh by binding its VAO and drawing each index of every submesh. This function supports instancing.
-/// </summary>
-/// <param name="nInstances">The number of instances you would like to draw.</param>
-/// <param name="model_matrix">The matrices you would like to transform each instance with.</param>
-void StaticMesh::render(unsigned int nInstances, const mat4* model_matrix) {
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, IBO);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(mat4) * nInstances, &model_matrix[0]);
-    std::vector<float> idxs(nInstances, 2);
-    for (unsigned int i = 0; i < m_Meshes.size(); i++) {
-        unsigned int mIndex = m_Meshes[i].materialIndex;
-        assert(mIndex < m_Textures.size());
-
-        if (m_Textures[mIndex]) {
-            m_Textures[mIndex]->bind(GL_TEXTURE0);
-            printf("%d\n", m_Textures[mIndex]->texture);
-            // glActiveTexture(GL_TEXTURE0);
-            // glBindTexture(GL_TEXTURE_2D, m_Textures[mIndex]->texture);  // bind model's texture
-            // glBindBuffer(GL_ARRAY_BUFFER, d_VBO);
-            // glBufferData(GL_ARRAY_BUFFER, sizeof(float) * nInstances, &idxs.data()[0], GL_DYNAMIC_DRAW);
-        }
-        glDrawElementsInstancedBaseVertex(
-            GL_TRIANGLES,
-            m_Meshes[i].n_Indices,
-            GL_UNSIGNED_INT,
-            (void*)(sizeof(unsigned int) * m_Meshes[i].baseIndex),
-            nInstances,
-            m_Meshes[i].baseVertex);
-    }
-    glBindVertexArray(0);  // prevent VAO from being changed externally
-}
-
-/// <summary>
 /// Render the mesh by binding its VAO and drawing each index of every submesh. This function supports instancing and atlas coordinates.
 /// </summary>
 /// <param name="nInstances">The number of instances you would like to draw.</param>
@@ -281,20 +221,21 @@ void StaticMesh::render(unsigned int nInstances, const mat4* model_matrix, const
     }
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, IBO);
-    // glBufferData(GL_ARRAY_BUFFER, sizeof(mat4) * nInstances, &model_matrix[0], GL_DYNAMIC_DRAW);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(mat4) * nInstances, &model_matrix[0]);
     for (unsigned int i = 0; i < m_Meshes.size(); i++) {
-        // unsigned int mIndex = m_Meshes[i].materialIndex;
-        // assert(mIndex < texture->file_names.size());
-        // printf("%d\n", mIndex);
-        // printf("%d\n", texture->file_names.size());
+        unsigned int mIndex = m_Meshes[i].materialIndex;
+        assert(mIndex < m_Materials.size());
 
-        if (texture) {
-            texture->bind();
-            glBindBuffer(GL_ARRAY_BUFFER, d_VBO);
-            // glBufferData(GL_ARRAY_BUFFER, sizeof(float) * nInstances, &atlasDepths[0], GL_DYNAMIC_DRAW);
-            glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * nInstances, &atlasDepths[0]);
+        glBindBuffer(GL_ARRAY_BUFFER, d_VBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * nInstances, &atlasDepths[0]);
+        if (m_Materials[mIndex].diffTex) m_Materials[mIndex].diffTex->bind(GL_TEXTURE0);
+        if (m_Materials[mIndex].mtlsTex) {
+            m_Materials[mIndex].mtlsTex->bind(GL_TEXTURE1);
+        } else {
+            // glActiveTexture(GL_TEXTURE1);
+            // glBindTexture(GL_TEXTURE_2D_ARRAY, 0);  // bind model's texture
         }
+        
         glDrawElementsInstancedBaseVertex(
             GL_TRIANGLES,
             m_Meshes[i].n_Indices,
@@ -307,12 +248,13 @@ void StaticMesh::render(unsigned int nInstances, const mat4* model_matrix, const
 }
 
 /// <summary>
-/// Render the mesh by binding its VAO and drawing each index of every submesh. This is a special case that will render exactly one instance of your mesh.
+/// Render the mesh by binding its VAO and drawing each index of every submesh. This function supports instancing.
 /// </summary>
-/// <param name="mat">The transform you would like to apply to your instance.</param>
-void StaticMesh::render(mat4 mat) {
-    this->mat = mat;
-    render(1, &mat);
+/// <param name="nInstances">The number of instances you would like to draw.</param>
+/// <param name="model_matrix">The matrices you would like to transform each instance with.</param>
+void StaticMesh::render(unsigned int nInstances, const mat4* model_matrix) {
+    std::vector<float> dpths(nInstances, 0);
+    return render(nInstances, model_matrix, dpths.data());
 }
 
 /// <summary>

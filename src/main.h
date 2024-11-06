@@ -2,6 +2,7 @@
 #define MAIN_H
 
 #define NOMINMAX
+#define GLM_ENABLE_EXPERIMENTAL
 
 // C includes
 #include <windows.h>
@@ -35,6 +36,7 @@
 #include "mesh.h"
 #include "staticmesh.h"
 #include "bonemesh.h"
+#include "variantmesh.h"
 #include "shader.h"
 #include "sm.h"
 #include "util.h"
@@ -77,6 +79,8 @@ const char* vert_bmesh = PROJDIR "Shaders/boneMesh.vert";
 const char* frag_bmesh = PROJDIR "Shaders/boneMesh.frag";
 const char* vert_blank = PROJDIR "Shaders/blank.vert";
 const char* frag_blank = PROJDIR "Shaders/blank.frag";
+const char* vert_variant = PROJDIR "Shaders/variantMesh.vert";
+const char* frag_variant = PROJDIR "Shaders/variantMesh.frag";
 
 Cubemap* cubemap;
 Camera camera = Camera();

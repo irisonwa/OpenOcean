@@ -3,51 +3,19 @@
 #include "stb/stb_image.h"
 #define STB_IMAGE_IMPLEMENTATION
 
-Texture::Texture(GLenum texType = GL_TEXTURE_2D) {
-    textureEnum = texType;
-    isAtlas = texType == GL_TEXTURE_2D_ARRAY;
-}
-
-Texture::Texture(const std::string fname, GLenum texType = GL_TEXTURE_2D) {
-    textureEnum = texType;
-    file_name = fname;
-    isAtlas = texType == GL_TEXTURE_2D_ARRAY;
-}
-
-Texture::Texture(const std::vector<std::string> fnames, GLenum texType = GL_TEXTURE_CUBE_MAP) {
-    textureEnum = texType;
-    file_names = fnames;
-}
-
-void Texture::bind() {
-    if (file_names.size() == 1 || !isAtlas) {
-        bind(GL_TEXTURE0);
-        glActiveTexture(GL_TEXTURE1);  // unbind unused specular map
-        glBindTexture(textureEnum, 0);
-    } else if (file_names.size() == 2) {
-        bind(GL_TEXTURE0, GL_TEXTURE1);
-    }
-}
-
 void Texture::bind(GLenum textureUnit) { 
     glActiveTexture(textureUnit);
     glBindTexture(textureEnum, texture);  // bind model's texture
 }
 
-void Texture::bind(GLenum textureUnitA, GLenum textureUnitB) {
-    glActiveTexture(textureUnitA);
-    glBindTexture(textureEnum, textureDiff);  // bind diffuse texture
-    glActiveTexture(textureUnitB);
-    glBindTexture(textureEnum, textureSpec);  // bind specular texture
-}
-
-bool Texture::_loadAtlas(std::string path, int tileSize, int tiles, unsigned int& buffer) {
+bool Texture::_loadAtlas(std::string path, int tileSize, int tiles) {
     stbi_set_flip_vertically_on_load(true);
     unsigned char* data = stbi_load(path.c_str(), &_width, &_height, &_nrChannels, 0);
     if (data) {
         if (textureEnum == GL_TEXTURE_2D_ARRAY) {
-            glGenTextures(1, &buffer);
-            glBindTexture(textureEnum, buffer);
+            glGenTextures(1, &texture);
+            glBindTexture(textureEnum, texture);
+            
             glPixelStorei(GL_UNPACK_ALIGNMENT, 1);  // align data to 1-byte. used to prevent warping of certain textures.
             GLint bpp = 0;
             switch (_nrChannels) {
@@ -66,7 +34,7 @@ bool Texture::_loadAtlas(std::string path, int tileSize, int tiles, unsigned int
                     return glGetError() == GL_NO_ERROR;
             }
             int tsz = tileSize == -1 ? _width : tileSize;
-            int ts = tiles == -1 ? 1 : tiles;
+            int ts = tiles < 1 ? 1 : tiles;
 
             // texture arrays
             glTexImage3D(textureEnum, 0, bpp, tsz, tsz, ts, 0, bpp, GL_UNSIGNED_BYTE, data);
@@ -88,37 +56,28 @@ bool Texture::_loadAtlas(std::string path, int tileSize, int tiles, unsigned int
     return glGetError() == GL_NO_ERROR;
 }
 
-bool Texture::loadAtlas(std::string path, int tileSize, int tiles) {
+bool Texture::loadAtlas(std::string path, int tileSize = -1, int tiles = -1) {
     file_names.push_back(path);
-    return _loadAtlas(path, tileSize, tiles, texture);
+    return _loadAtlas(path, tileSize, tiles);
 }
 
-bool Texture::loadAtlas(std::string path) {
-    return _loadAtlas(path, -1, -1, texture);
+bool Texture::loadAtlas(int tileSize = -1, int tiles = -1) {
+    return _loadAtlas(file_name, tileSize, tiles);
 }
 
-bool Texture::loadAtlas() {
-    return _loadAtlas(file_name, -1, -1, texture);
+bool Texture::load() { 
+    return load(file_name); 
 }
 
-bool Texture::loadAtlas(std::string diffuseTexture, std::string specularTexture, int tileSize, int tiles) {
-    file_names.push_back(diffuseTexture);
-    file_names.push_back(specularTexture);
-    bool diff = _loadAtlas(diffuseTexture, tileSize, tiles, textureDiff);
-    bool spec = _loadAtlas(specularTexture, tileSize, tiles, textureSpec);
-    return diff && spec;
-}
-
-bool Texture::load() {
+bool Texture::load(std::string tex) {
     glGenTextures(1, &texture);
     // load and generate the texture
     stbi_set_flip_vertically_on_load(true);
-    unsigned char* data = stbi_load(file_name.c_str(), &_width, &_height, &_nrChannels, 0);
+    unsigned char* data = stbi_load(tex.c_str(), &_width, &_height, &_nrChannels, 0);
     if (data) {
         if (textureEnum == GL_TEXTURE_2D) {
             glBindTexture(textureEnum, texture);
-            // printf(file_name.c_str());
-            // printf("\n");
+
             glPixelStorei(GL_UNPACK_ALIGNMENT, 1);  // align data to 1-byte. used to prevent warping of certain textures.
             GLint bpp = 0;
             switch (_nrChannels) {
@@ -147,7 +106,7 @@ bool Texture::load() {
             exit(1);  // exit if trying to load different texture type
         }
     } else {
-        std::cout << "Failed to load texture " << file_name.c_str() << std::endl;
+        std::cout << "Failed to load texture " << tex.c_str() << std::endl;
     }
     stbi_image_free(data);
     // glBindTexture(GL_TEXTURE_2D, 0);

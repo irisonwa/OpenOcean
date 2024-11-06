@@ -15,6 +15,7 @@ namespace SM {
     
     int unnamedMeshCount = 0;
     int unnamedBoneMeshCount = 0;
+    int unnamedVariantMeshCount = 0;
 
     float mouseDX = 0;
     float mouseDY = 0;

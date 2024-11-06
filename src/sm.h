@@ -39,13 +39,14 @@ namespace SM {
 
     extern int unnamedMeshCount;
     extern int unnamedBoneMeshCount;
+    extern int unnamedVariantMeshCount;
     
     extern float mouseDX; // mouse delta x
     extern float mouseDY; // mouse delta y
 
-    extern bool isFreeCam;
-    extern bool isFirstPerson;
-    extern bool isThirdPerson;
+    extern bool isFreeCam; // in free cam, the player model is loaded and updates but does not move with the camera
+    extern bool isFirstPerson; // in first person, the player model is not updated but the camera follows it anyway
+    extern bool isThirdPerson; // in third person, the player model is loaded and the camera moves with it
     // extern Camera activeCamera;
     extern CAMERA_MODE camMode;
     extern bool showNormal;
