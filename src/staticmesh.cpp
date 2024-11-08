@@ -7,15 +7,8 @@ StaticMesh::~StaticMesh() {}
 /// </summary>
 /// <param name="file_name">The full name of the model to load.</param>
 /// <returns>A boolean. True if loading succeeds, false otherwise.</returns>
-bool StaticMesh::loadMesh(std::string file_name) {
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
-    glGenBuffers(1, &p_VBO);
-    glGenBuffers(1, &n_VBO);
-    glGenBuffers(1, &t_VBO);
-    glGenBuffers(1, &d_VBO);
-    glGenBuffers(1, &EBO);
-    glGenBuffers(1, &IBO);
+bool StaticMesh::loadMesh(std::string file_name, bool popBuffer) {
+    populateBuffer = popBuffer;
 
     std::string rpath = MODELDIR(file_name) + file_name;
     const aiScene* scene = aiImportFile(
@@ -71,7 +64,7 @@ bool StaticMesh::initScene(const aiScene* scene, std::string file_name) {
         return false;
     }
 
-    populateBuffers();
+    if (populateBuffer) populateBuffers();
     return glGetError() == GL_NO_ERROR;
 }
 
@@ -177,6 +170,15 @@ bool StaticMesh::initMaterials(const aiScene* scene, std::string file_name) {
 /// Bind and enable the VAO, VBOs, and EBO for usage.
 /// </summary>
 void StaticMesh::populateBuffers() {
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
+    glGenBuffers(1, &p_VBO);
+    glGenBuffers(1, &n_VBO);
+    glGenBuffers(1, &t_VBO);
+    glGenBuffers(1, &d_VBO);
+    glGenBuffers(1, &EBO);
+    glGenBuffers(1, &IBO);
+
     glBindBuffer(GL_ARRAY_BUFFER, p_VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(m_Positions[0]) * m_Positions.size(), &m_Positions[0], GL_STATIC_DRAW);
     glEnableVertexAttribArray(ST_POSITION_LOC);
@@ -229,12 +231,7 @@ void StaticMesh::render(unsigned int nInstances, const mat4* model_matrix, const
         glBindBuffer(GL_ARRAY_BUFFER, d_VBO);
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * nInstances, &atlasDepths[0]);
         if (m_Materials[mIndex].diffTex) m_Materials[mIndex].diffTex->bind(GL_TEXTURE0);
-        if (m_Materials[mIndex].mtlsTex) {
-            m_Materials[mIndex].mtlsTex->bind(GL_TEXTURE1);
-        } else {
-            // glActiveTexture(GL_TEXTURE1);
-            // glBindTexture(GL_TEXTURE_2D_ARRAY, 0);  // bind model's texture
-        }
+        if (m_Materials[mIndex].mtlsTex) m_Materials[mIndex].mtlsTex->bind(GL_TEXTURE1);
         
         glDrawElementsInstancedBaseVertex(
             GL_TRIANGLES,
@@ -244,6 +241,11 @@ void StaticMesh::render(unsigned int nInstances, const mat4* model_matrix, const
             nInstances,
             m_Meshes[i].baseVertex);
     }
+    // unbind textures so they don't "spill over"
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
     glBindVertexArray(0);  // prevent VAO from being changed externally
 }
 

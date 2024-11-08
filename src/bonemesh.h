@@ -41,9 +41,9 @@ class BoneMesh : public Mesh {
 
     ~BoneMesh();
 
-    bool loadMesh(bool populateBuffer) { return loadMesh(mesh_path, populateBuffer); }  // load the mesh stored in the constructor
+    bool loadMesh(bool popBuffer) { return loadMesh(mesh_path, popBuffer); }  // load the mesh stored in the constructor
     bool loadMesh(std::string mesh_path) { return loadMesh(mesh_path, true); }  // load a mesh located at `mesh_path`
-    bool loadMesh(std::string mesh_path, bool populateBuffer);
+    bool loadMesh(std::string mesh_path, bool popBuffer);
     bool initScene(const aiScene*, std::string);
     void initSingleMesh(unsigned int, const aiMesh*);
     bool initMaterials(const aiScene*, std::string);
@@ -82,7 +82,6 @@ class BoneMesh : public Mesh {
     Assimp::Importer importer;
 
     Shader* shader;
-    bool shouldPopulateBuffers = true;
 };
 
 #endif /* BONEMESH_H */

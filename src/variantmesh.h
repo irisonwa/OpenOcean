@@ -7,8 +7,9 @@
 #include <mmsystem.h>
 
 #include "mesh.h"
-#include "shader.h"
+#include "staticmesh.h"
 #include "bonemesh.h"
+#include "shader.h"
 
 // Inherits the Mesh class. Can be used with instantiate any variant of meshes and textures using instancing, which allows for the retaining of
 // data read from the GPU via SSBOs.
@@ -38,8 +39,9 @@ class VariantMesh : public Mesh {
         }
         // Load the mesh stored in this variant without populating its buffers
         bool loadMesh() {
-            mesh = new BoneMesh(parentName + "_" + MODEL_NO_DIR(path), path, textureAtlasSize, textureAtlasTileCount, false);
-            return mesh->loadMesh(false);
+            // mesh = new BoneMesh(parentName + "_" + MODEL_NO_DIR(path), path, textureAtlasSize, textureAtlasTileCount, false);
+            mesh = new StaticMesh(parentName + "_" + MODEL_NO_DIR(path), path, textureAtlasSize, textureAtlasTileCount, false);
+            return mesh->loadMesh(path, false);
         }
         std::string parentName;
         std::string path;
@@ -47,20 +49,21 @@ class VariantMesh : public Mesh {
         unsigned int textureAtlasSize;
         unsigned int textureAtlasTileCount;
         std::vector<unsigned int> depths;
-        BoneMesh* mesh;
+        // BoneMesh* mesh;
+        StaticMesh* mesh;
     };
 
     VariantMesh() { name = "NewVariantMesh" + std::to_string(SM::unnamedVariantMeshCount++); }
     VariantMesh(std::string nm) { name = nm; }
-    /* 
-     * Create a new VariantMesh. `nm` is the name of the mesh. `s` is a pointer to the shader to use. 
+    /*
+     * Create a new VariantMesh. `nm` is the name of the mesh. `s` is a pointer to the shader to use.
      * `_variants` is a list of tuples, each of which represents one mesh. each tuple has:
      * - `string`: path to a mesh
      * - `unsigned int`: the number of instances of this mesh to draw
      * - `unsigned int`: the square size of the array texture the mesh will use which must be a square texture of size `size x size`. if -1, will use the entire texture available
      * - `unsigned int`: the number of tiles in the texture, vertically. must be at least 1. if -1, will be set to 1.
      * - `vector<unsigned int>`: a list of depths to use in the mesh. must have a size equal to the number of instances (first int)
-    */
+     */
     VariantMesh(std::string nm, Shader* s, std::vector<std::tuple<std::string, unsigned int, unsigned int, unsigned int, std::vector<unsigned int>>> _variants) {
         name = nm;
         shader = s;
@@ -68,7 +71,6 @@ class VariantMesh : public Mesh {
             VariantInfo* vi = new VariantInfo(name, _path, _instanceCount, _textureAtlasSize, _textureAtlasTileCount, _depths);
             variants.push_back(vi);
         }
-        // variants = _variants;
         if (!loadMeshes()) std::cout << "\n\nfailed to load variant mesh \"" << nm.c_str() << "\" :(\n";
     }
 
@@ -78,9 +80,11 @@ class VariantMesh : public Mesh {
     bool loadMeshes() { return loadMeshes(variants); }
     bool loadMeshes(std::vector<VariantInfo*> variantInfos);
     bool initScene();
+    void loadMaterials();
+    void unloadMaterials();
     void generateCommands();
     void populateBuffers();
-    void render(unsigned int, const mat4*);
+    void render(const mat4*);
     void render(mat4);
     void update();                       // update the mesh's animations
     void update(Shader* skinnedShader);  // update the mesh's animations using an external shader
@@ -90,21 +94,22 @@ class VariantMesh : public Mesh {
 #define VA_TEXTURE_LOC 2      // t_vbo
 #define VA_BONE_LOC 3         // bone vbo
 #define VA_BONE_WEIGHT_LOC 4  // bone weight location
-#define VA_INSTANCE_LOC 5     // instance location
-#define VA_DEPTH_LOC 9        // instance location
-#define VA_ID_LOC 10          // draw id
-
-    unsigned int commandBuffer;  // draw command buffer object (compute shader)
-    unsigned int BBO;            // bone vbo
-    std::vector<VertexBoneData> m_Bones;
-    std::vector<BoneInfo*> m_BoneInfo;
+#define VA_BONE_TRANS_LOC 5   // bone transform location
+#define VA_INSTANCE_LOC 9     // instance location
+#define VA_DEPTH_LOC 13       // texture depth vbo
 
     Shader* shader;
+
+    unsigned int commandBuffer;  // draw command buffer object (compute shader)
+    unsigned int BBO;            // bone vertex vbo
+    unsigned int BTBO;           // bone transform vbo
+
+    std::vector<VertexBoneData> m_Bones;
+    std::vector<BoneInfo*> m_BoneInfo;
     std::vector<std::string> paths;
-    std::vector<IndirectDrawCommand> cmds;
     std::vector<VariantInfo*> variants;
+    std::vector<float> depths;
     int totalInstanceCount = 0;
-    std::vector<unsigned int> depths;
 };
 
 #endif /* VARIANTMESH_H */

@@ -4,7 +4,7 @@ BoneMesh::~BoneMesh() {}
 
 // load a mesh located at `mesh_path`. can optionally disable populating shader buffers.
 bool BoneMesh::loadMesh(std::string mesh_name, bool popBuffers) {
-    shouldPopulateBuffers = popBuffers;
+    populateBuffer = popBuffers;
 
     std::string rpath = MODELDIR(mesh_name) + mesh_name;
     scene = importer.ReadFile(rpath.c_str(), B_AI_LOAD_FLAGS);
@@ -62,7 +62,7 @@ bool BoneMesh::initScene(const aiScene* scene, std::string mesh_name) {
         return false;
     }
 
-    if (shouldPopulateBuffers) {
+    if (populateBuffer) {
         populateBuffers();
     }
     return glGetError() == GL_NO_ERROR;
@@ -404,13 +404,8 @@ void BoneMesh::render(unsigned int nInstances, const mat4* bone_trans_matrix, co
         glBindBuffer(GL_ARRAY_BUFFER, d_VBO);
         glBufferData(GL_ARRAY_BUFFER, sizeof(float) * nInstances, &depths[0], GL_DYNAMIC_DRAW);
         if (m_Materials[mIndex].diffTex) m_Materials[mIndex].diffTex->bind(GL_TEXTURE0);
-        if (m_Materials[mIndex].mtlsTex) {
-            m_Materials[mIndex].mtlsTex->bind(GL_TEXTURE1);
-        } else {
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D_ARRAY, 0);  // bind model's texture
-        }
-
+        if (m_Materials[mIndex].mtlsTex) m_Materials[mIndex].mtlsTex->bind(GL_TEXTURE1);
+        
         glDrawElementsInstancedBaseVertex(
             GL_TRIANGLES,
             m_Meshes[i].n_Indices,
@@ -419,6 +414,12 @@ void BoneMesh::render(unsigned int nInstances, const mat4* bone_trans_matrix, co
             nInstances,
             m_Meshes[i].baseVertex);
     }
+
+    // unbind textures so they don't "spill over"
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
     glBindVertexArray(0);  // prevent VAO from being changed externally
 }
 

@@ -26,6 +26,7 @@ void init() {
 
     baseLight = new Lighting("stony light", shaders["base"], MATERIAL_SHINY);
     boneLight = new Lighting("boney light", shaders["bones"], MATERIAL_SHINY);
+    variantLight = new Lighting("variant light", shaders["variant"], MATERIAL_SHINY);
 
     // Load meshes to be used
     // StaticMesh* m1 = new StaticMesh("boid", TEST_FISHB, 1024, 4);
@@ -54,17 +55,20 @@ void init() {
     player->setMesh(MESH_PLAYER_ANIM, 2048, 1);
     player->setShader(shaders["bones"]);
 
-    // VariantMesh::VariantInfo* vInfo = new VariantMesh::VariantInfo();
-    VariantMesh* vMesh = new VariantMesh(
+    vMesh = new VariantMesh(
         "vmesh", shaders["variant"],
         {
-            {MESH_SHARK_ANIM2, 100, 1024, 4, std::vector<unsigned int>(100, 0)},
-            {MESH_SHARK_ANIM2, 10, 1024, 4, std::vector<unsigned int>(10, 0)},
-            {MESH_PLAYER_ANIM, 1, 2048, 1, std::vector<unsigned int>(1, 0)},
-            {MESH_SHARK_ANIM2, 1000, 1024, 4, std::vector<unsigned int>(1000, 0)},
-            {MESH_SHARK_ANIM2, 3, 1024, 4, std::vector<unsigned int>(3, 0)},
-            {MESH_KELP_ANIM, 5, 1024, 1, std::vector<unsigned int>(5, 0)},
+            {MESH_SUB, 40, 2048, 1, std::vector<unsigned int>(40, 1)},
+            {TEST_SPEC, 1, 1024, 4, std::vector<unsigned int>(1, 3)},
+            {TEST_BOID, 3, 1024, 4, std::vector<unsigned int>(3, 2)},
+            {MESH_KELP, 3, 1024, 1, std::vector<unsigned int>(3, 3)},
+            {MESH_SUB, 2, 2048, 1, std::vector<unsigned int>(2, 3)},
+            {TEST_BOID, 100, 1024, 4, std::vector<unsigned int>(100, 1)},
+            {MESH_SUB, 1, 2048, 1, std::vector<unsigned int>(1, 3)},
         });
+    for (int i = 0; i < vMesh->totalInstanceCount; ++i) {
+        vtrans.push_back(translate(mat4(1), vec3(i * 10, 10, 0)));
+    }
 
     // Create skybox
     cubemap = new Cubemap();
@@ -124,11 +128,20 @@ void init() {
     // boneLight->setDirLightsAtt(vector<vec3>{vec3(0, -1, 0)});
     // boneLight->setDirLightColour(vec3(.2), vec3(.2), vec3(.2));
     // boneLight->addPointLightAtt(vec3(0), vec3(0.2f), vec3(1), vec3(1));
+
+    variantLight->addSpotLightAtt(flashlightCoords, flashlightDir, vec3(0.2f), vec3(1), vec3(1));
+    variantLight->spotLights[variantLight->nSpotLights - 1].cutOff = cos(Util::deg2Rad(24.f));
+    variantLight->spotLights[variantLight->nSpotLights - 1].outerCutOff = cos(Util::deg2Rad(35.f));
+    variantLight->addSpotLightAtt(vec3(0, 300, 0), vec3(0, -1, 0), vec3(.3), vec3(1), vec3(1));
+    variantLight->spotLights[variantLight->nSpotLights - 1].linear = /* 0.022; */ 0.00022;
+    variantLight->spotLights[variantLight->nSpotLights - 1].quadratic = /* 0.0019; */ 0.000019;
+    variantLight->spotLights[variantLight->nSpotLights - 1].cutOff = cos(Util::deg2Rad(24.f));
+    variantLight->spotLights[variantLight->nSpotLights - 1].outerCutOff = cos(Util::deg2Rad(35.f));
 }
 
 void display() {
     // tell GL to only draw onto a pixel if the shape is closer to the viewer
-    glEnable(GL_CULL_FACE);
+    // glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);  // enable depth-testing
     glEnable(GL_BLEND);       // enable colour blending
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -183,8 +196,9 @@ void display() {
         boids[i]->process(boids);
         models[i] = scale(Util::lookTowards(boids[i]->pos, boids[i]->dir), scales[i]);
     }
-    bmeshes["test shark"]->update();
-    bmeshes["test shark"]->render(numInstances, models, depths.data());
+    
+    // bmeshes["test shark"]->update();
+    // bmeshes["test shark"]->render(numInstances, models, depths.data());
 
     if (SM::isFirstPerson) {
         player->lookAt(camera.front);
@@ -196,7 +210,15 @@ void display() {
     } else /* isFreeCam */ {
         player->render();
     }
-    
+
+    /// ---------------- VARIANT MESHES ---------------- ///
+    variantLight->setLightAtt(view, persp_proj, camera.pos);
+    variantLight->setSpotLightAtt(0, flashlightCoords, flashlightDir, vec3(0.2f), vec3(1, .6, .2), vec3(1));
+    variantLight->use();
+    std::vector<mat4> sub(&models[0], &models[vMesh->totalInstanceCount]);
+    vMesh->render(sub.data());
+    vMesh->update();
+
     glutSwapBuffers();
 }
 
@@ -260,9 +282,9 @@ void keyPressed(unsigned char key, int x, int y) {
                 (float)((rand() % (int)(SM::WORLD_BOUND_HIGH * 2)) + SM::WORLD_BOUND_LOW),
                 (float)((rand() % (int)(SM::WORLD_BOUND_HIGH * 2)) + SM::WORLD_BOUND_LOW));
             b->velocity = normalize(vec3(
-                (float)(rand() % 100) / 100,
-                (float)(rand() % 100) / 100,
-                (float)(rand() % 100) / 100));
+                (float)(rand() % 100) - 50,
+                (float)(rand() % 100) - 50,
+                (float)(rand() % 100) - 50));
             player->pos = vec3(0);
             camera.setPosition(vec3(0));
         }
@@ -314,7 +336,7 @@ void keyReleased(unsigned char key, int x, int y) {
 int main(int argc, char** argv) {
     // Set up the window
     glutInit(&argc, argv);
-    glutInitContextVersion(4, 3);
+    glutInitContextVersion(4, 6);
     glutInitContextProfile(GLUT_CORE_PROFILE);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
     glutInitWindowSize(SM::width, SM::height);

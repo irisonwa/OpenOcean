@@ -113,7 +113,7 @@ class Mesh {
     int atlasTileSize = -1;        // size of a single tile in array texture (must be square)
     int atlasTilesUsed = -1;       // number of tiles in array texture (must be at last 1)
     bool usingAtlas = false;       // flag if the mesh is using an array texture
-    bool isAtlasVertical = false;  // flag if the mesh is using a vertical array texture
+    bool populateBuffer = true;        // should this mesh's buffers be populated?
 
     std::vector<vec3> m_Positions;        // vertex positions
     std::vector<vec3> m_Normals;          // vertex normals

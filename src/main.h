@@ -62,6 +62,7 @@
 #define TEST_ROOM "box.obj"
 #define MESH_SUB "sub.obj"
 #define MESH_SHARK "shark.obj"
+#define MESH_KELP "kelp.obj"
 
 /* Animated meshes */
 #define MESH_PLAYER_ANIM "sub.gltf"
@@ -84,10 +85,11 @@ const char* frag_variant = PROJDIR "Shaders/variantMesh.frag";
 
 Cubemap* cubemap;
 Camera camera = Camera();
-Lighting *baseLight, *boneLight;
+Lighting *baseLight, *boneLight, *variantLight;
 
 std::deque<Boid*> boids;
 Player *player;
+VariantMesh* vMesh;
 
 vec3 flashlightCoords = vec3(-10000);
 vec3 flashlightDir = vec3(0, -1, 0);
@@ -95,6 +97,7 @@ std::map<std::string, Shader*> shaders;
 std::map<std::string, StaticMesh*> smeshes;
 std::map<std::string, BoneMesh*> bmeshes;
 std::vector<vec3> translations, scales;
+std::vector<mat4> vtrans;
 std::vector<int> mat_idxs;
 std::vector<float> depths;
 int spread = 10;

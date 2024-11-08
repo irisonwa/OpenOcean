@@ -9,11 +9,12 @@ bool VariantMesh::loadMeshes(std::vector<VariantInfo *> infos) {
         for (auto x : v->mesh->m_Positions) m_Positions.push_back(x);
         for (auto x : v->mesh->m_Normals) m_Normals.push_back(x);
         for (auto x : v->mesh->m_TexCoords) m_TexCoords.push_back(x);
-        for (auto x : v->mesh->m_Materials) m_Materials.push_back(x);
+        for (auto x : v->mesh->m_Materials)
+            if (x.diffTex || x.mtlsTex) m_Materials.push_back(x);
         for (auto x : v->mesh->m_Indices) m_Indices.push_back(x);
-        for (auto x : v->mesh->m_Bones) m_Bones.push_back(x);
-        for (auto x : v->mesh->m_BoneInfo) m_BoneInfo.push_back(x);
-        for (auto x : v->depths) depths.push_back(x);
+        // for (auto x : v->mesh->m_Bones) m_Bones.push_back(x);
+        // for (auto x : v->mesh->m_BoneInfo) m_BoneInfo.push_back(x);
+        for (auto x : v->depths) depths.push_back((float)x);
         paths.push_back(v->path);
         totalInstanceCount += v->instanceCount;
     }
@@ -36,6 +37,7 @@ void VariantMesh::populateBuffers() {
     glGenBuffers(1, &EBO);
     glGenBuffers(1, &IBO);
     glGenBuffers(1, &BBO);
+    glGenBuffers(1, &BTBO);
 
     glGenBuffers(1, &commandBuffer);
     // glNamedBufferStorage(commandBuffer, sizeof(IndirectDrawCommand) * cmds.size(), (const void *)cmds.data(), GL_DYNAMIC_STORAGE_BIT); // for compute shaders
@@ -55,13 +57,13 @@ void VariantMesh::populateBuffers() {
     glEnableVertexAttribArray(VA_TEXTURE_LOC);
     glVertexAttribPointer(VA_TEXTURE_LOC, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
-    glBindBuffer(GL_ARRAY_BUFFER, BBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(m_Bones[0]) * m_Bones.size(), &m_Bones[0], GL_STATIC_DRAW);
-    glEnableVertexAttribArray(VA_BONE_LOC);
-    glVertexAttribIPointer(VA_BONE_LOC, MAX_NUM_BONES_PER_VERTEX, GL_INT, sizeof(VertexBoneData), (const GLvoid *)0);
-    glEnableVertexAttribArray(VA_BONE_WEIGHT_LOC);
-    glVertexAttribPointer(VA_BONE_WEIGHT_LOC, MAX_NUM_BONES_PER_VERTEX, GL_FLOAT, GL_FALSE,
-                          sizeof(VertexBoneData), (const GLvoid *)(MAX_NUM_BONES_PER_VERTEX * sizeof(unsigned int)));
+    // glBindBuffer(GL_ARRAY_BUFFER, BBO);
+    // glBufferData(GL_ARRAY_BUFFER, sizeof(m_Bones[0]) * m_Bones.size(), &m_Bones[0], GL_STATIC_DRAW);
+    // glEnableVertexAttribArray(VA_BONE_LOC);
+    // glVertexAttribIPointer(VA_BONE_LOC, MAX_NUM_BONES_PER_VERTEX, GL_INT, sizeof(VertexBoneData), (const GLvoid *)0);
+    // glEnableVertexAttribArray(VA_BONE_WEIGHT_LOC);
+    // glVertexAttribPointer(VA_BONE_WEIGHT_LOC, MAX_NUM_BONES_PER_VERTEX, GL_FLOAT, GL_FALSE,
+    //                       sizeof(VertexBoneData), (const GLvoid *)(MAX_NUM_BONES_PER_VERTEX * sizeof(unsigned int)));
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(m_Indices[0]) * m_Indices.size(), &m_Indices[0], GL_STATIC_DRAW);
@@ -74,14 +76,15 @@ void VariantMesh::populateBuffers() {
     }
 
     glBindBuffer(GL_ARRAY_BUFFER, d_VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * SM::MAX_NUM_BOIDS, NULL, GL_DYNAMIC_DRAW);
-    glEnableVertexAttribArray(SK_DEPTH_LOC);
-    glVertexAttribPointer(SK_DEPTH_LOC, 1, GL_FLOAT, GL_FALSE, sizeof(float), 0);
-    glVertexAttribDivisor(SK_DEPTH_LOC, 1);  // tell OpenGL this is an instanced vertex attribute.
+    glBufferData(GL_ARRAY_BUFFER, sizeof(depths[0]) * depths.size(), &depths[0], GL_STATIC_DRAW);
+    glEnableVertexAttribArray(VA_DEPTH_LOC);
+    glVertexAttribPointer(VA_DEPTH_LOC, 1, GL_FLOAT, GL_FALSE, sizeof(float), 0);
+    glVertexAttribDivisor(VA_DEPTH_LOC, 1);  // tell OpenGL this is an instanced vertex attribute.
+    generateCommands();
 }
 
 void VariantMesh::generateCommands() {
-    cmds = std::vector<IndirectDrawCommand>(totalInstanceCount);
+    IndirectDrawCommand cmds[variants.size()];
     unsigned int baseVertex = 0, baseInstance = 0, baseIndex = 0;
     int i = 0;
     for (const auto &v : variants) {
@@ -100,43 +103,71 @@ void VariantMesh::generateCommands() {
         i++;
     }
 
+    // send command buffers to gpu
     glBindBuffer(GL_DRAW_INDIRECT_BUFFER, commandBuffer);
-    glBufferData(GL_DRAW_INDIRECT_BUFFER, sizeof(cmds), &cmds[0], GL_DYNAMIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, commandBuffer);
-    // keep base instance value since gl_InstanceID is reset for each mesh. this means creating our own gl_InstanceID values
-    glEnableVertexAttribArray(VA_ID_LOC);
-    glVertexAttribIPointer(VA_ID_LOC, 1, GL_UNSIGNED_INT, sizeof(IndirectDrawCommand), (void *)(offsetof(IndirectDrawCommand, baseInstance)));
-    glVertexAttribDivisor(VA_ID_LOC, 1);  // tell OpenGL this is an instanced vertex attribute.
+    glBufferData(GL_DRAW_INDIRECT_BUFFER, sizeof(cmds), cmds, GL_DYNAMIC_DRAW);
 }
 
-void VariantMesh::render(unsigned int nInstances, const mat4 *bone_trans_matrix) {
-    std::vector<float> depths(nInstances, 0);
-    glBindVertexArray(VAO);
-    generateCommands();
-    glBindBuffer(GL_ARRAY_BUFFER, IBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(mat4) * nInstances, &bone_trans_matrix[0], GL_DYNAMIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, d_VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * nInstances, &depths[0], GL_DYNAMIC_DRAW);
+void VariantMesh::loadMaterials() {
+    for (int i = 0; i < variants.size(); ++i) {
+        auto diff_id = GL_TEXTURE0 + i * 2;
+        glActiveTexture(diff_id);
+        if (variants[i]->mesh->m_Materials[1].diffTex) glBindTexture(GL_TEXTURE_2D_ARRAY, variants[i]->mesh->m_Materials[1].diffTex->texture);
 
-    // TODO: figure out how this works
-    // glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_INT, &data[0], nInstances, 0);
+        auto mtl_id = GL_TEXTURE0 + (i * 2) + 1;
+        glActiveTexture(mtl_id);
+        if (variants[i]->mesh->m_Materials[1].mtlsTex) glBindTexture(GL_TEXTURE_2D_ARRAY, variants[i]->mesh->m_Materials[1].mtlsTex->texture);
+    }
+}
+
+// unbind textures so they don't "spill over"
+void VariantMesh::unloadMaterials() {
+    for (int i = 0; i < variants.size(); ++i) {
+        auto diff_id = GL_TEXTURE0 + i * 2;
+        glActiveTexture(diff_id);
+        glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+        auto mtls_id = GL_TEXTURE0 + (i * 2) + 1;
+        glActiveTexture(mtls_id);
+        glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+    }
+}
+
+void VariantMesh::render(const mat4 *bone_trans_matrix) {
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, IBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(mat4) * totalInstanceCount, &bone_trans_matrix[0], GL_DYNAMIC_DRAW);
+
+    loadMaterials();
+
+    glMultiDrawElementsIndirect(
+        GL_TRIANGLES,     // draw triangles
+        GL_UNSIGNED_INT,  // data type in indices
+        (const void *)0,  // no offset; commands already bound to buffer
+        variants.size(),  // number of variants
+        0                 // no stride
+    );
+
+    unloadMaterials();
 
     glBindVertexArray(0);  // prevent VAO from being changed externally
 }
 
 void VariantMesh::render(mat4 mm) {
     this->mat = mm;
-    render(1, &mm);
+    render(&mm);
 }
 
 void VariantMesh::update(Shader *skinnedShader) {
-    for (const auto& v : variants) {
-        v->mesh->update(skinnedShader);
-    }
+    // for (const auto &v : variants) {
+    //     v->mesh->update(skinnedShader);
+    // }
 }
 
 void VariantMesh::update() {
-    for (const auto &v : variants) {
-        v->mesh->update();
-    }
+    // for (const auto &v : variants) {
+    //     v->mesh->update();
+    // }
+    // for (int i = 0; i < 200; i++) {
+    //     shader->setMat4("bones[" + std::to_string(i) + "]", mat4(1));
+    // }
 }
