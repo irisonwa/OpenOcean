@@ -68,6 +68,8 @@
 #define MESH_KELP "kelp.obj"
 #define MESH_ISLAND "island.obj"
 #define MESH_THREADFIN "fish_threadfin.obj"
+#define MESH_MARLIN "fish_marlin.obj"
+#define MESH_SPEARFISH "fish_spear.obj"
 
 /* Animated meshes */
 #define MESH_PLAYER_ANIM "sub.gltf"
@@ -77,6 +79,8 @@
 #define MESH_WLL_ANIM "wll.gltf"
 #define MESH_KELP_ANIM "kelp.gltf"
 #define MESH_THREADFIN_ANIM "fish_threadfin.gltf"
+#define MESH_MARLIN_ANIM "fish_marlin.gltf"
+#define MESH_SPEARFISH_ANIM "fish_spear.gltf"
 
 const char* vert_main = PROJDIR "Shaders/main.vert";
 const char* frag_main = PROJDIR "Shaders/main.frag";
@@ -107,7 +111,7 @@ std::vector<vec3> translations, scales;
 std::vector<mat4> vtrans;
 std::vector<int> mat_idxs;
 std::vector<float> depths;
-int spread = 10;
+int spread = 400;
 
 std::vector<std::string> cubemap_faces = {
     PROJDIR "Models/bskybox/right.jpg",

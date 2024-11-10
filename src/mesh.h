@@ -115,12 +115,12 @@ class Mesh {
     bool usingAtlas = false;       // flag if the mesh is using an array texture
     bool populateBuffer = true;        // should this mesh's buffers be populated?
 
-    std::vector<vec3> m_Positions;        // vertex positions
-    std::vector<vec3> m_Normals;          // vertex normals
-    std::vector<vec2> m_TexCoords;        // vertex texture coords
-    std::vector<unsigned int> m_Indices;  // vertex indices
-    std::vector<MeshObject> m_Meshes;     // submeshes in mesh
-    std::vector<Material> m_Materials;    // textures and colours in mesh
+    std::vector<vec3> vertices;        // vertex positions
+    std::vector<vec3> normals;          // vertex normals
+    std::vector<vec2> texCoords;        // vertex texture coords
+    std::vector<unsigned int> indices;  // vertex indices
+    std::vector<MeshObject> meshes;     // submeshes in mesh
+    std::vector<Material> materials;    // textures and colours in mesh
 };
 
 #endif /* MESH_H */

@@ -6,12 +6,12 @@ bool VariantMesh::loadMeshes(std::vector<VariantInfo *> infos) {
     bool valid = true;
     for (auto v : infos) {
         valid &= v->loadMesh();
-        for (auto x : v->mesh->m_Positions) m_Positions.push_back(x);
-        for (auto x : v->mesh->m_Normals) m_Normals.push_back(x);
-        for (auto x : v->mesh->m_TexCoords) m_TexCoords.push_back(x);
-        for (auto x : v->mesh->m_Materials)
-            if (x.diffTex || x.mtlsTex) m_Materials.push_back(x);
-        for (auto x : v->mesh->m_Indices) m_Indices.push_back(x);
+        for (auto x : v->mesh->vertices) vertices.push_back(x);
+        for (auto x : v->mesh->normals) normals.push_back(x);
+        for (auto x : v->mesh->texCoords) texCoords.push_back(x);
+        for (auto x : v->mesh->materials)
+            if (x.diffTex || x.mtlsTex) materials.push_back(x);
+        for (auto x : v->mesh->indices) indices.push_back(x);
         // for (auto x : v->mesh->m_Bones) m_Bones.push_back(x);
         // for (auto x : v->mesh->m_BoneInfo) m_BoneInfo.push_back(x);
         for (auto x : v->depths) depths.push_back((float)x);
@@ -43,17 +43,17 @@ void VariantMesh::populateBuffers() {
     // glNamedBufferStorage(commandBuffer, sizeof(IndirectDrawCommand) * cmds.size(), (const void *)cmds.data(), GL_DYNAMIC_STORAGE_BIT); // for compute shaders
 
     glBindBuffer(GL_ARRAY_BUFFER, p_VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(m_Positions[0]) * m_Positions.size(), &m_Positions[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices[0]) * vertices.size(), &vertices[0], GL_STATIC_DRAW);
     glEnableVertexAttribArray(VA_POSITION_LOC);
     glVertexAttribPointer(VA_POSITION_LOC, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
     glBindBuffer(GL_ARRAY_BUFFER, n_VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(m_Normals[0]) * m_Normals.size(), &m_Normals[0], GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(normals[0]) * normals.size(), &normals[0], GL_DYNAMIC_DRAW);
     glEnableVertexAttribArray(VA_NORMAL_LOC);
     glVertexAttribPointer(VA_NORMAL_LOC, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
     glBindBuffer(GL_ARRAY_BUFFER, t_VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(m_TexCoords[0]) * m_TexCoords.size(), &m_TexCoords[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(texCoords[0]) * texCoords.size(), &texCoords[0], GL_STATIC_DRAW);
     glEnableVertexAttribArray(VA_TEXTURE_LOC);
     glVertexAttribPointer(VA_TEXTURE_LOC, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
@@ -66,7 +66,7 @@ void VariantMesh::populateBuffers() {
     //                       sizeof(VertexBoneData), (const GLvoid *)(MAX_NUM_BONES_PER_VERTEX * sizeof(unsigned int)));
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(m_Indices[0]) * m_Indices.size(), &m_Indices[0], GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices[0]) * indices.size(), &indices[0], GL_STATIC_DRAW);
 
     glBindBuffer(GL_ARRAY_BUFFER, IBO);
     for (unsigned int i = 0; i < 4; i++) {
@@ -88,8 +88,8 @@ void VariantMesh::generateCommands() {
     unsigned int baseVertex = 0, baseInstance = 0, baseIndex = 0;
     int i = 0;
     for (const auto &v : variants) {
-        int vCount = v->mesh->m_Positions.size();  // vertices in this mesh
-        int iCount = v->mesh->m_Indices.size();    // indices in thie mesh
+        int vCount = v->mesh->vertices.size();  // vertices in this mesh
+        int iCount = v->mesh->indices.size();    // indices in thie mesh
 
         cmds[i].indexCount = iCount;
         cmds[i].instanceCount = v->instanceCount;  // number of instances this mesh will have
@@ -112,11 +112,11 @@ void VariantMesh::loadMaterials() {
     for (int i = 0; i < variants.size(); ++i) {
         auto diff_id = GL_TEXTURE0 + i * 2;
         glActiveTexture(diff_id);
-        if (variants[i]->mesh->m_Materials[1].diffTex) glBindTexture(GL_TEXTURE_2D_ARRAY, variants[i]->mesh->m_Materials[1].diffTex->texture);
+        if (variants[i]->mesh->materials[1].diffTex) glBindTexture(GL_TEXTURE_2D_ARRAY, variants[i]->mesh->materials[1].diffTex->texture);
 
         auto mtl_id = GL_TEXTURE0 + (i * 2) + 1;
         glActiveTexture(mtl_id);
-        if (variants[i]->mesh->m_Materials[1].mtlsTex) glBindTexture(GL_TEXTURE_2D_ARRAY, variants[i]->mesh->m_Materials[1].mtlsTex->texture);
+        if (variants[i]->mesh->materials[1].mtlsTex) glBindTexture(GL_TEXTURE_2D_ARRAY, variants[i]->mesh->materials[1].mtlsTex->texture);
     }
 }
 

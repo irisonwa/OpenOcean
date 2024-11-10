@@ -10,8 +10,9 @@ class Flock;
 
 enum BoidType {
     F_THREADFIN,
-    F_BLACK_MARLIN,
-    F_STRIPED_MARLIN,
+    // F_BLACK_MARLIN,
+    // F_STRIPED_MARLIN,
+    F_MARLIN,
     F_SPEAR_FISH,
     F_TUNA,
     F_HERRING,

@@ -31,32 +31,32 @@ bool StaticMesh::loadMesh(std::string file_name, bool popBuffer) {
 }
 
 bool StaticMesh::initScene(const aiScene* scene, std::string file_name) {
-    m_Meshes.resize(scene->mNumMeshes);
-    m_Materials.resize(scene->mNumMaterials);
+    meshes.resize(scene->mNumMeshes);
+    materials.resize(scene->mNumMaterials);
 
     unsigned int nvertices = 0;
     unsigned int nindices = 0;
 
     // Count all vertices and indices
-    for (unsigned int i = 0; i < m_Meshes.size(); i++) {
-        m_Meshes[i].materialIndex = scene->mMeshes[i]->mMaterialIndex;  // get current material index
-        m_Meshes[i].n_Indices = scene->mMeshes[i]->mNumFaces * 3;       // there are 3 times as many indices as there are faces (since they're all triangles)
-        m_Meshes[i].baseVertex = nvertices;                             // index of first vertex in the current mesh
-        m_Meshes[i].baseIndex = nindices;                               // track number of indices
+    for (unsigned int i = 0; i < meshes.size(); i++) {
+        meshes[i].materialIndex = scene->mMeshes[i]->mMaterialIndex;  // get current material index
+        meshes[i].n_Indices = scene->mMeshes[i]->mNumFaces * 3;       // there are 3 times as many indices as there are faces (since they're all triangles)
+        meshes[i].baseVertex = nvertices;                             // index of first vertex in the current mesh
+        meshes[i].baseIndex = nindices;                               // track number of indices
 
         // Move forward by the corresponding number of vertices/indices to find the base of the next vertex/index
         nvertices += scene->mMeshes[i]->mNumVertices;
-        nindices += m_Meshes[i].n_Indices;
+        nindices += meshes[i].n_Indices;
     }
 
     // Reallocate space for structure of arrays (SOA) values
-    m_Positions.reserve(nvertices);
-    m_Normals.reserve(nvertices);
-    m_TexCoords.reserve(nvertices);
-    m_Indices.reserve(nindices);
+    vertices.reserve(nvertices);
+    normals.reserve(nvertices);
+    texCoords.reserve(nvertices);
+    indices.reserve(nindices);
 
     // Initialise meshes
-    for (unsigned int i = 0; i < m_Meshes.size(); i++) {
+    for (unsigned int i = 0; i < meshes.size(); i++) {
         const aiMesh* am = scene->mMeshes[i];
         initSingleMesh(am);
     }
@@ -80,18 +80,18 @@ void StaticMesh::initSingleMesh(const aiMesh* amesh) {
         const aiVector3D& pNormal = amesh->mNormals ? amesh->mNormals[i] : aiVector3D(0.0f, 1.0f, 0.0f);
         const aiVector3D& pTexCoord = amesh->HasTextureCoords(0) ? amesh->mTextureCoords[0][i] : aiVector3D(0.0f, 0.0f, 0.0f);
 
-        m_Positions.push_back(vec3(pPos.x, pPos.y, pPos.z));
-        m_Normals.push_back(vec3(pNormal.x, pNormal.y, pNormal.z));
-        m_TexCoords.push_back(vec2(pTexCoord.x, pTexCoord.y));
+        vertices.push_back(vec3(pPos.x, pPos.y, pPos.z));
+        normals.push_back(vec3(pNormal.x, pNormal.y, pNormal.z));
+        texCoords.push_back(vec2(pTexCoord.x, pTexCoord.y));
     }
 
     // Populate the index buffer
     for (unsigned int i = 0; i < amesh->mNumFaces; i++) {
         const aiFace& Face = amesh->mFaces[i];
         assert(Face.mNumIndices == 3);
-        m_Indices.push_back(Face.mIndices[0]);
-        m_Indices.push_back(Face.mIndices[1]);
-        m_Indices.push_back(Face.mIndices[2]);
+        indices.push_back(Face.mIndices[0]);
+        indices.push_back(Face.mIndices[1]);
+        indices.push_back(Face.mIndices[2]);
     }
 }
 
@@ -113,9 +113,9 @@ bool StaticMesh::initMaterials(const aiScene* scene, std::string file_name) {
             if (pMaterial->GetTexture(aiTextureType_DIFFUSE, 0, &Path, NULL, NULL, NULL, NULL, NULL) == AI_SUCCESS) {
                 const aiTexture* embeddedTex = scene->GetEmbeddedTexture(Path.C_Str());
                 if (embeddedTex) {
-                    m_Materials[i].diffTex = new Texture(GL_TEXTURE_2D);
+                    materials[i].diffTex = new Texture(GL_TEXTURE_2D);
                     unsigned int buffer = embeddedTex->mWidth;
-                    m_Materials[i].diffTex->load(buffer, embeddedTex->pcData);
+                    materials[i].diffTex->load(buffer, embeddedTex->pcData);
                     printf("%s: embedded diffuse texture type %s\n", name.c_str(), embeddedTex->achFormatHint);
                 } else {
                     std::string p(Path.data);
@@ -124,8 +124,8 @@ bool StaticMesh::initMaterials(const aiScene* scene, std::string file_name) {
                         p = p.substr(2, p.size() - 2);
                     }
                     std::string fullPath = dir + p;
-                    m_Materials[i].diffTex = new Texture(GL_TEXTURE_2D_ARRAY);
-                    if (m_Materials[i].diffTex->loadAtlas(fullPath, atlasTileSize, atlasTilesUsed)) {
+                    materials[i].diffTex = new Texture(GL_TEXTURE_2D_ARRAY);
+                    if (materials[i].diffTex->loadAtlas(fullPath, atlasTileSize, atlasTilesUsed)) {
                         // printf("%s: Loaded diffuse texture '%s'\n", name.c_str(), fullPath.c_str());
                     } else {
                         printf("Error loading diffuse texture '%s'\n", fullPath.c_str());
@@ -141,9 +141,9 @@ bool StaticMesh::initMaterials(const aiScene* scene, std::string file_name) {
             if (pMaterial->GetTexture(aiTextureType_METALNESS, 0, &Path, NULL, NULL, NULL, NULL, NULL) == AI_SUCCESS) {
                 const aiTexture* embeddedTex = scene->GetEmbeddedTexture(Path.C_Str());
                 if (embeddedTex) {
-                    m_Materials[i].mtlsTex = new Texture(GL_TEXTURE_2D);
+                    materials[i].mtlsTex = new Texture(GL_TEXTURE_2D);
                     unsigned int buffer = embeddedTex->mWidth;
-                    m_Materials[i].mtlsTex->load(buffer, embeddedTex->pcData);
+                    materials[i].mtlsTex->load(buffer, embeddedTex->pcData);
                     printf("%s: embedded metalness texture type %s\n", name.c_str(), embeddedTex->achFormatHint);
                 } else {
                     std::string p(Path.data);
@@ -152,8 +152,8 @@ bool StaticMesh::initMaterials(const aiScene* scene, std::string file_name) {
                         p = p.substr(2, p.size() - 2);
                     }
                     std::string fullPath = dir + p;
-                    m_Materials[i].mtlsTex = new Texture(GL_TEXTURE_2D_ARRAY);
-                    if (m_Materials[i].mtlsTex->loadAtlas(fullPath, atlasTileSize, atlasTilesUsed)) {
+                    materials[i].mtlsTex = new Texture(GL_TEXTURE_2D_ARRAY);
+                    if (materials[i].mtlsTex->loadAtlas(fullPath, atlasTileSize, atlasTilesUsed)) {
                         // printf("%s: Loaded metalness texture '%s'\n", name.c_str(), fullPath.c_str());
                     } else {
                         printf("Error loading metalness texture '%s'\n", fullPath.c_str());
@@ -181,22 +181,22 @@ void StaticMesh::populateBuffers() {
     glGenBuffers(1, &IBO);
 
     glBindBuffer(GL_ARRAY_BUFFER, p_VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(m_Positions[0]) * m_Positions.size(), &m_Positions[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices[0]) * vertices.size(), &vertices[0], GL_STATIC_DRAW);
     glEnableVertexAttribArray(ST_POSITION_LOC);
     glVertexAttribPointer(ST_POSITION_LOC, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
     glBindBuffer(GL_ARRAY_BUFFER, n_VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(m_Normals[0]) * m_Normals.size(), &m_Normals[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(normals[0]) * normals.size(), &normals[0], GL_STATIC_DRAW);
     glEnableVertexAttribArray(ST_NORMAL_LOC);
     glVertexAttribPointer(ST_NORMAL_LOC, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
     glBindBuffer(GL_ARRAY_BUFFER, t_VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(m_TexCoords[0]) * m_TexCoords.size(), &m_TexCoords[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(texCoords[0]) * texCoords.size(), &texCoords[0], GL_STATIC_DRAW);
     glEnableVertexAttribArray(ST_TEXTURE_LOC);
     glVertexAttribPointer(ST_TEXTURE_LOC, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(m_Indices[0]) * m_Indices.size(), &m_Indices[0], GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices[0]) * indices.size(), &indices[0], GL_STATIC_DRAW);
 
     glBindBuffer(GL_ARRAY_BUFFER, IBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(mat4) * SM::MAX_NUM_BOIDS, NULL, GL_DYNAMIC_DRAW);
@@ -225,22 +225,22 @@ void StaticMesh::render(unsigned int nInstances, const mat4* model_matrix, const
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, IBO);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(mat4) * nInstances, &model_matrix[0]);
-    for (unsigned int i = 0; i < m_Meshes.size(); i++) {
-        unsigned int mIndex = m_Meshes[i].materialIndex;
-        assert(mIndex < m_Materials.size());
+    for (unsigned int i = 0; i < meshes.size(); i++) {
+        unsigned int mIndex = meshes[i].materialIndex;
+        assert(mIndex < materials.size());
 
         glBindBuffer(GL_ARRAY_BUFFER, d_VBO);
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * nInstances, &atlasDepths[0]);
-        if (m_Materials[mIndex].diffTex) m_Materials[mIndex].diffTex->bind(GL_TEXTURE0);
-        if (m_Materials[mIndex].mtlsTex) m_Materials[mIndex].mtlsTex->bind(GL_TEXTURE1);
+        if (materials[mIndex].diffTex) materials[mIndex].diffTex->bind(GL_TEXTURE0);
+        if (materials[mIndex].mtlsTex) materials[mIndex].mtlsTex->bind(GL_TEXTURE1);
         
         glDrawElementsInstancedBaseVertex(
             GL_TRIANGLES,
-            m_Meshes[i].n_Indices,
+            meshes[i].n_Indices,
             GL_UNSIGNED_INT,
-            (void*)(sizeof(unsigned int) * m_Meshes[i].baseIndex),
+            (void*)(sizeof(unsigned int) * meshes[i].baseIndex),
             nInstances,
-            m_Meshes[i].baseVertex);
+            meshes[i].baseVertex);
     }
     // unbind textures so they don't "spill over"
     glActiveTexture(GL_TEXTURE0);

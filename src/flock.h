@@ -20,6 +20,10 @@ class Flock {
         auto pth = MODEL_NO_DIR(nm);
         if (pth == "fish_threadfin") {
             return BoidType::F_THREADFIN;
+        } else if (pth == "fish_marlin") {
+            return BoidType::F_MARLIN;
+        } else if (pth == "fish_spear") {
+            return BoidType::F_SPEAR_FISH;
         } else if (pth == "shark2") {
             return BoidType::S_BLUE;
         }
@@ -65,7 +69,6 @@ class Flock {
 
     std::deque<Boid*> boids;
     std::vector<mat4> transforms;
-
     VariantMesh* vmesh;
 };
 

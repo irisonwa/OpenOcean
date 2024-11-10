@@ -27,33 +27,33 @@ bool BoneMesh::loadMesh(std::string mesh_name, bool popBuffers) {
 }
 
 bool BoneMesh::initScene(const aiScene* scene, std::string mesh_name) {
-    m_Meshes.resize(scene->mNumMeshes);
-    m_Materials.resize(scene->mNumMaterials);
+    meshes.resize(scene->mNumMeshes);
+    materials.resize(scene->mNumMaterials);
 
     unsigned int nvertices = 0;
     unsigned int nindices = 0;
 
     // Count all vertices and indices
-    for (unsigned int i = 0; i < m_Meshes.size(); i++) {
-        m_Meshes[i].materialIndex = scene->mMeshes[i]->mMaterialIndex;  // get current material index
-        m_Meshes[i].n_Indices = scene->mMeshes[i]->mNumFaces * 3;       // there are 3 times as many indices as there are faces (since they're all triangles)
-        m_Meshes[i].baseVertex = nvertices;                             // index of first vertex in the current mesh
-        m_Meshes[i].baseIndex = nindices;                               // track number of indices
+    for (unsigned int i = 0; i < meshes.size(); i++) {
+        meshes[i].materialIndex = scene->mMeshes[i]->mMaterialIndex;  // get current material index
+        meshes[i].n_Indices = scene->mMeshes[i]->mNumFaces * 3;       // there are 3 times as many indices as there are faces (since they're all triangles)
+        meshes[i].baseVertex = nvertices;                             // index of first vertex in the current mesh
+        meshes[i].baseIndex = nindices;                               // track number of indices
 
         // Move forward by the corresponding number of vertices/indices to find the base of the next vertex/index
         nvertices += scene->mMeshes[i]->mNumVertices;
-        nindices += m_Meshes[i].n_Indices;
+        nindices += meshes[i].n_Indices;
     }
 
     // Reallocate space for structure of arrays (SOA) values
-    m_Positions.reserve(nvertices);
-    m_Normals.reserve(nvertices);
-    m_TexCoords.reserve(nvertices);
-    m_Indices.reserve(nindices);
+    vertices.reserve(nvertices);
+    normals.reserve(nvertices);
+    texCoords.reserve(nvertices);
+    indices.reserve(nindices);
     m_Bones.resize(nvertices);
 
     // Initialise meshes
-    for (unsigned int i = 0; i < m_Meshes.size(); i++) {
+    for (unsigned int i = 0; i < meshes.size(); i++) {
         const aiMesh* am = scene->mMeshes[i];
         initSingleMesh(i, am);
     }
@@ -75,9 +75,9 @@ void BoneMesh::initSingleMesh(unsigned int mIndex, const aiMesh* amesh) {
         const aiVector3D& pNormal = amesh->mNormals ? amesh->mNormals[i] : aiVector3D(0.0f, 1.0f, 0.0f);
         const aiVector3D& pTexCoord = amesh->HasTextureCoords(0) ? amesh->mTextureCoords[0][i] : aiVector3D(0.0f, 0.0f, 0.0f);
 
-        m_Positions.push_back(vec3(pPos.x, pPos.y, pPos.z));
-        m_Normals.push_back(vec3(pNormal.x, pNormal.y, pNormal.z));
-        m_TexCoords.push_back(vec2(pTexCoord.x, pTexCoord.y));
+        vertices.push_back(vec3(pPos.x, pPos.y, pPos.z));
+        normals.push_back(vec3(pNormal.x, pNormal.y, pNormal.z));
+        texCoords.push_back(vec2(pTexCoord.x, pTexCoord.y));
     }
 
     // Load all bones in mesh
@@ -86,7 +86,7 @@ void BoneMesh::initSingleMesh(unsigned int mIndex, const aiMesh* amesh) {
         unsigned int boneID = getBoneID(aBone);
 
         for (int j = 0; j < aBone->mNumWeights; j++) {
-            unsigned int gvID = m_Meshes[mIndex].baseVertex + aBone->mWeights[j].mVertexId;  // global vertex id
+            unsigned int gvID = meshes[mIndex].baseVertex + aBone->mWeights[j].mVertexId;  // global vertex id
             float weight = aBone->mWeights[j].mWeight;
             m_Bones[gvID].addBoneData(boneID, weight);
         }
@@ -96,7 +96,7 @@ void BoneMesh::initSingleMesh(unsigned int mIndex, const aiMesh* amesh) {
     for (unsigned int i = 0; i < amesh->mNumFaces; i++) {
         const aiFace& Face = amesh->mFaces[i];
         for (unsigned int i = 0; i < Face.mNumIndices; i++) {
-            m_Indices.push_back(Face.mIndices[i]);
+            indices.push_back(Face.mIndices[i]);
         }
     }
 }
@@ -291,17 +291,17 @@ bool BoneMesh::loadDiffuseTexture(const aiMaterial* pMaterial, std::string dir, 
             const aiTexture* cTex = scene->GetEmbeddedTexture(Path.C_Str());
             if (cTex) {
                 // printf("%s: embedded diffuse texture type %s\n", name.c_str(), cTex->achFormatHint);
-                m_Materials[index].diffTex = new Texture(GL_TEXTURE_2D);
+                materials[index].diffTex = new Texture(GL_TEXTURE_2D);
                 unsigned int buffer = cTex->mWidth;
-                m_Materials[index].diffTex->load(buffer, cTex->pcData);
+                materials[index].diffTex->load(buffer, cTex->pcData);
             } else {
                 std::string p(Path.data);
                 if (p.substr(0, 2) == ".\\") {
                     p = p.substr(2, p.size() - 2);
                 }
                 std::string fullPath = dir + p;
-                m_Materials[index].diffTex = new Texture(GL_TEXTURE_2D_ARRAY);
-                if (m_Materials[index].diffTex->loadAtlas(fullPath, atlasTileSize, atlasTilesUsed)) {
+                materials[index].diffTex = new Texture(GL_TEXTURE_2D_ARRAY);
+                if (materials[index].diffTex->loadAtlas(fullPath, atlasTileSize, atlasTilesUsed)) {
                     // printf("%s: Loaded diffuse texture '%s'\n", name.c_str(), fullPath.c_str());
                 } else {
                     printf("Error loading diffuse texture '%s'\n", fullPath.c_str());
@@ -325,8 +325,8 @@ bool BoneMesh::loadSpecularTexture(const aiMaterial* pMaterial, std::string dir,
             }
 
             std::string fullPath = dir + p;
-            m_Materials[index].mtlsTex = new Texture(GL_TEXTURE_2D_ARRAY);
-            if (m_Materials[index].mtlsTex->loadAtlas(fullPath, atlasTileSize, atlasTilesUsed)) {
+            materials[index].mtlsTex = new Texture(GL_TEXTURE_2D_ARRAY);
+            if (materials[index].mtlsTex->loadAtlas(fullPath, atlasTileSize, atlasTilesUsed)) {
                 // printf("%s: Loaded metalness texture '%s'\n", name.c_str(), fullPath.c_str());
             } else {
                 printf("Error loading metalness texture '%s'\n", fullPath.c_str());
@@ -350,17 +350,17 @@ void BoneMesh::populateBuffers() {
     glGenBuffers(1, &BBO);
 
     glBindBuffer(GL_ARRAY_BUFFER, p_VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(m_Positions[0]) * m_Positions.size(), &m_Positions[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices[0]) * vertices.size(), &vertices[0], GL_STATIC_DRAW);
     glEnableVertexAttribArray(SK_POSITION_LOC);
     glVertexAttribPointer(SK_POSITION_LOC, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
     glBindBuffer(GL_ARRAY_BUFFER, n_VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(m_Normals[0]) * m_Normals.size(), &m_Normals[0], GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(normals[0]) * normals.size(), &normals[0], GL_DYNAMIC_DRAW);
     glEnableVertexAttribArray(SK_NORMAL_LOC);
     glVertexAttribPointer(SK_NORMAL_LOC, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
     glBindBuffer(GL_ARRAY_BUFFER, t_VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(m_TexCoords[0]) * m_TexCoords.size(), &m_TexCoords[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(texCoords[0]) * texCoords.size(), &texCoords[0], GL_STATIC_DRAW);
     glEnableVertexAttribArray(SK_TEXTURE_LOC);
     glVertexAttribPointer(SK_TEXTURE_LOC, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
@@ -373,7 +373,7 @@ void BoneMesh::populateBuffers() {
                           sizeof(VertexBoneData), (const GLvoid*)(MAX_NUM_BONES_PER_VERTEX * sizeof(unsigned int)));
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(m_Indices[0]) * m_Indices.size(), &m_Indices[0], GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices[0]) * indices.size(), &indices[0], GL_STATIC_DRAW);
 
     glBindBuffer(GL_ARRAY_BUFFER, IBO);
     for (unsigned int i = 0; i < 4; i++) {
@@ -397,22 +397,22 @@ void BoneMesh::render(unsigned int nInstances, const mat4* bone_trans_matrix, co
     glBindBuffer(GL_ARRAY_BUFFER, IBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(mat4) * nInstances, &bone_trans_matrix[0], GL_DYNAMIC_DRAW);
 
-    for (unsigned int i = 0; i < m_Meshes.size(); i++) {
-        unsigned int mIndex = m_Meshes[i].materialIndex;
-        assert(mIndex < m_Materials.size());
+    for (unsigned int i = 0; i < meshes.size(); i++) {
+        unsigned int mIndex = meshes[i].materialIndex;
+        assert(mIndex < materials.size());
 
         glBindBuffer(GL_ARRAY_BUFFER, d_VBO);
         glBufferData(GL_ARRAY_BUFFER, sizeof(float) * nInstances, &depths[0], GL_DYNAMIC_DRAW);
-        if (m_Materials[mIndex].diffTex) m_Materials[mIndex].diffTex->bind(GL_TEXTURE0);
-        if (m_Materials[mIndex].mtlsTex) m_Materials[mIndex].mtlsTex->bind(GL_TEXTURE1);
+        if (materials[mIndex].diffTex) materials[mIndex].diffTex->bind(GL_TEXTURE0);
+        if (materials[mIndex].mtlsTex) materials[mIndex].mtlsTex->bind(GL_TEXTURE1);
         
         glDrawElementsInstancedBaseVertex(
             GL_TRIANGLES,
-            m_Meshes[i].n_Indices,
+            meshes[i].n_Indices,
             GL_UNSIGNED_INT,
-            (void*)(sizeof(unsigned int) * m_Meshes[i].baseIndex),
+            (void*)(sizeof(unsigned int) * meshes[i].baseIndex),
             nInstances,
-            m_Meshes[i].baseVertex);
+            meshes[i].baseVertex);
     }
 
     // unbind textures so they don't "spill over"

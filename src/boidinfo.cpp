@@ -6,25 +6,21 @@ namespace BoidInfo {
         {F_THREADFIN, {
             PLANKTON
         }},
-        {F_BLACK_MARLIN, {
-            
-        }},
-        {F_STRIPED_MARLIN, {
-            
+        {F_MARLIN, {
+            PLANKTON
         }},
         {F_SPEAR_FISH, {
-            
+            PLANKTON
         }},
         {F_TUNA, {
-            
+            PLANKTON
         }},
         {F_HERRING, {
-            
+            PLANKTON
         }},
         {S_BLUE, {
             F_THREADFIN,
-            F_BLACK_MARLIN,
-            F_STRIPED_MARLIN,
+            F_MARLIN,
             F_SPEAR_FISH,
             F_TUNA,
             F_HERRING
@@ -53,19 +49,30 @@ namespace BoidInfo {
             S_WHITE,
             WHALE
         }},
-        {F_BLACK_MARLIN, {
-            
-        }},
-        {F_STRIPED_MARLIN, {
-            
+        {F_MARLIN, {
+            S_BLUE,
+            S_WHALE,
+            S_WHITE,
+            WHALE
         }},
         {F_SPEAR_FISH, {
-            
+            S_BLUE,
+            S_WHALE,
+            S_WHITE,
+            WHALE
         }},
         {F_TUNA, {
+            S_BLUE,
+            S_WHALE,
+            S_WHITE,
+            WHALE
             
         }},
         {F_HERRING, {
+            S_BLUE,
+            S_WHALE,
+            S_WHITE,
+            WHALE
             
         }},
         {S_BLUE, {
@@ -92,12 +99,10 @@ namespace BoidInfo {
         switch (t) {
             case F_THREADFIN:
                 return vec3(.5);
-            case F_BLACK_MARLIN:
-                return vec3(1);
-            case F_STRIPED_MARLIN:
-                return vec3(1);
+            case F_MARLIN:
+                return vec3(.75);
             case F_SPEAR_FISH:
-                return vec3(1);
+                return vec3(.75);
             case F_TUNA:
                 return vec3(1);
             case F_HERRING:

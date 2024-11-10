@@ -4,8 +4,8 @@ namespace SM {
     int width = 1024;
     int height = 600;
 
-    float WORLD_BOUND_HIGH = 20;
-    float WORLD_BOUND_LOW = -20;
+    float WORLD_BOUND_HIGH = 50;
+    float WORLD_BOUND_LOW = -50;
     
     const float floor_position = 0.f;
     bool flashlightToggled = false;

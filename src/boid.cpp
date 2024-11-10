@@ -39,7 +39,7 @@ void Boid::move(std::deque<Boid*> boids) {
     vec3 closestPrey = vec3(1e9);  // chase closest prey instead of group if it's within chase distance
     float closestPreyDist = 1e9;
     float minEnemyInterceptDistance = 8;
-    float minEnemyChaseDistance = 3;
+    float minEnemyChaseDistance = 1.5;
     float fearWeight = 1;
     float goalWeight = .1;
 
@@ -145,7 +145,8 @@ void Boid::update() {
         velocity.z += tf;
     if (pos.z > SM::WORLD_BOUND_HIGH)
         velocity.z -= tf;
-    // velocity = normalize(velocity);
-    pos += velocity * Boid::MAX_SPEED * SM::delta;
-    lastVelocity = velocity;
+    velocity = normalize(velocity);
+    lastVelocity = Util::lerpV(lastVelocity, velocity, SM::delta * lerpAcceleration);
+    pos += lastVelocity * Boid::MAX_SPEED * SM::delta;
+    // lastVelocity = velocity;
 }

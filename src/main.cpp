@@ -40,7 +40,7 @@ void init() {
     // smeshes[m4->name] = m4;
     // StaticMesh* m5 = new StaticMesh("cube", TEST_SPEC, 1024, 4);
     // smeshes[m5->name] = m5;
-    StaticMesh* m6 = new StaticMesh("room", TEST_ROOM, 1024, 1);
+    StaticMesh* m6 = new StaticMesh("room", MESH_KELP, -1, -1);
     smeshes[m6->name] = m6;
     StaticMesh* m7 = new StaticMesh("shark", MESH_SHARK, 1024, 1);
     smeshes[m7->name] = m7;
@@ -64,8 +64,12 @@ void init() {
     vMesh = new VariantMesh(
         "vmesh", shaders["variant"],
         {
-            {MESH_THREADFIN, 500, 1024, 1, std::vector<unsigned int>(500, 1)},
+            {MESH_THREADFIN, 300, 1024, 1, std::vector<unsigned int>(300, 1)},
+            {MESH_MARLIN, 300, 1024, 2, std::vector<unsigned int>(300, 0)}, // black marlin
+            {MESH_MARLIN, 300, 1024, 2, std::vector<unsigned int>(300, 1)}, // blue marlin
+            {MESH_SPEARFISH, 300, 1024, 1, std::vector<unsigned int>(300, 1)},
             {MESH_SHARK2, 2, 1024, 1, std::vector<unsigned int>(2, 1)},
+            {MESH_SHARK2, 3, 1024, 4, std::vector<unsigned int>(3, 2)},
             // {TEST_SPEC, 1, 1024, 4, std::vector<unsigned int>(1, 3)},
             // {TEST_BOID, 3, 1024, 4, std::vector<unsigned int>(3, 2)},
             // {MESH_KELP, 3, 1024, 1, std::vector<unsigned int>(3, 3)},
@@ -90,7 +94,7 @@ void init() {
             for (int x = -lim / 2; x < lim / 2; x += 1) {
                 vec3 translation(
                     (float)x + offset * (rand() % spread),
-                    (float)y + offset * (rand() % spread),
+                    (float)y + offset,
                     (float)z + offset * (rand() % spread));
                 translations.push_back(translation);
                 int idx = rand() % 4;
@@ -102,10 +106,6 @@ void init() {
             }
         }
     }
-    // for (int i = 0; i < translations.size(); ++i) {
-    //     Boid* boid = new Boid(translations[i], normalize(vec3(-5 + rand() % 10, -5 + rand() % 10, -5 + rand() % 10)), BoidType::FISH_1, i);
-    //     boids.push_back(boid);
-    // }
 
     float flashAttLin = 0.0022;
     float flashAttQuad = 0.00019;
@@ -189,9 +189,9 @@ void display() {
 
     // meshes["shark"]->render(numInstances, models, depths.data());  // draw cubes
     // smeshes["boid_display"]->render(4, cubes, cubeds);  // display
-    // smeshes["room"]->render(scale(mat4(1), vec3(250)), 1);
+    smeshes["room"]->render(scale(mat4(1), vec3(.25)), 1);
     
-    smeshes["island"]->render(scale(mat4(1), vec3(15)), 1);
+    smeshes["island"]->render(scale(mat4(1), vec3(20)), 1);
 
     /// ---------------- SKINNED MESHES ---------------- ///
     boneLight->setLightAtt(view, persp_proj, camera.pos);
@@ -201,17 +201,17 @@ void display() {
     boneLight->shader->setBool("showNormal", SM::showNormal);
     boneLight->use();
 
-    // bmeshes["test kelp"]->update();
-    // bmeshes["test kelp"]->render(translate(mat4(1), vec3(-10)));
     // bmeshes["test guy"]->update();
     // bmeshes["test guy"]->render(translate(mat4(1), vec3(-20)));
 
-    // const unsigned int numInstances = boids.size();
-    // mat4 models[numInstances];
-    // for (int i = 0; i < numInstances; i++) {
-    //     boids[i]->process(boids);
-    //     models[i] = scale(Util::lookTowards(boids[i]->pos, boids[i]->dir), scales[i]);
-    // }
+    const unsigned int numInstances = translations.size();
+    mat4 models[numInstances];
+    for (int i = 0; i < translations.size(); i++) {
+        models[i] = translate(mat4(1), translations[i]);
+    }
+    bmeshes["test kelp"]->update();
+    // bmeshes["test kelp"]->render(scale(translate(mat4(1), vec3(-10)), vec3(.25)));
+    bmeshes["test kelp"]->render(numInstances, models);
 
     // bmeshes["test shark"]->update();
     // bmeshes["test shark"]->render(numInstances, models, depths.data());
@@ -231,11 +231,8 @@ void display() {
     variantLight->setLightAtt(view, persp_proj, camera.pos);
     variantLight->setSpotLightAtt(0, flashlightCoords, flashlightDir, vec3(0.2f), vec3(1, .6, .2), vec3(1));
     variantLight->use();
-    // std::vector<mat4> sub(&models[0], &models[vMesh->totalInstanceCount]);
-    // vMesh->render(sub.data());
-    // vMesh->update();
     flock->process();
-    flock->show();
+    // flock->show();
 
     glutSwapBuffers();
 }
