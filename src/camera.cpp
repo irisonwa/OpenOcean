@@ -110,6 +110,10 @@ mat4 Camera::getViewMatrix() {
     return view;
 }
 
+mat4 Camera::getPerspectiveProjection() {
+    return perspectiveProjection;
+}
+
 void Camera::setPosition(vec3 p) {
     pos = p;
     followPos = p;

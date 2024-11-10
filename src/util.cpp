@@ -75,10 +75,14 @@ namespace Util {
         return rad2Deg(atan2(v.y, v.x));
     }
 
-    FloatComp compareFloat(float a, float b) {
-        if (std::abs(a - b) < MIN_FLOAT_DIFF) return FloatComp::EQ;
-        else if (a < b) return FloatComp::LT;
-        else return FloatComp::GT;
+    // Compare float values.
+    // Returns 0 if both floats are "equal" (difference is less than some epsilon)
+    // Returns -1 if `a` is less than `b`
+    // Returns 1 if `a` is greater than `b`
+    int compareFloat(float a, float b) {
+        if (std::abs(a - b) < MIN_FLOAT_DIFF) return 0;
+        else if (a < b) return -1;
+        else return 1;
     }
 
     // Decompose a mat4 into a vec3 scale, quat rotation, vec3 translation, vec3 skew, and vec4 perspective

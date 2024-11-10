@@ -41,6 +41,7 @@
 #include "sm.h"
 #include "util.h"
 #include "cubemap.h"
+#include "flock.h"
 #include "lighting.h"
 #include "boid.h"
 #include "player.h"
@@ -60,9 +61,13 @@
 #define TEST_BOID "boid.obj"
 #define TEST_GROUND "test_ground.obj"
 #define TEST_ROOM "box.obj"
+
 #define MESH_SUB "sub.obj"
 #define MESH_SHARK "shark.obj"
+#define MESH_SHARK2 "shark2.obj"
 #define MESH_KELP "kelp.obj"
+#define MESH_ISLAND "island.obj"
+#define MESH_THREADFIN "fish_threadfin.obj"
 
 /* Animated meshes */
 #define MESH_PLAYER_ANIM "sub.gltf"
@@ -71,6 +76,7 @@
 #define MESH_GUY_ANIM "boblampclean.md5mesh"
 #define MESH_WLL_ANIM "wll.gltf"
 #define MESH_KELP_ANIM "kelp.gltf"
+#define MESH_THREADFIN_ANIM "fish_threadfin.gltf"
 
 const char* vert_main = PROJDIR "Shaders/main.vert";
 const char* frag_main = PROJDIR "Shaders/main.frag";
@@ -84,10 +90,11 @@ const char* vert_variant = PROJDIR "Shaders/variantMesh.vert";
 const char* frag_variant = PROJDIR "Shaders/variantMesh.frag";
 
 Cubemap* cubemap;
-Camera camera = Camera();
+Camera camera = Camera(0.1f, 1000.0f, (float)SM::width / (float)SM::height);
 Lighting *baseLight, *boneLight, *variantLight;
 
 std::deque<Boid*> boids;
+Flock *flock;
 Player *player;
 VariantMesh* vMesh;
 

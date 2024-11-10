@@ -24,8 +24,9 @@ bool StaticMesh::loadMesh(std::string file_name, bool popBuffer) {
         valid_scene = initScene(scene, file_name);
     }
 
-    printf("Successfully loaded static mesh \"%s\"\n", name.c_str());
     glBindVertexArray(0);  // avoid modifying VAO between loads
+
+    if (valid_scene) printf("Successfully loaded static mesh \"%s\"\n", name.c_str());
     return valid_scene;
 }
 

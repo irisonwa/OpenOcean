@@ -166,11 +166,6 @@ void Lighting::setSpotLightAtt(int idx, vec3 pos, vec3 dir, vec3 amb, vec3 dif, 
         spotLights[idx].ambient = amb;
         spotLights[idx].diffuse = dif;
         spotLights[idx].specular = spec;
-        spotLights[idx].constant = 1.f;
-        spotLights[idx].linear = 0.0009f;
-        spotLights[idx].quadratic = 0.00032f;
-        spotLights[idx].cutOff = cos(Util::deg2Rad(12.5f));
-        spotLights[idx].outerCutOff = cos(Util::deg2Rad(15.5f));
     }
 }
 

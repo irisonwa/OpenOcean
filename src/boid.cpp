@@ -1,17 +1,5 @@
 #include "boid.h"
-
-Boid::Boid(vec3 _pos, vec3 vel, BoidType t, int id) {
-    pos = _pos;
-    velocity = vel;
-    vec3 nVel = normalize(velocity);
-    dir = nVel;
-    velocity = nVel;
-    lastVelocity = nVel;
-    type = t;
-    ID = id;
-}
-
-Boid::~Boid() { }
+using namespace BoidInfo;
 
 void Boid::process(std::deque<Boid*> boids) {
     dir = normalize(velocity);
@@ -27,52 +15,78 @@ void Boid::move(std::deque<Boid*> boids) {
     // subtraction in alignment and cohesion checks
     int numFamily = 0;
 
-    // alignment variables
-    // float avgXVel = 0;
-    // float avgYVel = 0;
+    // alignment variable
     vec3 avgVel(0);
 
-    // cohesion variables
-    // int centerX = 0;
-    // int centerY = 0;
+    // cohesion
     vec3 avgCentre(0);
 
     // separation variables
-    // float moveX = 0;
-    // float moveY = 0;
     vec3 avgMove(0);
+    // if being chased, ignore all prey. define separate attacking and fleeing so that any behaviour defined
+    // before fully seen (i.e., deciding to chase before finding a predator in boid list) can be undone
+    vec3 avgMoveAtt(0);
+    vec3 avgMoveFlee(0);
 
     float minSepDistance = .5;
     float matchingFactor = 0.05;
     float centeringFactor = 0.005;
-    float avoidFactor = 0.05;
+    float avoidFactor = 0.1;
 
-    // // if being chased, ignore all prey. define separate attacking and fleeing so that any behaviour defined
-    // // before fully seen (i.e., deciding to chase before finding a predator in boid list) can be undone
-    // float attackingMoveX = 0;
-    // float attackingMoveY = 0;
-    // float fleeingMoveX = 0;
-    // float fleeingMoveY = 0;
-
-    // isBeingChased = false;                // reset immediate fleeing variable
-    // vec3 closestPrey = nullptr;  // chase closest prey instead of group if it's within chase distance
-    // float closestPreyDist = -1;
+    bool isBeingChased = false;    // am i being chased?
+    bool isInPursuit = false;      // am i chasing prey (intercepting or chasing)
+    bool isInChasing = false;      // am i chasing prey (chasing only)
+    vec3 closestPrey = vec3(1e9);  // chase closest prey instead of group if it's within chase distance
+    float closestPreyDist = 1e9;
+    float minEnemyInterceptDistance = 8;
+    float minEnemyChaseDistance = 3;
+    float fearWeight = 1;
+    float goalWeight = .1;
 
     for (Boid* otherBoid : boids) {
         if (otherBoid->ID != ID) {
             float distFromBoid = distance(pos, otherBoid->pos);
 
-            // alignment
-            if (distFromBoid < Boid::FAMILY_RANGE) {
-                numFamily += 1;
-                avgVel += otherBoid->velocity;
+            if (distFromBoid < FAMILY_RANGE) {
+                // stay within group of same boid type
+                if (isFamily(type, otherBoid->type)) {
+                    numFamily++;
 
-                // cohesion
-                avgCentre += otherBoid->pos;
+                    // alignment
+                    avgVel += otherBoid->velocity;
 
-                // separation
-                if (distFromBoid < minSepDistance) {
-                    avgMove += pos - otherBoid->pos;
+                    // cohesion
+                    avgCentre += otherBoid->pos;
+
+                    // separation
+                    if (distFromBoid < minSepDistance) {
+                        avgMove += pos - otherBoid->pos;
+                    }
+                    // } else if (!SM::canBoidsAttack) {
+                    //     // to avoid altering if-statement structure in case i decide to remove this
+                } else {
+                    if (isPreyTo(type, otherBoid->type)) {
+                        if (distFromBoid <= minEnemyInterceptDistance) {
+                            isBeingChased = true;
+                            // printf("CHASED\n");
+                        }
+                        avgMoveFlee += (pos - otherBoid->pos) * fearWeight;
+                    } else if (isPredatorTo(type, otherBoid->type)) {
+                        isInPursuit = isInPursuit || distFromBoid <= minEnemyInterceptDistance;
+                        if (distFromBoid <= minEnemyChaseDistance) {
+                            // move towards goal
+                            isInChasing = true;
+                            if (distFromBoid < closestPreyDist) {
+                                closestPrey = otherBoid->pos;
+                                closestPreyDist = distFromBoid;
+                            }
+                            avgMoveAtt -= (pos - otherBoid->pos) * goalWeight;
+                        } else if (distFromBoid <= minEnemyInterceptDistance) {
+                            // intercept goal
+                            // doing it like this means predators are drawn towards larger groups more than single prey
+                            avgMoveAtt -= (pos - (otherBoid->pos + otherBoid->dir * otherBoid->speed)) * goalWeight;
+                        }
+                    }
                 }
             }
         }
@@ -87,10 +101,19 @@ void Boid::move(std::deque<Boid*> boids) {
             // cohesion
             avgCentre /= numFamily;
             velocity += (avgCentre - pos) * centeringFactor;
-
-            // separation
-            velocity += avgMove * avoidFactor;
         }
+
+        // separation
+        if (isBeingChased) {
+            velocity += avgMoveFlee * avoidFactor;
+        } else if (isInPursuit) {
+            if (isInChasing) {
+                // chase closest target only
+                avgMoveAtt = -(pos - closestPrey) * goalWeight;
+            }
+            velocity += avgMoveAtt * avoidFactor;
+        }
+        velocity += avgMove * avoidFactor;
     }
 }
 
@@ -103,6 +126,7 @@ void Boid::limitSpeed() {
         if (tspeed > Boid::MAX_SPEED) {
             velocity = (velocity / vec3(tspeed)) * Boid::MAX_SPEED;
         }
+        speed = length(velocity);
     }
 }
 

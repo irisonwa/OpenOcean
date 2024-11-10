@@ -58,21 +58,10 @@ void Player::processMovement(Camera camera) {
 
     if (!CAN_FLY) pos.y = t_cpos_y;  // if can't fly, don't change y_pos
 
+    pos = vec3(
+        Util::clamp(pos.x, SM::WORLD_BOUND_LOW, SM::WORLD_BOUND_HIGH),
+        Util::clamp(pos.y, SM::WORLD_BOUND_LOW, SM::WORLD_BOUND_HIGH),
+        Util::clamp(pos.z, SM::WORLD_BOUND_LOW, SM::WORLD_BOUND_HIGH)
+    );
     followPos = Util::lerpV(followPos, pos, SM::delta * acceleration);
-
-    // Keep player within world bounds
-    float tf = 0.2;
-    if (followPos.x < SM::WORLD_BOUND_LOW)
-        followPos.x += tf;
-    if (followPos.x > SM::WORLD_BOUND_HIGH)
-        followPos.x -= tf;
-    if (followPos.y < SM::WORLD_BOUND_LOW)
-        followPos.y += tf;
-    if (followPos.y > SM::WORLD_BOUND_HIGH)
-        followPos.y -= tf;
-    if (followPos.z < SM::WORLD_BOUND_LOW)
-        followPos.z += tf;
-    if (followPos.z > SM::WORLD_BOUND_HIGH)
-        followPos.z -= tf;
-
 }

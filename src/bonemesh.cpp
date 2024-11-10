@@ -22,7 +22,7 @@ bool BoneMesh::loadMesh(std::string mesh_name, bool popBuffers) {
         }
     }
 
-    printf("Successfully loaded %sboned mesh \"%s\"\n", popBuffers ? "" : "variant ", name.c_str());
+    if (valid_scene) printf("Successfully loaded %sboned mesh \"%s\"\n", popBuffers ? "" : "variant ", name.c_str());
     return valid_scene;
 }
 

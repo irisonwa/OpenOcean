@@ -52,6 +52,7 @@ namespace SM {
     extern bool showNormal;
 
     extern int MAX_NUM_BOIDS; // maximum count of boids allowed to be rendered. 
+    extern bool canBoidsAttack; // toggle predator/prey behaviour of boids
 
 };
 

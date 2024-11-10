@@ -22,6 +22,14 @@ class Camera {
         // setup rotation quaternion
         processView();
         view = getViewMatrix();
+        perspectiveProjection = perspective(Util::deg2Rad(FOV), aspectRatio, nearClipDist, farClipDist);
+    }
+
+    Camera(float _nearClipDist, float _farClipDist, float aspect) : Camera() {
+        nearClipDist = _nearClipDist;
+        farClipDist = _farClipDist;
+        aspectRatio = aspect;
+        perspectiveProjection = perspective(Util::deg2Rad(FOV), aspectRatio, nearClipDist, farClipDist);
     }
 
     // Process and update the camera's view matrix. The mouse's x- and y-coordinates are used to dictate the direction the player is looking.
@@ -32,6 +40,9 @@ class Camera {
 
     // Get the world view matrix for the camera.
     mat4 getViewMatrix();
+
+    // Get the prospective projection matrix for the camera.
+    mat4 getPerspectiveProjection();
 
     // Follow the target position `pos` who is pointing in the direction `dir` at some fixed distance
     void followTarget(vec3 pos, vec3 dir);
@@ -49,11 +60,16 @@ class Camera {
     vec3 right;                  // Camera right direction
     vec3 target;                 // Camera target position
     mat4 view;                   // Model view matrix
+    mat4 perspectiveProjection;  // Model perspective projection matrix
+    float aspectRatio = 16/9;    // Aspect ratio of camera
+
     float targetDist = 12;       // Camera distance to target (fixed)
     float fps_zm = -3;           // Camera zoom in first person mode
     float targetHorizontalDist;  // Camera horizontal distance to target
     float targetVerticalDist;    // Camera vertical distance to target
 
+    float nearClipDist = 0.1f;   // Distance to the near clip plane
+    float farClipDist = 1000.f;  // Distance to the far clip plane
     float base_FOV = 60.0f;      // Normal (minimum) field of view
     float max_FOV = 105.0f;      // Maximum field of view
     float FOV = base_FOV;        // Camera field of view

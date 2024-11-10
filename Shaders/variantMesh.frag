@@ -30,6 +30,8 @@ layout(binding = 19) uniform highp sampler2DArray mtlSampler10;
 layout(binding = 20) uniform highp sampler2DArray diffSampler11;
 layout(binding = 21) uniform highp sampler2DArray mtlSampler11;
 
+layout(binding = 30) uniform highp sampler2DArray samplers[][2];
+
 struct Material {
   highp sampler2DArray diffuse;
   highp sampler2DArray specular;

@@ -37,13 +37,6 @@
 using namespace glm;
 // using namespace SM;
 
-// Enum values for float comparison, for ease of use
-enum FloatComp {
-    EQ,
-    LT,
-    GT
-};
-
 namespace Util {
     extern vec3 UP;  // World up
     extern vec3 FORWARD;  // World forward
@@ -69,7 +62,7 @@ namespace Util {
     extern mat4 lookTowards(vec3 pos, vec3 to, vec3 up);
     extern void printVec3(vec3 v);
     extern void printMat4(mat4 m);
-    extern FloatComp compareFloat(float a, float b);
+    extern int compareFloat(float a, float b);
 };
 
 #endif  // UTIL_H
