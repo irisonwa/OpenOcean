@@ -13,7 +13,7 @@ void Player::lookAt(vec3 p) {
 }
 
 void Player::render() {
-    mesh->update(shader);
+    mesh->update(shader, 10);
     mesh->render(transform);
 }
 
@@ -61,7 +61,6 @@ void Player::processMovement(Camera camera) {
     pos = vec3(
         Util::clamp(pos.x, SM::WORLD_BOUND_LOW, SM::WORLD_BOUND_HIGH),
         Util::clamp(pos.y, SM::WORLD_BOUND_LOW, SM::WORLD_BOUND_HIGH),
-        Util::clamp(pos.z, SM::WORLD_BOUND_LOW, SM::WORLD_BOUND_HIGH)
-    );
+        Util::clamp(pos.z, SM::WORLD_BOUND_LOW, SM::WORLD_BOUND_HIGH));
     followPos = Util::lerpV(followPos, pos, SM::delta * acceleration);
 }

@@ -33,7 +33,8 @@ class StaticMesh : public Mesh {
         usingAtlas = true;
         atlasTileSize = _atlasTileSize;
         atlasTilesUsed = _atlasTilesUsed;
-        if (load) if (!loadMesh(mesh_path)) std::cout << "\n\nfailed to load mesh \"" << nm.c_str() << "\" :(\n";
+        if (load)
+            if (!loadMesh(mesh_path)) std::cout << "\n\nfailed to load mesh \"" << nm.c_str() << "\" :(\n";
     }
 
     ~StaticMesh();
@@ -46,8 +47,8 @@ class StaticMesh : public Mesh {
     void populateBuffers();
     void render(unsigned int, const mat4*);                // render an array of meshes using instancing
     void render(unsigned int, const mat4*, const float*);  // render an array of meshes using instancing and atlas depths
-    void render(mat4);                                     // render a single mesh
     void render(mat4, float);                              // single atlas depth
+    void render(mat4);                                     // render a single mesh
 
 #define ST_POSITION_LOC 0  // p_vbo
 #define ST_NORMAL_LOC 1    // n_vbo

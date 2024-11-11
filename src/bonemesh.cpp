@@ -102,11 +102,10 @@ void BoneMesh::initSingleMesh(unsigned int mIndex, const aiMesh* amesh) {
 }
 
 int BoneMesh::getBoneID(const aiBone* pBone) {
-    int bIndex = 0;
     std::string bName = pBone->mName.C_Str();
 
     if (boneToIndexMap.find(bName) == boneToIndexMap.end()) {
-        bIndex = boneToIndexMap.size();
+        int bIndex = boneToIndexMap.size();
         BoneInfo* bi = new BoneInfo();
         m_BoneInfo.push_back(bi);
         m_BoneInfo[bIndex]->offsetMatrix = pBone->mOffsetMatrix;
@@ -117,21 +116,23 @@ int BoneMesh::getBoneID(const aiBone* pBone) {
     }
 }
 
-void BoneMesh::getBoneTransforms(float time, std::vector<aiMatrix4x4>& trans) {
+std::vector<aiMatrix4x4> BoneMesh::getBoneTransforms(float timeSinceStarted, float animSpeed) {
+    std::vector<aiMatrix4x4> trans(m_BoneInfo.size(), aiMatrix4x4());
     float tps = 0.0f;
     float animTime = 0.0f;
     if (scene->HasAnimations()) {
         /* mAnimations[0] -> the first animation. change the index to access other animations */
-        tps = scene->mAnimations[0]->mTicksPerSecond != 0 ? (float)scene->mAnimations[0]->mTicksPerSecond : 24;  // ticks per second = tps
-        animTime = fmod(time * tps, (float)scene->mAnimations[0]->mDuration);                                    // animation time in tps
+        tps = 24 * animSpeed;                                                              // ticks per second = tps
+        animTime = fmod(timeSinceStarted * tps, (float)scene->mAnimations[0]->mDuration);  // animation time in tps. modf used for looping
     }
 
     readNodeHierarchy(animTime, scene->mRootNode, aiMatrix4x4());
-    trans.resize(m_BoneInfo.size());
 
     for (int i = 0; i < m_BoneInfo.size(); i++) {
         trans[i] = m_BoneInfo[i]->lastTransformation;
     }
+
+    return trans;
 }
 
 void BoneMesh::readNodeHierarchy(float atime, const aiNode* node, const aiMatrix4x4& parent) {
@@ -145,20 +146,17 @@ void BoneMesh::readNodeHierarchy(float atime, const aiNode* node, const aiMatrix
         // Interpolate translation, scaling, and rotation
         if (animNode) {
             // Interpolate translation
-            aiVector3D trans;
-            calcInterpolatedTranslation(trans, atime, animNode);
+            aiVector3D trans = calcInterpolatedTranslation(atime, animNode);
             aiMatrix4x4 transM;
             aiMatrix4x4::Translation(trans, transM);
 
             // Interpolate scaling
-            aiVector3D scale;
-            calcInterpolatedScale(scale, atime, animNode);
+            aiVector3D scale = calcInterpolatedScale(atime, animNode);
             aiMatrix4x4 scaleM;
             aiMatrix4x4::Scaling(scale, scaleM);
 
             // Interpolate rotation
-            aiQuaternion rotation;
-            calcInterpolatedRotation(rotation, atime, animNode);
+            aiQuaternion rotation = calcInterpolatedRotation(atime, animNode);
             aiMatrix4x4 rotM;
             rotM = aiMatrix4x4(rotation.GetMatrix());
 
@@ -169,7 +167,10 @@ void BoneMesh::readNodeHierarchy(float atime, const aiNode* node, const aiMatrix
     aiMatrix4x4 globalTrans = parent * nodeTrans;
     if (boneToIndexMap.find(nodeName) != boneToIndexMap.end()) {
         unsigned int bIndex = boneToIndexMap[nodeName];
-        m_BoneInfo[bIndex]->lastTransformation = globalInverseTrans * globalTrans * m_BoneInfo[bIndex]->offsetMatrix;
+        m_BoneInfo[bIndex]->lastTransformation =
+            globalInverseTrans *
+            globalTrans *
+            m_BoneInfo[bIndex]->offsetMatrix;
     }
 
     for (int i = 0; i < node->mNumChildren; i++) {
@@ -180,59 +181,50 @@ void BoneMesh::readNodeHierarchy(float atime, const aiNode* node, const aiMatrix
 const aiNodeAnim* BoneMesh::findNodeAnim(const aiAnimation* anim, const std::string nodeName) {
     for (int i = 0; i < anim->mNumChannels; i++) {
         const aiNodeAnim* tnode = anim->mChannels[i];
-        if (std::string(tnode->mNodeName.data) == nodeName) return tnode;
+        if (std::string(tnode->mNodeName.data) == nodeName) {
+            return tnode;
+        }
     }
     return NULL;
 }
 
-void BoneMesh::calcInterpolatedTranslation(aiVector3D& out, float atime, const aiNodeAnim* node) {
+aiVector3D BoneMesh::calcInterpolatedTranslation(float atime, const aiNodeAnim* node) {
     if (node->mNumPositionKeys <= 1) {
-        out = node->mPositionKeys[0].mValue;
-        return;
+        return node->mPositionKeys[0].mValue;
     }
 
-    // lambda function. finds translation factor given an animation time in ticks and an aiNodeAnim. made because this function has only this one purpose
-    auto findPosition = [atime, &node]() -> unsigned int {
-        assert(node->mNumPositionKeys > 0);
-
-        for (unsigned int i = 0; i < node->mNumPositionKeys - 1; i++) {
-            float t = (float)node->mPositionKeys[i + 1].mTime;
-            if (atime < t) {
-                return i;
-            }
+    // get position index
+    unsigned int positionIndex = 0;
+    for (unsigned int i = 0; i < node->mNumPositionKeys - 1; i++) {
+        float t = (float)node->mPositionKeys[i + 1].mTime;
+        if (atime < t) {
+            positionIndex = i;
+            break;
         }
-        return 0;
-    };
-    unsigned int positionIndex = findPosition();
+    }
     assert(positionIndex + 1 < node->mNumPositionKeys);
 
     float deltaTime = node->mPositionKeys[positionIndex + 1].mTime - node->mPositionKeys[positionIndex].mTime;  // delta between two adjacent Position keyfraes
-    float factor = (atime - node->mPositionKeys[positionIndex].mTime) / deltaTime;                              // intermediate Position factor
+    float factor = (atime - node->mPositionKeys[positionIndex].mTime) / deltaTime;                              // intermediate position factor
 
     const aiVector3D& start = node->mPositionKeys[positionIndex].mValue;    // start position value
     const aiVector3D& end = node->mPositionKeys[positionIndex + 1].mValue;  // end position value
-    out = start + factor * (end - start);                                   // interpolated position
+    return start + factor * (end - start);                                  // interpolated position
 }
 
-void BoneMesh::calcInterpolatedScale(aiVector3D& out, float atime, const aiNodeAnim* node) {
+aiVector3D BoneMesh::calcInterpolatedScale(float atime, const aiNodeAnim* node) {
     if (node->mNumScalingKeys <= 1) {
-        out = node->mScalingKeys[0].mValue;
-        return;
+        return node->mScalingKeys[0].mValue;
     }
 
-    // lambda function. finds scaling factor given an animation time in ticks and an aiNodeAnim. made because this function has only this one purpose
-    auto findScaling = [atime, &node]() -> unsigned int {
-        assert(node->mNumScalingKeys > 0);
-
-        for (unsigned int i = 0; i < node->mNumScalingKeys - 1; i++) {
-            float t = (float)node->mScalingKeys[i + 1].mTime;
-            if (atime < t) {
-                return i;
-            }
+    unsigned int scalingIndex = 0;
+    for (unsigned int i = 0; i < node->mNumScalingKeys - 1; i++) {
+        float t = (float)node->mScalingKeys[i + 1].mTime;
+        if (atime < t) {
+            scalingIndex = i;
+            break;
         }
-        return 0;
-    };
-    unsigned int scalingIndex = findScaling();
+    }
     assert(scalingIndex + 1 < node->mNumScalingKeys);
 
     float deltaTime = node->mScalingKeys[scalingIndex + 1].mTime - node->mScalingKeys[scalingIndex].mTime;  // delta between two adjacent scaling keyfraes
@@ -240,28 +232,22 @@ void BoneMesh::calcInterpolatedScale(aiVector3D& out, float atime, const aiNodeA
 
     const aiVector3D& start = node->mScalingKeys[scalingIndex].mValue;    // start scale value
     const aiVector3D& end = node->mScalingKeys[scalingIndex + 1].mValue;  // end scale value
-    out = start + factor * (end - start);                                 // interpolated scale
+    return start + factor * (end - start);                                // interpolated scale
 }
 
-void BoneMesh::calcInterpolatedRotation(aiQuaternion& out, float atime, const aiNodeAnim* node) {
+aiQuaternion BoneMesh::calcInterpolatedRotation(float atime, const aiNodeAnim* node) {
     if (node->mNumRotationKeys <= 1) {
-        out = node->mRotationKeys[0].mValue;
-        return;
+        return node->mRotationKeys[0].mValue;
     }
 
-    // lambda function. finds rotation factor given an animation time in ticks and an aiNodeAnim. made because this function has only this one purpose
-    auto findRotation = [atime, &node]() -> unsigned int {
-        assert(node->mNumRotationKeys > 0);
-
-        for (unsigned int i = 0; i < node->mNumRotationKeys - 1; i++) {
-            float t = (float)node->mRotationKeys[i + 1].mTime;
-            if (atime < t) {
-                return i;
-            }
+    unsigned int rotationIndex = 0;
+    for (unsigned int i = 0; i < node->mNumRotationKeys - 1; i++) {
+        float t = (float)node->mRotationKeys[i + 1].mTime;
+        if (atime < t) {
+            rotationIndex = i;
+            break;
         }
-        return 0;
-    };
-    unsigned int rotationIndex = findRotation();
+    }
     assert(rotationIndex + 1 < node->mNumRotationKeys);
 
     float deltaTime = node->mRotationKeys[rotationIndex + 1].mTime - node->mRotationKeys[rotationIndex].mTime;  // delta between two adjacent rotation keyfraes
@@ -269,8 +255,9 @@ void BoneMesh::calcInterpolatedRotation(aiQuaternion& out, float atime, const ai
 
     const aiQuaternion& start = node->mRotationKeys[rotationIndex].mValue;    // start rotation value
     const aiQuaternion& end = node->mRotationKeys[rotationIndex + 1].mValue;  // end rotation value
+    aiQuaternion out;
     aiQuaternion::Interpolate(out, start, end, factor);
-    out = out.Normalize();  // interpolated rotation
+    return out.Normalize();  // interpolated rotation
 }
 
 bool BoneMesh::initMaterials(const aiScene* scene, std::string mesh_name) {
@@ -405,7 +392,7 @@ void BoneMesh::render(unsigned int nInstances, const mat4* bone_trans_matrix, co
         glBufferData(GL_ARRAY_BUFFER, sizeof(float) * nInstances, &depths[0], GL_DYNAMIC_DRAW);
         if (materials[mIndex].diffTex) materials[mIndex].diffTex->bind(GL_TEXTURE0);
         if (materials[mIndex].mtlsTex) materials[mIndex].mtlsTex->bind(GL_TEXTURE1);
-        
+
         glDrawElementsInstancedBaseVertex(
             GL_TRIANGLES,
             meshes[i].n_Indices,
@@ -432,22 +419,22 @@ void BoneMesh::render(mat4 mm) {
     render(1, &mm);
 }
 
-void BoneMesh::update(Shader* skinnedShader) {
-    std::vector<aiMatrix4x4> trans;
-    float animTime = ((float)(timeGetTime() - SM::startTime)) / 1000.0f;
-    getBoneTransforms(animTime, trans);
+void BoneMesh::update(Shader* skinnedShader, float animSpeed) {
+    std::vector<aiMatrix4x4> trans = getBoneTransforms(SM::getGlobalTime(), animSpeed);
     for (int i = 0; i < trans.size(); i++) {
         mat4 t = Util::aiToGLM(&trans[i]);
         skinnedShader->setMat4("bones[" + std::to_string(i) + "]", t);
     }
 }
 
-void BoneMesh::update() {
-    std::vector<aiMatrix4x4> trans;
-    float animTime = ((float)(timeGetTime() - SM::startTime)) / 1000.0f;
-    getBoneTransforms(animTime, trans);
+void BoneMesh::update(float animSpeed) {
+    std::vector<aiMatrix4x4> trans = getBoneTransforms(SM::getGlobalTime(), animSpeed);
     for (int i = 0; i < trans.size(); i++) {
         mat4 t = Util::aiToGLM(&trans[i]);
         shader->setMat4("bones[" + std::to_string(i) + "]", t);
     }
+}
+
+void BoneMesh::update() {
+    update(1);
 }

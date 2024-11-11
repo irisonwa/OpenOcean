@@ -54,7 +54,7 @@ class Flock {
             BoidType type = getTypeFromModel(v->path);
             for (int i = 0; i < v->instanceCount; ++i) {
                 Boid* boid = new Boid(
-                    vec3((rand() % spread), (rand() % spread), (rand() % spread)),
+                    vec3((rand() % spread), 10, (rand() % spread)),
                     normalize(vec3(-5 + rand() % 10, -5 + rand() % 10, -5 + rand() % 10)),
                     type,
                     id);

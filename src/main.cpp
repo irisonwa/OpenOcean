@@ -12,7 +12,7 @@ void init() {
     srand(time(nullptr));
 
     /// -------------------------------------------------- SHADERS -------------------------------------------------- ///
-    Shader* s = new Shader("base", vert_main, frag_main);
+    Shader* s = new Shader("static", vert_smesh, frag_smesh);
     shaders[s->name] = s;
 
     Shader* s2 = new Shader("skybox", vert_sb, frag_sb);
@@ -21,11 +21,11 @@ void init() {
     Shader* s3 = new Shader("bones", vert_bmesh, frag_bmesh);
     shaders[s3->name] = s3;
 
-    Shader* s4 = new Shader("variant", vert_variant, frag_variant);
+    Shader* s4 = new Shader("variant", vert_vmesh, frag_vmesh);
     shaders[s4->name] = s4;
 
     /// -------------------------------------------------- LIGHTING -------------------------------------------------- ///
-    baseLight = new Lighting("stony light", shaders["base"], MATERIAL_SHINY);
+    staticLight = new Lighting("stony light", shaders["static"], MATERIAL_SHINY);
     boneLight = new Lighting("boney light", shaders["bones"], MATERIAL_SHINY);
     variantLight = new Lighting("variant light", shaders["variant"], MATERIAL_SHINY);
 
@@ -40,7 +40,7 @@ void init() {
     // smeshes[m4->name] = m4;
     // StaticMesh* m5 = new StaticMesh("cube", TEST_SPEC, 1024, 4);
     // smeshes[m5->name] = m5;
-    StaticMesh* m6 = new StaticMesh("room", MESH_KELP, -1, -1);
+    StaticMesh* m6 = new StaticMesh("kelp", MESH_KELP, -1, -1);
     smeshes[m6->name] = m6;
     StaticMesh* m7 = new StaticMesh("shark", MESH_SHARK, 1024, 1);
     smeshes[m7->name] = m7;
@@ -56,7 +56,7 @@ void init() {
     bmeshes[bm3->name] = bm3;
 
     /// -------------------------------------------------- PLAYER -------------------------------------------------- ///
-    player = new Player("Player", vec3(10), Util::FORWARD);
+    player = new Player("Player", vec3(0, 10, 0), Util::FORWARD);
     player->setMesh(MESH_PLAYER_ANIM, 2048, 1);
     player->setShader(shaders["bones"]);
 
@@ -64,12 +64,12 @@ void init() {
     vMesh = new VariantMesh(
         "vmesh", shaders["variant"],
         {
+            {MESH_MARLIN, 300, 1024, 2, std::vector<unsigned int>(300, 0)},  // black marlin
+            {MESH_MARLIN, 300, 1024, 2, std::vector<unsigned int>(300, 1)},  // blue marlin
             {MESH_THREADFIN, 300, 1024, 1, std::vector<unsigned int>(300, 1)},
-            {MESH_MARLIN, 300, 1024, 2, std::vector<unsigned int>(300, 0)}, // black marlin
-            {MESH_MARLIN, 300, 1024, 2, std::vector<unsigned int>(300, 1)}, // blue marlin
             {MESH_SPEARFISH, 300, 1024, 1, std::vector<unsigned int>(300, 1)},
-            {MESH_SHARK2, 2, 1024, 1, std::vector<unsigned int>(2, 1)},
-            {MESH_SHARK2, 3, 1024, 4, std::vector<unsigned int>(3, 2)},
+            {MESH_SHARK2, 10, 1024, 1, std::vector<unsigned int>(2, 1)},
+            {MESH_SHARK2, 10, 1024, 4, std::vector<unsigned int>(3, 2)},
             // {TEST_SPEC, 1, 1024, 4, std::vector<unsigned int>(1, 3)},
             // {TEST_BOID, 3, 1024, 4, std::vector<unsigned int>(3, 2)},
             // {MESH_KELP, 3, 1024, 1, std::vector<unsigned int>(3, 3)},
@@ -87,22 +87,20 @@ void init() {
     SM::startTime = timeGetTime();
 
     float offset = 1.0f;
-    float lim = 10;
-    vector<float> scls = {.25, .5, 1, 2};
+    float lim = 6;
+    int j = 0;
+    transm.resize(lim * lim * lim);
     for (int z = -lim / 2; z < lim / 2; z += 1) {
         for (int y = -lim / 2; y < lim / 2; y += 1) {
             for (int x = -lim / 2; x < lim / 2; x += 1) {
                 vec3 translation(
-                    (float)x + offset * (rand() % spread),
-                    (float)y + offset,
-                    (float)z + offset * (rand() % spread));
+                    (float)x * (rand() % spread),
+                    (float)y,
+                    (float)z * (rand() % spread));
                 translations.push_back(translation);
-                int idx = rand() % 4;
-                // printf("%d\n", idx);
-                scales.push_back(vec3(scls[idx]));
-                depths.push_back(idx);
-                // scales.push_back(vec3(.5));
-                // mat_idxs.push_back()
+                // int i = (z * lim * lim) + (y * lim) + x;
+                transm[j] = scale(translate(mat4(1), translation), vec3(.25));
+                j++;
             }
         }
     }
@@ -111,21 +109,21 @@ void init() {
     float flashAttQuad = 0.00019;
     float sunlightLin = 0.00008;
     float sunlightQuad = 0.000008;
-    baseLight->addSpotLightAtt(flashlightCoords, flashlightDir, vec3(0.2f), vec3(1), vec3(1));
-    baseLight->spotLights[baseLight->nSpotLights - 1].cutOff = cos(Util::deg2Rad(24.f));
-    baseLight->spotLights[baseLight->nSpotLights - 1].outerCutOff = cos(Util::deg2Rad(35.f));
-    baseLight->spotLights[baseLight->nSpotLights - 1].linear = /* 0.022; */ flashAttLin;
-    baseLight->spotLights[baseLight->nSpotLights - 1].quadratic = /* 0.0019; */ flashAttQuad;
-    baseLight->addSpotLightAtt(vec3(0, 300, 0), vec3(0, -1, 0), vec3(.3), vec3(1), vec3(1));
-    baseLight->spotLights[baseLight->nSpotLights - 1].linear = /* 0.022; */ sunlightLin;
-    baseLight->spotLights[baseLight->nSpotLights - 1].quadratic = /* 0.0019; */ sunlightQuad;
-    baseLight->spotLights[baseLight->nSpotLights - 1].cutOff = cos(Util::deg2Rad(24.f));
-    baseLight->spotLights[baseLight->nSpotLights - 1].outerCutOff = cos(Util::deg2Rad(35.f));
-    // baseLight->addPointLightAtt(vec3(0), vec3(0.2f), vec3(1), vec3(1));
-    // baseLight->setDirLightsAtt(vector<vec3>{vec3(0, -1, 0)});
-    // baseLight->setDirLightColour(vec3(.05), vec3(.05), vec3(1));
-    // baseLight->spotLights[baseLight->nSpotLights - 1].linear = 0.9;
-    // baseLight->spotLights[baseLight->nSpotLights - 1].quadratic = 0.3;
+    staticLight->addSpotLightAtt(flashlightCoords, flashlightDir, vec3(0.2f), vec3(1), vec3(1));
+    staticLight->spotLights[staticLight->nSpotLights - 1].cutOff = cos(Util::deg2Rad(24.f));
+    staticLight->spotLights[staticLight->nSpotLights - 1].outerCutOff = cos(Util::deg2Rad(35.f));
+    staticLight->spotLights[staticLight->nSpotLights - 1].linear = /* 0.022; */ flashAttLin;
+    staticLight->spotLights[staticLight->nSpotLights - 1].quadratic = /* 0.0019; */ flashAttQuad;
+    staticLight->addSpotLightAtt(vec3(0, 300, 0), vec3(0, -1, 0), vec3(.3), vec3(1), vec3(1));
+    staticLight->spotLights[staticLight->nSpotLights - 1].linear = /* 0.022; */ sunlightLin;
+    staticLight->spotLights[staticLight->nSpotLights - 1].quadratic = /* 0.0019; */ sunlightQuad;
+    staticLight->spotLights[staticLight->nSpotLights - 1].cutOff = cos(Util::deg2Rad(24.f));
+    staticLight->spotLights[staticLight->nSpotLights - 1].outerCutOff = cos(Util::deg2Rad(35.f));
+    // staticLight->addPointLightAtt(vec3(0), vec3(0.2f), vec3(1), vec3(1));
+    // staticLight->setDirLightsAtt(vector<vec3>{vec3(0, -1, 0)});
+    // staticLight->setDirLightColour(vec3(.05), vec3(.05), vec3(1));
+    // staticLight->spotLights[staticLight->nSpotLights - 1].linear = 0.9;
+    // staticLight->spotLights[staticLight->nSpotLights - 1].quadratic = 0.3;
 
     boneLight->addSpotLightAtt(flashlightCoords, flashlightDir, vec3(0.2f), vec3(1), vec3(1));
     boneLight->spotLights[boneLight->nSpotLights - 1].cutOff = cos(Util::deg2Rad(24.f));
@@ -156,12 +154,13 @@ void init() {
 
 void display() {
     // tell GL to only draw onto a pixel if the shape is closer to the viewer
-    // glEnable(GL_CULL_FACE);
+    glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);  // enable depth-testing
     glEnable(GL_BLEND);       // enable colour blending
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDepthFunc(GL_LESS);  // depth-testing interprets a smaller value as "closer"
-    glClearColor(0.3f, 0.2f, 0.3f, 1.0f);
+    vec4 newBg = SM::bgColour * Util::mapRange(player->pos.y, SM::WORLD_BOUND_LOW, SM::WORLD_BOUND_HIGH, 0, 1);
+    glClearColor(newBg.x, newBg.y, newBg.z, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     mat4 view = camera.getViewMatrix();
@@ -178,20 +177,14 @@ void display() {
     // glDepthFunc(GL_LESS);
 
     // update camera view and flashlight
-    baseLight->setLightAtt(view, persp_proj, camera.pos);
-    baseLight->setSpotLightAtt(0, flashlightCoords, flashlightDir, vec3(0.2f), vec3(1, .6, .2), vec3(1));
-    // baseLight->spotLights[baseLight->nSpotLights - 1].cutOff = cos(Util::deg2Rad(24.f));
-    // baseLight->spotLights[baseLight->nSpotLights - 1].outerCutOff = cos(Util::deg2Rad(35.f));
-    baseLight->use();
+    staticLight->setLightAtt(view, persp_proj, camera.pos);
+    staticLight->setSpotLightAtt(0, flashlightCoords, flashlightDir, vec3(0.2f), vec3(1, .6, .2), vec3(1));
+    // staticLight->spotLights[staticLight->nSpotLights - 1].cutOff = cos(Util::deg2Rad(24.f));
+    // staticLight->spotLights[staticLight->nSpotLights - 1].outerCutOff = cos(Util::deg2Rad(35.f));
+    staticLight->use();
 
-    mat4 cubes[4] = {translate(mat4(1), vec3(20, 0, 10)), translate(mat4(1), vec3(10, 0, 0)), translate(mat4(1), vec3(20, 0, 0)), translate(mat4(1), vec3(30, 0, 0))};
-    auto cubeds = std::vector<float>{0, 1, 2, 3}.data();
-
-    // meshes["shark"]->render(numInstances, models, depths.data());  // draw cubes
-    // smeshes["boid_display"]->render(4, cubes, cubeds);  // display
-    smeshes["room"]->render(scale(mat4(1), vec3(.25)), 1);
-    
-    smeshes["island"]->render(scale(mat4(1), vec3(20)), 1);
+    // smeshes["kelp"]->render(mat4(1));
+    smeshes["island"]->render(scale(translate(mat4(1), vec3(0, 0, 0)), vec3(25)), 1);
 
     /// ---------------- SKINNED MESHES ---------------- ///
     boneLight->setLightAtt(view, persp_proj, camera.pos);
@@ -201,17 +194,8 @@ void display() {
     boneLight->shader->setBool("showNormal", SM::showNormal);
     boneLight->use();
 
-    // bmeshes["test guy"]->update();
-    // bmeshes["test guy"]->render(translate(mat4(1), vec3(-20)));
-
-    const unsigned int numInstances = translations.size();
-    mat4 models[numInstances];
-    for (int i = 0; i < translations.size(); i++) {
-        models[i] = translate(mat4(1), translations[i]);
-    }
-    bmeshes["test kelp"]->update();
-    // bmeshes["test kelp"]->render(scale(translate(mat4(1), vec3(-10)), vec3(.25)));
-    bmeshes["test kelp"]->render(numInstances, models);
+    bmeshes["test kelp"]->update(100);
+    bmeshes["test kelp"]->render(transm.size(), transm.data());
 
     // bmeshes["test shark"]->update();
     // bmeshes["test shark"]->render(numInstances, models, depths.data());
@@ -232,7 +216,7 @@ void display() {
     variantLight->setSpotLightAtt(0, flashlightCoords, flashlightDir, vec3(0.2f), vec3(1, .6, .2), vec3(1));
     variantLight->use();
     flock->process();
-    // flock->show();
+    flock->show();
 
     glutSwapBuffers();
 }

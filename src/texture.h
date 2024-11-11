@@ -31,7 +31,7 @@ class Texture {
         textureEnum = texType;
         file_names = fnames;
     }
-    
+
     // load the file given in the constructor
     bool load();
 
@@ -41,11 +41,11 @@ class Texture {
     // load the diffuse texture `diffuseTex` and the specular map `specularTex`
     // bool load(std::string diffuseTex, std::string specularTex);
 
-    // load an atlas of textures. 
+    // load an atlas of textures.
     // `tiles` is the number of actual, non-empty tiles in the atlas, and `tileSize` is the width (and height) of a single tile.
     bool loadAtlas(std::string tex, int tileSize, int tiles);
 
-    // load the atlas of textures given in the constructor. 
+    // load the atlas of textures given in the constructor.
     // `tiles` is the number of actual, non-empty tiles in the atlas, and `tileSize` is the width (and height) of a single tile.
     bool loadAtlas(int tileSize, int tiles);
 

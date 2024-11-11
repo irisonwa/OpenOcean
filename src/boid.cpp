@@ -62,8 +62,8 @@ void Boid::move(std::deque<Boid*> boids) {
                     if (distFromBoid < minSepDistance) {
                         avgMove += pos - otherBoid->pos;
                     }
-                    // } else if (!SM::canBoidsAttack) {
-                    //     // to avoid altering if-statement structure in case i decide to remove this
+                } else if (!SM::canBoidsAttack) {
+                    // to avoid altering if-statement structure in case i decide to remove this
                 } else {
                     if (isPreyTo(type, otherBoid->type)) {
                         if (distFromBoid <= minEnemyInterceptDistance) {

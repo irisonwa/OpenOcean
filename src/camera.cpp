@@ -16,7 +16,7 @@ void Camera::processView() {
     view = SM::isFreeCam ? lookAt(pos, pos + front, up) : lookAt(followPos, followPos + front, up);
 
     // Follow checks
-    if(SM::isFirstPerson) {
+    if (SM::isFirstPerson) {
         targetVerticalDist = -0.25;
         targetHorizontalDist = fps_zm;
     } else {
@@ -26,36 +26,26 @@ void Camera::processView() {
 }
 
 void Camera::followTarget(vec3 tPos, vec3 tDir) {
-    target = tPos; // cache
+    target = tPos;  // cache
     vec3 fDir = normalize(tDir);
     // rotation from z axis, calculated using rotation about y-axis
     // yaw needs to be negated because as the camera turns right, we want to move leftwards around it, and vice versa
-    float angle = atan2f(fDir.z, fDir.x) - Util::deg2Rad(yaw); 
+    float angle = atan2f(fDir.z, fDir.x) - Util::deg2Rad(yaw);
     float xDist = targetHorizontalDist * sin(angle);
     float zDist = targetHorizontalDist * cos(angle);
     pos = vec3(
         tPos.x + xDist,
         tPos.y - targetVerticalDist,
-        tPos.z + zDist
-    );
+        tPos.z + zDist);
     followPos = Util::lerpV(followPos, pos, acceleration * SM::delta);
 }
 
 void Camera::followTarget(Player* player) {
-    target = player->transform[3]; // cache
-    vec3 fDir = normalize(player->dir);
-    // rotation from z axis, calculated using rotation about y-axis
-    // yaw needs to be negated because as the camera turns right, we want to move leftwards around it, and vice versa
-    float angle = atan2f(fDir.z, fDir.x) - Util::deg2Rad(yaw); 
-    float xDist = targetHorizontalDist * sin(angle);
-    float zDist = targetHorizontalDist * cos(angle);
-    pos = vec3(
-        target.x + xDist,
-        target.y - targetVerticalDist,
-        target.z + zDist
-    );
+    followTarget(vec3(player->transform[3]), player->dir);
+}
 
-    followPos = Util::lerpV(followPos, pos, acceleration * SM::delta);
+void Camera::followTarget(Boid* b) {
+    followTarget(b->pos, b->dir);
 }
 
 void Camera::processMovement() {
@@ -99,14 +89,14 @@ void Camera::processMovement() {
 
     /* // if sprinting (and moving), change the FOV on start and when stopped.
     int lerp_speed = 350;
-    FOV = (SPRINT && ((CAN_FLY && UP) || (CAN_FLY && DOWN) || LEFT || RIGHT || FORWARD || BACK)) ? 
+    FOV = (SPRINT && ((CAN_FLY && UP) || (CAN_FLY && DOWN) || LEFT || RIGHT || FORWARD || BACK)) ?
         std::clamp(Util::lerp(FOV, max_FOV, SM::delta * lerp_speed), base_FOV, max_FOV) : // zoom out
         std::clamp(Util::lerp(FOV, base_FOV, SM::delta * -lerp_speed * 2), base_FOV, max_FOV); // zoom in */
 
     if (!CAN_FLY) pos.y = t_cpos_y;  // if can't fly, don't change y_pos
 }
 
-mat4 Camera::getViewMatrix() { 
+mat4 Camera::getViewMatrix() {
     return view;
 }
 

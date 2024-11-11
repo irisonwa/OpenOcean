@@ -7,8 +7,8 @@ StaticMesh::~StaticMesh() {}
 /// </summary>
 /// <param name="file_name">The full name of the model to load.</param>
 /// <returns>A boolean. True if loading succeeds, false otherwise.</returns>
-bool StaticMesh::loadMesh(std::string file_name, bool popBuffer) {
-    populateBuffer = popBuffer;
+bool StaticMesh::loadMesh(std::string file_name, bool popBuffers) {
+    populateBuffer = popBuffers;
 
     std::string rpath = MODELDIR(file_name) + file_name;
     const aiScene* scene = aiImportFile(
@@ -26,7 +26,7 @@ bool StaticMesh::loadMesh(std::string file_name, bool popBuffer) {
 
     glBindVertexArray(0);  // avoid modifying VAO between loads
 
-    if (valid_scene) printf("Successfully loaded static mesh \"%s\"\n", name.c_str());
+    if (valid_scene) printf("Successfully loaded %sstatic mesh \"%s\"\n", popBuffers ? "" : "variant ", name.c_str());
     return valid_scene;
 }
 
@@ -233,7 +233,7 @@ void StaticMesh::render(unsigned int nInstances, const mat4* model_matrix, const
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * nInstances, &atlasDepths[0]);
         if (materials[mIndex].diffTex) materials[mIndex].diffTex->bind(GL_TEXTURE0);
         if (materials[mIndex].mtlsTex) materials[mIndex].mtlsTex->bind(GL_TEXTURE1);
-        
+
         glDrawElementsInstancedBaseVertex(
             GL_TRIANGLES,
             meshes[i].n_Indices,
@@ -268,4 +268,12 @@ void StaticMesh::render(mat4 mat, float depth) {
     this->mat = mat;
     const float ds[1] = {depth};
     render(1, &mat, ds);
+}
+
+/// <summary>
+/// Render the mesh by binding its VAO and drawing each index of every submesh. This is a special case that will render exactly one instance of your mesh.
+/// </summary>
+/// <param name="mat">The transform you would like to apply to your instance.</param>
+void StaticMesh::render(mat4 mat) {
+    render(mat, 0);
 }

@@ -21,24 +21,25 @@ uniform int showNormal;
 void main() {
   vec4 totalPos = vec4(0.0);
   vec3 totalNormal = vec3(0.0);
-  int cnt = 0;
+  int cnt = 0; // number of bones
   for (int i = 0; i < 4; i++) {
     if (bone_ids[i] == -1) // ignore unbound bones
       continue;
     cnt++;
     mat4 bone = bones[bone_ids[i]];
-    vec4 trans = bone * vec4(vertex_position, 1.0);
-    totalPos += bone_weights[i] * trans;
+    totalPos += bone_weights[i] * bone * vec4(vertex_position, 1.0);
 
     vec3 worldNormal = mat3(transpose(inverse(bone))) * vertex_normal;
     totalNormal += worldNormal * bone_weights[i];
   }
 
   if (cnt == 0) {
+    // if no bones, animate as if it's static
     totalPos = vec4(vertex_position, 0.0);
     totalNormal = vertex_normal;
   }
-  FragPos = (instance_trans * totalPos).xyz;
+
+  FragPos = vec3(instance_trans * totalPos);
   Normal = vec3(normalize(instance_trans * vec4(totalNormal, 0.0)));
   TexCoords = vertex_texture;
   tDepth = texture_depth;

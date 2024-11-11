@@ -86,8 +86,9 @@ class VariantMesh : public Mesh {
     void populateBuffers();
     void render(const mat4*);
     void render(mat4);
-    void update();                       // update the mesh's animations
-    void update(Shader* skinnedShader);  // update the mesh's animations using an external shader
+    void update();                           // update the mesh's animations
+    void update(Shader* skinnedShader);      // update the mesh's animations using an external shader
+    void update(std::vector<float> speeds);  // update the mesh's animations given custom speeds
 
 #define VA_POSITION_LOC 0     // p_vbo
 #define VA_NORMAL_LOC 1       // n_vbo

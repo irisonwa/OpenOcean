@@ -171,3 +171,13 @@ void VariantMesh::update() {
     //     shader->setMat4("bones[" + std::to_string(i) + "]", mat4(1));
     // }
 }
+
+void VariantMesh::update(std::vector<float> speeds) {
+    assert(speeds.size() == variants.size());
+    // for (const auto &v : variants) {
+    //     v->mesh->update();
+    // }
+    // for (int i = 0; i < 200; i++) {
+    //     shader->setMat4("bones[" + std::to_string(i) + "]", mat4(1));
+    // }
+}

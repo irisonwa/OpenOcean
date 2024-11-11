@@ -3,7 +3,7 @@
 #include "stb/stb_image.h"
 #define STB_IMAGE_IMPLEMENTATION
 
-void Texture::bind(GLenum textureUnit) { 
+void Texture::bind(GLenum textureUnit) {
     glActiveTexture(textureUnit);
     glBindTexture(textureEnum, texture);  // bind model's texture
 }
@@ -15,7 +15,7 @@ bool Texture::_loadAtlas(std::string path, int tileSize, int tiles) {
         if (textureEnum == GL_TEXTURE_2D_ARRAY) {
             glGenTextures(1, &texture);
             glBindTexture(textureEnum, texture);
-            
+
             glPixelStorei(GL_UNPACK_ALIGNMENT, 1);  // align data to 1-byte. used to prevent warping of certain textures.
             GLint bpp = 0;
             switch (_nrChannels) {
@@ -65,8 +65,8 @@ bool Texture::loadAtlas(int tileSize = -1, int tiles = -1) {
     return _loadAtlas(file_name, tileSize, tiles);
 }
 
-bool Texture::load() { 
-    return load(file_name); 
+bool Texture::load() {
+    return load(file_name);
 }
 
 bool Texture::load(std::string tex) {

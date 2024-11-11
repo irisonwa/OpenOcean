@@ -38,31 +38,32 @@ using namespace glm;
 // using namespace SM;
 
 namespace Util {
-    extern vec3 UP;  // World up
-    extern vec3 FORWARD;  // World forward
-    extern vec3 RIGHT;  // World right
-    extern vec3 X;  // Value of 1 on x axis
-    extern vec3 Y;  // Value of 1 on y axis
-    extern vec3 Z;  // Value of 1 on z axis
+extern vec3 UP;       // World up
+extern vec3 FORWARD;  // World forward
+extern vec3 RIGHT;    // World right
+extern vec3 X;        // Value of 1 on x axis
+extern vec3 Y;        // Value of 1 on y axis
+extern vec3 Z;        // Value of 1 on z axis
 
-    extern std::string readFile(const char* path);
-    extern float wrap(float val, float min, float max);
-    extern float clamp(float val, float min, float max);
-    extern float deg2Rad(float val);
-    extern float rad2Deg(float val);
-    extern aiMatrix4x4 GLMtoAI(const mat4& mat);
-    extern mat4 aiToGLM(aiMatrix4x4* from);
-    extern std::tuple<vec3, quat, vec3, vec3, vec4> decomposeMat4(mat4& mat);
-    extern vec3 getTranslation(mat4& mat);
-    extern vec3 angleToVec3(float angle);
-    extern float vec3ToAngle(vec3 v);
-    extern float lerp(float a, float b, float dt);
-    extern vec3 lerpV(vec3 a, vec3 b, float dt);
-    extern mat4 lookTowards(vec3 pos, vec3 to);
-    extern mat4 lookTowards(vec3 pos, vec3 to, vec3 up);
-    extern void printVec3(vec3 v);
-    extern void printMat4(mat4 m);
-    extern int compareFloat(float a, float b);
-};
+extern std::string readFile(const char* path);
+extern float wrap(float val, float min, float max);
+extern float clamp(float val, float min, float max);
+extern float deg2Rad(float val);
+extern float rad2Deg(float val);
+extern aiMatrix4x4 GLMtoAI(const mat4& mat);
+extern mat4 aiToGLM(aiMatrix4x4* from);
+extern std::tuple<vec3, quat, vec3, vec3, vec4> decomposeMat4(mat4& mat);
+extern vec3 getTranslation(mat4& mat);
+extern vec3 angleToVec3(float angle);
+extern float vec3ToAngle(vec3 v);
+extern float lerp(float a, float b, float dt);
+extern vec3 lerpV(vec3 a, vec3 b, float dt);
+extern float mapRange(float v, float inLow, float inHigh, float outLow, float outHigh);
+extern mat4 lookTowards(vec3 pos, vec3 to);
+extern mat4 lookTowards(vec3 pos, vec3 to, vec3 up);
+extern void printVec3(vec3 v);
+extern void printMat4(mat4 m);
+extern int compareFloat(float a, float b);
+};  // namespace Util
 
 #endif  // UTIL_H

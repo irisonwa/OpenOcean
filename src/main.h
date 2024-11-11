@@ -82,24 +82,24 @@
 #define MESH_MARLIN_ANIM "fish_marlin.gltf"
 #define MESH_SPEARFISH_ANIM "fish_spear.gltf"
 
-const char* vert_main = PROJDIR "Shaders/main.vert";
-const char* frag_main = PROJDIR "Shaders/main.frag";
-const char* vert_sb = PROJDIR "Shaders/cubemap.vert";
-const char* frag_sb = PROJDIR "Shaders/cubemap.frag";
+const char* vert_smesh = PROJDIR "Shaders/staticMesh.vert";
+const char* frag_smesh = PROJDIR "Shaders/staticMesh.frag";
 const char* vert_bmesh = PROJDIR "Shaders/boneMesh.vert";
 const char* frag_bmesh = PROJDIR "Shaders/boneMesh.frag";
+const char* vert_vmesh = PROJDIR "Shaders/variantMesh.vert";
+const char* frag_vmesh = PROJDIR "Shaders/variantMesh.frag";
+const char* vert_sb = PROJDIR "Shaders/cubemap.vert";
+const char* frag_sb = PROJDIR "Shaders/cubemap.frag";
 const char* vert_blank = PROJDIR "Shaders/blank.vert";
 const char* frag_blank = PROJDIR "Shaders/blank.frag";
-const char* vert_variant = PROJDIR "Shaders/variantMesh.vert";
-const char* frag_variant = PROJDIR "Shaders/variantMesh.frag";
 
 Cubemap* cubemap;
 Camera camera = Camera(0.1f, 1000.0f, (float)SM::width / (float)SM::height);
-Lighting *baseLight, *boneLight, *variantLight;
+Lighting *staticLight, *boneLight, *variantLight;
 
 std::deque<Boid*> boids;
-Flock *flock;
-Player *player;
+Flock* flock;
+Player* player;
 VariantMesh* vMesh;
 
 vec3 flashlightCoords = vec3(-10000);
@@ -108,10 +108,10 @@ std::map<std::string, Shader*> shaders;
 std::map<std::string, StaticMesh*> smeshes;
 std::map<std::string, BoneMesh*> bmeshes;
 std::vector<vec3> translations, scales;
-std::vector<mat4> vtrans;
+std::vector<mat4> transm;
 std::vector<int> mat_idxs;
 std::vector<float> depths;
-int spread = 400;
+int spread = 30;
 
 std::vector<std::string> cubemap_faces = {
     PROJDIR "Models/bskybox/right.jpg",

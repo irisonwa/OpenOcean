@@ -62,6 +62,8 @@ uniform Material material;
 uniform int nPointLights = 10;
 uniform int nSpotLights = 10;
 uniform int nDirLights = 10;
+uniform vec4 fogColour;
+uniform vec2 fogBounds;
 
 out vec4 FragColor;
 
@@ -89,16 +91,15 @@ void main() {
     result += CalcSpotLight(spotLights[i], norm, FragPos, viewDir);
 
   // Fog
-  float fog_upper_bound = 500.0;
-  float fog_lower_bound = 50.0;
-  vec4 fog_colour = vec4(0.1, 0.1, 0.2, 1.0);
-  float dist = length(viewPos);
+  float fog_lower_bound = fogBounds.x;
+  float fog_upper_bound = fogBounds.y;
+  float dist = length(viewPos - FragPos);
   float fog_scale =
       (fog_upper_bound - dist) / (fog_upper_bound - fog_lower_bound);
   fog_scale = clamp(fog_scale, 0.0, 1.0);
 
-  // FragColor = mix(fog_colour, vec4(result, 1.0), fog_scale);
-  FragColor = vec4(result, 1.0);
+  FragColor = mix(fogColour, vec4(result, 1.0), fog_scale);
+  // FragColor = vec4(result, 1.0);
   //   FragColor = vec4(Normal, 1.0);
 }
 

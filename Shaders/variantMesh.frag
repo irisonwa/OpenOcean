@@ -93,6 +93,8 @@ uniform Material material;
 uniform int nPointLights = 10;
 uniform int nSpotLights = 10;
 uniform int nDirLights = 10;
+uniform vec4 fogColour;
+uniform vec2 fogBounds;
 
 vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir);
 vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
@@ -120,19 +122,18 @@ void main() {
     result += CalcSpotLight(spotLights[i], norm, FragPos, viewDir);
 
   // Fog
-  float fog_upper_bound = 500.0;
-  float fog_lower_bound = 50.0;
-  vec4 fog_colour = vec4(0.1, 0.1, 0.2, 1.0);
-  float dist = length(viewPos);
+  float fog_lower_bound = fogBounds.x;
+  float fog_upper_bound = fogBounds.y;
+  float dist = length(viewPos - FragPos);
   float fog_scale =
       (fog_upper_bound - dist) / (fog_upper_bound - fog_lower_bound);
   fog_scale = clamp(fog_scale, 0.0, 1.0);
 
-  // FragColour = mix(fog_colour, vec4(result, 1.0), fog_scale);
+  FragColour = mix(fogColour, vec4(result, 1.0), fog_scale);
   // if (drawID % 2 == 0)
   //   FragColour = vec4(Normal, 1.0);
   // else
-  FragColour = vec4(result, 1.0);
+  // FragColour = vec4(result, 1.0);
 }
 
 // calculate the light value and use the correct sampler to apply it to textures

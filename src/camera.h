@@ -4,6 +4,7 @@
 #include "util.h"
 #include "sm.h"
 #include "player.h"
+#include "boid.h"
 #include <GL/freeglut.h>
 
 class Player;
@@ -50,6 +51,9 @@ class Camera {
     // Follow the player
     void followTarget(Player*);
 
+    // Follow a boid
+    void followTarget(Boid*);
+
     // Set the camera position to some location
     void setPosition(vec3 p);
 
@@ -61,7 +65,7 @@ class Camera {
     vec3 target;                 // Camera target position
     mat4 view;                   // Model view matrix
     mat4 perspectiveProjection;  // Model perspective projection matrix
-    float aspectRatio = 16/9;    // Aspect ratio of camera
+    float aspectRatio = 16 / 9;  // Aspect ratio of camera
 
     float targetDist = 12;       // Camera distance to target (fixed)
     float fps_zm = -3;           // Camera zoom in first person mode

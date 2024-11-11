@@ -28,7 +28,8 @@ class BoneMesh : public Mesh {
         mesh_path = _mesh_path;
         atlasTileSize = _atlasTileSize;
         atlasTilesUsed = _atlasTilesUsed;
-        if (load) if (!loadMesh(mesh_path, true)) std::cout << "\nfailed to load mesh \"" << nm.c_str() << "\" :(\n\n";
+        if (load)
+            if (!loadMesh(mesh_path, true)) std::cout << "\nfailed to load mesh \"" << nm.c_str() << "\" :(\n\n";
     }
     BoneMesh(std::string nm, std::string _mesh_path, Shader* s, int _atlasTileSize, int _atlasTilesUsed, bool load = true) {
         name = nm;
@@ -36,12 +37,13 @@ class BoneMesh : public Mesh {
         mesh_path = _mesh_path;
         atlasTileSize = _atlasTileSize;
         atlasTilesUsed = _atlasTilesUsed;
-        if (load) if (!loadMesh(mesh_path, true)) std::cout << "\nfailed to load mesh \"" << nm.c_str() << "\" :(\n\n";
+        if (load)
+            if (!loadMesh(mesh_path, true)) std::cout << "\nfailed to load mesh \"" << nm.c_str() << "\" :(\n\n";
     }
 
     ~BoneMesh();
 
-    bool loadMesh(bool popBuffer) { return loadMesh(mesh_path, popBuffer); }  // load the mesh stored in the constructor
+    bool loadMesh(bool popBuffer) { return loadMesh(mesh_path, popBuffer); }    // load the mesh stored in the constructor
     bool loadMesh(std::string mesh_path) { return loadMesh(mesh_path, true); }  // load a mesh located at `mesh_path`
     bool loadMesh(std::string mesh_path, bool popBuffer);
     bool initScene(const aiScene*, std::string);
@@ -54,14 +56,15 @@ class BoneMesh : public Mesh {
     void render(unsigned int, const mat4*);
     void render(mat4);
     int getBoneID(const aiBone*);
-    void getBoneTransforms(float, std::vector<aiMatrix4x4>&);
+    std::vector<aiMatrix4x4> getBoneTransforms(float, float);
     void readNodeHierarchy(float, const aiNode*, const aiMatrix4x4&);
     const aiNodeAnim* findNodeAnim(const aiAnimation*, const std::string);
-    void calcInterpolatedTranslation(aiVector3D&, float, const aiNodeAnim*);
-    void calcInterpolatedScale(aiVector3D&, float, const aiNodeAnim*);
-    void calcInterpolatedRotation(aiQuaternion&, float, const aiNodeAnim*);
-    void update();                       // update the mesh's animations
-    void update(Shader* skinnedShader);  // update the mesh's animations using an external shader
+    aiVector3D calcInterpolatedTranslation(float, const aiNodeAnim*);
+    aiVector3D calcInterpolatedScale(float, const aiNodeAnim*);
+    aiQuaternion calcInterpolatedRotation(float, const aiNodeAnim*);
+    void update();                                        // update the mesh's animations
+    void update(float animSpeed);                         // update the mesh's animations
+    void update(Shader* skinnedShader, float animSpeed);  // update the mesh's animations using an external shader
 
 #define SK_POSITION_LOC 0     // p_vbo
 #define SK_NORMAL_LOC 1       // n_vbo
@@ -69,7 +72,7 @@ class BoneMesh : public Mesh {
 #define SK_BONE_LOC 3         // bone vbo
 #define SK_BONE_WEIGHT_LOC 4  // bone weight location
 #define SK_INSTANCE_LOC 5     // instance location
-#define SK_DEPTH_LOC 9     // instance location
+#define SK_DEPTH_LOC 9        // instance location
 
     aiMatrix4x4 globalInverseTrans;  // inverse matrix
     unsigned int BBO;                // bone vbo
