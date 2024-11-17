@@ -45,10 +45,18 @@ class StaticMesh : public Mesh {
     void initSingleMesh(const aiMesh*);
     bool initMaterials(const aiScene*, std::string);
     void populateBuffers();
-    void render(unsigned int, const mat4*);                // render an array of meshes using instancing
-    void render(unsigned int, const mat4*, const float*);  // render an array of meshes using instancing and atlas depths
-    void render(mat4, float);                              // single atlas depth
-    void render(mat4);                                     // render a single mesh
+    void render(unsigned int, const mat4*);                                                        // render an array of meshes using instancing
+    void render(unsigned int, const mat4*, const float*);                                          // render an array of meshes using instancing and atlas depths
+    void render(mat4, float);                                                                      // single atlas depth
+    void render(mat4);                                                                             // render a single mesh
+
+private:
+    std::vector<mat4> getUpdatedTransforms(Shader* skinnedShader, float animSpeed) { return {}; }  // not implemented
+    std::vector<mat4> getUpdatedTransforms(float animSpeed) { return {}; }                         // not implemented
+    void update() {}                                                                               // not implemented
+    void update(Shader* shader) {}                                                                 // not implemented
+    void update(float speed) {}                                                                    // not implemented
+    void update(Shader* shader, float speed) {}                                                    // not implemented
 
 #define ST_POSITION_LOC 0  // p_vbo
 #define ST_NORMAL_LOC 1    // n_vbo

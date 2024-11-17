@@ -117,6 +117,7 @@ void Lighting::setLightAtt(mat4 view, mat4 projection, vec3 vPos) {
     shader->setMat4("proj", projection);
     shader->setVec4("bgColour", SM::bgColour);
     shader->setVec2("fogBounds", SM::fogBounds);
+    shader->setFloat("seaLevel", SM::seaLevel);
 }
 
 void Lighting::setSpotLightsAtt(std::vector<vec3> pos, std::vector<vec3> dir) {

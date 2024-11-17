@@ -4,20 +4,26 @@ VariantMesh::~VariantMesh() {}
 
 bool VariantMesh::loadMeshes(std::vector<VariantInfo *> infos) {
     bool valid = true;
+    boneTransformOffsets.push_back(0);
     for (auto v : infos) {
         valid &= v->loadMesh();
         for (auto x : v->mesh->vertices) vertices.push_back(x);
         for (auto x : v->mesh->normals) normals.push_back(x);
         for (auto x : v->mesh->texCoords) texCoords.push_back(x);
-        for (auto x : v->mesh->materials)
+        for (auto x : v->mesh->materials){
             if (x.diffTex || x.mtlsTex) materials.push_back(x);
+        }
         for (auto x : v->mesh->indices) indices.push_back(x);
-        // for (auto x : v->mesh->m_Bones) m_Bones.push_back(x);
-        // for (auto x : v->mesh->m_BoneInfo) m_BoneInfo.push_back(x);
         for (auto x : v->depths) depths.push_back((float)x);
+        for (auto x : v->mesh->vBones) vBones.push_back(x);
+        for (auto x : v->mesh->boneInfos) boneInfos.push_back(x);
+        for (auto x : v->mesh->animations) animations.push_back(x);
         paths.push_back(v->path);
+        globalInverseMatrices.push_back(Util::aiToGLM(&v->mesh->globalInverseTrans));
+        boneTransformOffsets.push_back(v->mesh->boneInfos.size());
         totalInstanceCount += v->instanceCount;
     }
+    if (vBones.empty()) vBones.resize(totalInstanceCount);
     printf("%s: total instance count: %d\n", name.c_str(), totalInstanceCount);
     return valid && initScene();
 }
@@ -37,7 +43,10 @@ void VariantMesh::populateBuffers() {
     glGenBuffers(1, &EBO);
     glGenBuffers(1, &IBO);
     glGenBuffers(1, &BBO);
-    glGenBuffers(1, &BTBO);
+    // ssbos
+    glCreateBuffers(1, &ABBO);
+    glCreateBuffers(1, &BIBO);
+
 
     glGenBuffers(1, &commandBuffer);
     // glNamedBufferStorage(commandBuffer, sizeof(IndirectDrawCommand) * cmds.size(), (const void *)cmds.data(), GL_DYNAMIC_STORAGE_BIT); // for compute shaders
@@ -57,13 +66,13 @@ void VariantMesh::populateBuffers() {
     glEnableVertexAttribArray(VA_TEXTURE_LOC);
     glVertexAttribPointer(VA_TEXTURE_LOC, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
-    // glBindBuffer(GL_ARRAY_BUFFER, BBO);
-    // glBufferData(GL_ARRAY_BUFFER, sizeof(m_Bones[0]) * m_Bones.size(), &m_Bones[0], GL_STATIC_DRAW);
-    // glEnableVertexAttribArray(VA_BONE_LOC);
-    // glVertexAttribIPointer(VA_BONE_LOC, MAX_NUM_BONES_PER_VERTEX, GL_INT, sizeof(VertexBoneData), (const GLvoid *)0);
-    // glEnableVertexAttribArray(VA_BONE_WEIGHT_LOC);
-    // glVertexAttribPointer(VA_BONE_WEIGHT_LOC, MAX_NUM_BONES_PER_VERTEX, GL_FLOAT, GL_FALSE,
-    //                       sizeof(VertexBoneData), (const GLvoid *)(MAX_NUM_BONES_PER_VERTEX * sizeof(unsigned int)));
+    glBindBuffer(GL_ARRAY_BUFFER, BBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vBones[0]) * vBones.size(), &vBones[0], GL_STATIC_DRAW);
+    glEnableVertexAttribArray(VA_BONE_LOC);
+    glVertexAttribIPointer(VA_BONE_LOC, MAX_NUM_BONES_PER_VERTEX, GL_INT, sizeof(VertexBoneData), (const GLvoid *)0);
+    glEnableVertexAttribArray(VA_BONE_WEIGHT_LOC);
+    glVertexAttribPointer(VA_BONE_WEIGHT_LOC, MAX_NUM_BONES_PER_VERTEX, GL_FLOAT, GL_FALSE,
+                          sizeof(VertexBoneData), (const GLvoid *)(MAX_NUM_BONES_PER_VERTEX * sizeof(unsigned int)));
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices[0]) * indices.size(), &indices[0], GL_STATIC_DRAW);
@@ -80,6 +89,12 @@ void VariantMesh::populateBuffers() {
     glEnableVertexAttribArray(VA_DEPTH_LOC);
     glVertexAttribPointer(VA_DEPTH_LOC, 1, GL_FLOAT, GL_FALSE, sizeof(float), 0);
     glVertexAttribDivisor(VA_DEPTH_LOC, 1);  // tell OpenGL this is an instanced vertex attribute.
+
+    animShader = new Shader("anim shader", "../Shaders/test.comp");
+    auto bufflag = GL_MAP_WRITE_BIT | GL_MAP_READ_BIT;
+    glNamedBufferStorage(ABBO, animations.size() * sizeof(Animation), animations.data(), bufflag);
+    glNamedBufferStorage(BIBO, boneInfos.size() * sizeof(BoneInfo), boneInfos.data(), bufflag);
+
     generateCommands();
 }
 
@@ -89,7 +104,7 @@ void VariantMesh::generateCommands() {
     int i = 0;
     for (const auto &v : variants) {
         int vCount = v->mesh->vertices.size();  // vertices in this mesh
-        int iCount = v->mesh->indices.size();    // indices in thie mesh
+        int iCount = v->mesh->indices.size();   // indices in thie mesh
 
         cmds[i].indexCount = iCount;
         cmds[i].instanceCount = v->instanceCount;  // number of instances this mesh will have
@@ -112,11 +127,11 @@ void VariantMesh::loadMaterials() {
     for (int i = 0; i < variants.size(); ++i) {
         auto diff_id = GL_TEXTURE0 + i * 2;
         glActiveTexture(diff_id);
-        if (variants[i]->mesh->materials[1].diffTex) glBindTexture(GL_TEXTURE_2D_ARRAY, variants[i]->mesh->materials[1].diffTex->texture);
+        if (materials[i].diffTex) glBindTexture(GL_TEXTURE_2D_ARRAY, materials[i].diffTex->texture);
 
         auto mtl_id = GL_TEXTURE0 + (i * 2) + 1;
         glActiveTexture(mtl_id);
-        if (variants[i]->mesh->materials[1].mtlsTex) glBindTexture(GL_TEXTURE_2D_ARRAY, variants[i]->mesh->materials[1].mtlsTex->texture);
+        if (materials[i].mtlsTex) glBindTexture(GL_TEXTURE_2D_ARRAY, materials[i].mtlsTex->texture);
     }
 }
 
@@ -132,13 +147,29 @@ void VariantMesh::unloadMaterials() {
     }
 }
 
-void VariantMesh::render(const mat4 *bone_trans_matrix) {
+void VariantMesh::render(const mat4 *instance_trans_matrix) {
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, IBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(mat4) * totalInstanceCount, &bone_trans_matrix[0], GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(mat4) * totalInstanceCount, &instance_trans_matrix[0], GL_DYNAMIC_DRAW);
 
     loadMaterials();
 
+    animShader->use();
+    animShader->setFloat("timeSinceApplicationStarted", SM::getGlobalTime());
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ABBO);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, BIBO);
+    glDispatchCompute(boneInfos.size() / 1, 1, 1);   // declare work group sizes and run compute shader
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);  // wait for all threads to be finished
+
+    BoneInfo *matptr;
+    matptr = (BoneInfo *)glMapNamedBuffer(BIBO, GL_READ_WRITE);
+    for (int i = 0; i < boneInfos.size(); ++i) {
+        Util::printMat4(matptr[i].currentTransformation);
+    }
+    printf("\n");
+    glUnmapNamedBuffer(BIBO);
+
+    shader->use();
     glMultiDrawElementsIndirect(
         GL_TRIANGLES,     // draw triangles
         GL_UNSIGNED_INT,  // data type in indices
@@ -157,27 +188,46 @@ void VariantMesh::render(mat4 mm) {
     render(&mm);
 }
 
-void VariantMesh::update(Shader *skinnedShader) {
-    // for (const auto &v : variants) {
-    //     v->mesh->update(skinnedShader);
-    // }
-}
-
 void VariantMesh::update() {
-    // for (const auto &v : variants) {
-    //     v->mesh->update();
-    // }
-    // for (int i = 0; i < 200; i++) {
-    //     shader->setMat4("bones[" + std::to_string(i) + "]", mat4(1));
-    // }
+    update(shader, 1);
+}
+void VariantMesh::update(Shader *skinnedShader) {
+    update(skinnedShader, 1);
+}
+void VariantMesh::update(float speed) {
+    update(shader, std::vector<float>(variants.size(), speed));
+}
+void VariantMesh::update(std::vector<float> speeds) {
+    update(shader, speeds);
+}
+void VariantMesh::update(Shader *skinnedShader, float animSpeed) {
+    update(skinnedShader, std::vector<float>(variants.size(), animSpeed));
+}
+void VariantMesh::update(Shader *skinnedShader, std::vector<float> speeds) {
+    std::vector<mat4> trans = getUpdatedTransforms(skinnedShader, speeds);
+    for (int i = 0; i < trans.size(); i++) {
+        skinnedShader->setMat4("bones[" + std::to_string(i) + "]", trans[i]);
+    }
 }
 
-void VariantMesh::update(std::vector<float> speeds) {
-    assert(speeds.size() == variants.size());
-    // for (const auto &v : variants) {
-    //     v->mesh->update();
-    // }
-    // for (int i = 0; i < 200; i++) {
-    //     shader->setMat4("bones[" + std::to_string(i) + "]", mat4(1));
-    // }
+// update transforms with a specified shader and speed for each VARIANT
+std::vector<mat4> VariantMesh::getUpdatedTransforms(Shader *skinnedShader, std::vector<float> speeds) {
+    assert(speeds.size() == variants.size() && "length of 'speeds' must match variant count");
+    std::vector<mat4> trans;
+    for (int i = 0; i < variants.size(); ++i) {
+        for (const auto &m : variants[i]->mesh->getUpdatedTransforms(skinnedShader, speeds[i])) {
+            trans.push_back(m);
+        }
+    }
+    return trans;
+}
+
+// update transforms with a specified shader and speed for all variants
+std::vector<mat4> VariantMesh::getUpdatedTransforms(Shader *skinnedShader, float animSpeed) {
+    return getUpdatedTransforms(skinnedShader, std::vector<float>(variants.size(), animSpeed));
+}
+
+// update transforms with a specified speed for all variants
+std::vector<mat4> VariantMesh::getUpdatedTransforms(float animSpeed) {
+    return getUpdatedTransforms(shader, animSpeed);
 }

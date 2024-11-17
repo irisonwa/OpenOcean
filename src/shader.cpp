@@ -76,3 +76,51 @@ GLuint Shader::CompileShaders(const char* pVS, const char* pFS) {
     // replace it with another or explicitly disable its use
     return shaderProgramID;
 }
+
+GLuint Shader::CompileComputeShader(const char* pCS) {
+    // Start the process of setting up our shaders by creating a program ID
+    // Note: we will link all the shaders together into this ID
+    GLuint shaderProgramID = glCreateProgram();
+    if (shaderProgramID == 0) {
+        std::cerr << "Error creating shader program..." << std::endl;
+        std::cerr << "Press enter/return to exit..." << std::endl;
+        std::cin.get();
+        exit(1);
+    }
+
+    // Create the compute shader object
+    std::string pcs = Util::readFile(pCS);
+    AddShader(shaderProgramID, pcs.c_str(), GL_COMPUTE_SHADER);
+
+    GLint Success = 0;
+    GLchar ErrorLog[1024] = {'\0'};
+    // After compiling all shader objects and attaching them to the program, we
+    // can finally link it
+    glLinkProgram(shaderProgramID);
+    // check for program related errors using glGetProgramiv
+    glGetProgramiv(shaderProgramID, GL_LINK_STATUS, &Success);
+    if (Success == 0) {
+        glGetProgramInfoLog(shaderProgramID, sizeof(ErrorLog), NULL, ErrorLog);
+        std::cerr << "Error linking shader program: " << ErrorLog << std::endl;
+        std::cerr << "Press enter/return to exit..." << std::endl;
+        std::cin.get();
+        exit(1);
+    }
+
+    // program has been successfully linked but needs to be validated to check
+    // whether the program can execute given the current pipeline state
+    glValidateProgram(shaderProgramID);
+    // check for program related errors using glGetProgramiv
+    glGetProgramiv(shaderProgramID, GL_VALIDATE_STATUS, &Success);
+    if (!Success) {
+        glGetProgramInfoLog(shaderProgramID, sizeof(ErrorLog), NULL, ErrorLog);
+        std::cerr << "Invalid shader program: " << ErrorLog << std::endl;
+        std::cerr << "Press enter/return to exit..." << std::endl;
+        std::cin.get();
+        exit(1);
+    }
+
+    // Note: this program will stay in effect for all draw calls until you
+    // replace it with another or explicitly disable its use
+    return shaderProgramID;
+}

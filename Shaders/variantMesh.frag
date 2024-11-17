@@ -95,6 +95,7 @@ uniform int nSpotLights = 10;
 uniform int nDirLights = 10;
 uniform vec4 fogColour;
 uniform vec2 fogBounds;
+uniform float seaLevel;
 
 vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir);
 vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
@@ -129,7 +130,10 @@ void main() {
       (fog_upper_bound - dist) / (fog_upper_bound - fog_lower_bound);
   fog_scale = clamp(fog_scale, 0.0, 1.0);
 
-  FragColour = mix(fogColour, vec4(result, 1.0), fog_scale);
+  if (viewPos.y < seaLevel)
+    FragColour = mix(fogColour, vec4(result, 1.0), fog_scale);
+  else
+    FragColour = vec4(result, 1.0);
   // if (drawID % 2 == 0)
   //   FragColour = vec4(Normal, 1.0);
   // else

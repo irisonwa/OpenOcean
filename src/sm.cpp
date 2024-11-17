@@ -7,7 +7,8 @@ int height = 600;
 float WORLD_BOUND_HIGH = 50;
 float WORLD_BOUND_LOW = -50;
 glm::vec4 bgColour = glm::vec4(0.2, 0.3, 0.5, 1);  // lightest colour of background. any distance fog should match this colour
-glm::vec2 fogBounds = glm::vec2(10, 100);          // near and far bounds for fog
+glm::vec2 fogBounds = glm::vec2(25, 200);          // near and far bounds for fog
+float seaLevel = 200;                              // y-level of ocean
 
 const float floor_position = 0.f;
 bool flashlightToggled = false;

@@ -63,6 +63,7 @@
 #define TEST_ROOM "box.obj"
 
 #define MESH_SUB "sub.obj"
+#define MESH_SUN "sun.obj"
 #define MESH_SHARK "shark.obj"
 #define MESH_SHARK2 "shark2.obj"
 #define MESH_KELP "kelp.obj"
@@ -70,11 +71,13 @@
 #define MESH_THREADFIN "fish_threadfin.obj"
 #define MESH_MARLIN "fish_marlin.obj"
 #define MESH_SPEARFISH "fish_spear.obj"
+#define MESH_SEA "sea_surface.obj"
 
 /* Animated meshes */
+#define MESH_SEA_ANIM "sea_surface.gltf"
 #define MESH_PLAYER_ANIM "sub.gltf"
 #define MESH_SHARK_ANIM "shark.gltf"
-#define MESH_SHARK_ANIM2 "shark2.gltf"
+#define MESH_SHARK2_ANIM "shark2.gltf"
 #define MESH_GUY_ANIM "boblampclean.md5mesh"
 #define MESH_WLL_ANIM "wll.gltf"
 #define MESH_KELP_ANIM "kelp.gltf"
@@ -104,6 +107,9 @@ VariantMesh* vMesh;
 
 vec3 flashlightCoords = vec3(-10000);
 vec3 flashlightDir = vec3(0, -1, 0);
+vec3 sunPos = vec3(0, 300, 0);
+vec3 sunDir = Util::UP * -1.f;
+float seaLevel = 100;
 std::map<std::string, Shader*> shaders;
 std::map<std::string, StaticMesh*> smeshes;
 std::map<std::string, BoneMesh*> bmeshes;

@@ -64,8 +64,9 @@ uniform int nSpotLights = 10;
 uniform int nDirLights = 10;
 uniform vec4 fogColour;
 uniform vec2 fogBounds;
+uniform float seaLevel;
 
-out vec4 FragColor;
+out vec4 FragColour;
 
 // function prototypes
 vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir);
@@ -98,9 +99,11 @@ void main() {
       (fog_upper_bound - dist) / (fog_upper_bound - fog_lower_bound);
   fog_scale = clamp(fog_scale, 0.0, 1.0);
 
-  FragColor = mix(fogColour, vec4(result, 1.0), fog_scale);
-  // FragColor = vec4(result, 1.0);
-  //   FragColor = vec4(Normal, 1.0);
+  if (viewPos.y < seaLevel)
+    FragColour = mix(fogColour, vec4(result, 1.0), fog_scale);
+  else
+    FragColour = vec4(result, 1.0);
+  //   FragColour = vec4(Normal, 1.0);
 }
 
 // calculates the color when using a directional light.

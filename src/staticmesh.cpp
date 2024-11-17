@@ -11,7 +11,7 @@ bool StaticMesh::loadMesh(std::string file_name, bool popBuffers) {
     populateBuffer = popBuffers;
 
     std::string rpath = MODELDIR(file_name) + file_name;
-    const aiScene* scene = aiImportFile(
+    scene = aiImportFile(
         rpath.c_str(),
         AI_LOAD_FLAGS);
 

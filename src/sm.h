@@ -40,6 +40,7 @@ extern float WORLD_BOUND_HIGH;
 extern float WORLD_BOUND_LOW;
 extern glm::vec4 bgColour;
 extern glm::vec2 fogBounds;
+extern float seaLevel;
 
 extern int unnamedMeshCount;
 extern int unnamedBoneMeshCount;

@@ -39,8 +39,8 @@ class VariantMesh : public Mesh {
         }
         // Load the mesh stored in this variant without populating its buffers
         bool loadMesh() {
-            // mesh = new BoneMesh(parentName + "_" + MODEL_NO_DIR(path), path, textureAtlasSize, textureAtlasTileCount, false);
-            mesh = new StaticMesh(parentName + "_" + MODEL_NO_DIR(path), path, textureAtlasSize, textureAtlasTileCount, false);
+            mesh = new BoneMesh(parentName + "_" + MODEL_NO_DIR(path), path, textureAtlasSize, textureAtlasTileCount, false);
+            // mesh = new StaticMesh(parentName + "_" + MODEL_NO_DIR(path), path, textureAtlasSize, textureAtlasTileCount, false);
             return mesh->loadMesh(path, false);
         }
         std::string parentName;
@@ -49,20 +49,19 @@ class VariantMesh : public Mesh {
         unsigned int textureAtlasSize;
         unsigned int textureAtlasTileCount;
         std::vector<unsigned int> depths;
-        // BoneMesh* mesh;
-        StaticMesh* mesh;
+        Mesh* mesh;
     };
 
     VariantMesh() { name = "NewVariantMesh" + std::to_string(SM::unnamedVariantMeshCount++); }
     VariantMesh(std::string nm) { name = nm; }
     /*
-     * Create a new VariantMesh. `nm` is the name of the mesh. `s` is a pointer to the shader to use.
-     * `_variants` is a list of tuples, each of which represents one mesh. each tuple has:
-     * - `string`: path to a mesh
-     * - `unsigned int`: the number of instances of this mesh to draw
-     * - `unsigned int`: the square size of the array texture the mesh will use which must be a square texture of size `size x size`. if -1, will use the entire texture available
-     * - `unsigned int`: the number of tiles in the texture, vertically. must be at least 1. if -1, will be set to 1.
-     * - `vector<unsigned int>`: a list of depths to use in the mesh. must have a size equal to the number of instances (first int)
+        Create a new VariantMesh. `nm` is the name of the mesh. `s` is a pointer to the shader to use.
+        `_variants` is a list of tuples, each of which represents one mesh. each tuple has:
+        - `string`: path to a mesh
+        - `unsigned int`: the number of instances of this mesh to draw
+        - `unsigned int`: the square size of the array texture the mesh will use which must be a square texture of size `size x size`. if -1, will use the entire texture available
+        - `unsigned int`: the number of tiles in the texture, vertically. must be at least 1. if -1, will be set to 1.
+        - `vector<unsigned int>`: a list of depths to use in the mesh. must have a size equal to the number of instances (first int)
      */
     VariantMesh(std::string nm, Shader* s, std::vector<std::tuple<std::string, unsigned int, unsigned int, unsigned int, std::vector<unsigned int>>> _variants) {
         name = nm;
@@ -76,7 +75,8 @@ class VariantMesh : public Mesh {
 
     ~VariantMesh();
 
-    bool loadMesh(std::string) { return true; }  // should probably remove this from base class? idk
+    bool loadMesh(std::string) { return true; }        // should probably remove this from base class? idk
+    bool loadMesh(std::string, bool) { return true; }  // should probably remove this from base class? idk
     bool loadMeshes() { return loadMeshes(variants); }
     bool loadMeshes(std::vector<VariantInfo*> variantInfos);
     bool initScene();
@@ -86,9 +86,15 @@ class VariantMesh : public Mesh {
     void populateBuffers();
     void render(const mat4*);
     void render(mat4);
-    void update();                           // update the mesh's animations
-    void update(Shader* skinnedShader);      // update the mesh's animations using an external shader
-    void update(std::vector<float> speeds);  // update the mesh's animations given custom speeds
+    void update();
+    void update(Shader* skinnedShader);
+    void update(float speed);
+    void update(std::vector<float> speeds);
+    void update(Shader* skinnedShader, float animSpeed);
+    void update(Shader* skinnedShader, std::vector<float> speeds);
+    std::vector<mat4> getUpdatedTransforms(Shader* skinnedShader, float animSpeed);
+    std::vector<mat4> getUpdatedTransforms(Shader* skinnedShader, std::vector<float> speeds);
+    std::vector<mat4> getUpdatedTransforms(float animSpeed);
 
 #define VA_POSITION_LOC 0     // p_vbo
 #define VA_NORMAL_LOC 1       // n_vbo
@@ -99,18 +105,16 @@ class VariantMesh : public Mesh {
 #define VA_INSTANCE_LOC 9     // instance location
 #define VA_DEPTH_LOC 13       // texture depth vbo
 
-    Shader* shader;
-
-    unsigned int commandBuffer;  // draw command buffer object (compute shader)
-    unsigned int BBO;            // bone vertex vbo
-    unsigned int BTBO;           // bone transform vbo
-
-    std::vector<VertexBoneData> m_Bones;
-    std::vector<BoneInfo*> m_BoneInfo;
-    std::vector<std::string> paths;
-    std::vector<VariantInfo*> variants;
-    std::vector<float> depths;
-    int totalInstanceCount = 0;
+    unsigned int ABBO;                        // animated bone transform ssbo
+    unsigned int BIBO;                        // bone info ssbo
+    unsigned int commandBuffer;               // draw command buffer object (compute shader)
+    int totalInstanceCount = 0;               // number of instances across all variants
+    std::vector<float> depths;                // texture depths for each variant
+    std::vector<int> boneTransformOffsets;    // number of bones in each variant
+    std::vector<mat4> globalInverseMatrices;  // global inverse matrix for each variant
+    std::vector<std::string> paths;           // paths of variant mesh files
+    std::vector<VariantInfo*> variants;       // variant meshes held in this object
+    Shader* animShader;
 };
 
 #endif /* VARIANTMESH_H */

@@ -56,14 +56,15 @@ class BoneMesh : public Mesh {
     void render(unsigned int, const mat4*);
     void render(mat4);
     int getBoneID(const aiBone*);
-    std::vector<aiMatrix4x4> getBoneTransforms(float, float);
-    void readNodeHierarchy(float, const aiNode*, const aiMatrix4x4&);
+    int createAnimationList(const aiNode* node, int childIdx, mat4 parent);
+    std::vector<mat4> getBoneTransforms(float, float);
+    std::vector<mat4> loadAnimation(float);
     const aiNodeAnim* findNodeAnim(const aiAnimation*, const std::string);
-    aiVector3D calcInterpolatedTranslation(float, const aiNodeAnim*);
-    aiVector3D calcInterpolatedScale(float, const aiNodeAnim*);
-    aiQuaternion calcInterpolatedRotation(float, const aiNodeAnim*);
+    std::vector<mat4> getUpdatedTransforms(float animSpeed);
+    std::vector<mat4> getUpdatedTransforms(Shader* skinnedShader, float animSpeed);
     void update();                                        // update the mesh's animations
     void update(float animSpeed);                         // update the mesh's animations
+    void update(Shader* skinnedShader);                   // update the mesh's animations using an external shader
     void update(Shader* skinnedShader, float animSpeed);  // update the mesh's animations using an external shader
 
 #define SK_POSITION_LOC 0     // p_vbo
@@ -73,18 +74,6 @@ class BoneMesh : public Mesh {
 #define SK_BONE_WEIGHT_LOC 4  // bone weight location
 #define SK_INSTANCE_LOC 5     // instance location
 #define SK_DEPTH_LOC 9        // instance location
-
-    aiMatrix4x4 globalInverseTrans;  // inverse matrix
-    unsigned int BBO;                // bone vbo
-
-    std::vector<VertexBoneData> m_Bones;
-    std::vector<BoneInfo*> m_BoneInfo;
-    std::map<std::string, unsigned int> boneToIndexMap;
-
-    const aiScene* scene;
-    Assimp::Importer importer;
-
-    Shader* shader;
 };
 
 #endif /* BONEMESH_H */

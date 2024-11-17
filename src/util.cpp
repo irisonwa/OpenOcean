@@ -132,7 +132,7 @@ aiMatrix4x4 GLMtoAI(const mat4& mat) {
     return p;
 }
 
-mat4 aiToGLM(aiMatrix4x4* from) {
+mat4 aiToGLM(const aiMatrix4x4* from) {
     mat4 to;
     to[0][0] = (GLfloat)from->a1;
     to[0][1] = (GLfloat)from->b1;
@@ -151,7 +151,15 @@ mat4 aiToGLM(aiMatrix4x4* from) {
     to[3][2] = (GLfloat)from->c4;
     to[3][3] = (GLfloat)from->d4;
     return to;
-};
+}
+
+vec3 aiToGLM(aiVector3D* from) {
+    return vec3(
+        from->x,
+        from->y,
+        from->z
+    );
+}
 
 // Create a matrix at position `from` looking in the direction `to`. Uses the global up direction (0, 1, 0)
 mat4 lookTowards(vec3 from, vec3 to) {
@@ -171,11 +179,19 @@ void printVec3(vec3 v) {
     printf("(%f, %f, %f)\n", v.x, v.y, v.z);
 }
 
+void printVec2(vec2 v) {
+    printf("(%f, %f)\n", v.x, v.y);
+}
+
 void printMat4(mat4 m) {
     printf("\n");
     printf("[%.2f][%.2f][%.2f][%.2f]\n", m[0][0], m[1][0], m[2][0], m[3][0]);
     printf("[%.2f][%.2f][%.2f][%.2f]\n", m[0][1], m[1][1], m[2][1], m[3][1]);
     printf("[%.2f][%.2f][%.2f][%.2f]\n", m[0][2], m[1][2], m[2][2], m[3][2]);
     printf("[%.2f][%.2f][%.2f][%.2f]\n", m[0][3], m[1][3], m[2][3], m[3][3]);
+}
+
+void printMat4(aiMatrix4x4 m) {
+    printMat4(aiToGLM(&m));
 }
 }  // namespace Util
