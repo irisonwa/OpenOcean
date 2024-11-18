@@ -20,7 +20,7 @@ bool VariantMesh::loadMeshes(std::vector<VariantInfo *> infos) {
         for (auto x : v->mesh->animations) animations.push_back(x);
         paths.push_back(v->path);
         globalInverseMatrices.push_back(Util::aiToGLM(&v->mesh->globalInverseTrans));
-        boneTransformOffsets.push_back(v->mesh->boneInfos.size());
+        boneTransformOffsets.push_back(boneInfos.size());
         totalInstanceCount += v->instanceCount;
     }
     if (vBones.empty()) vBones.resize(totalInstanceCount);
@@ -46,6 +46,7 @@ void VariantMesh::populateBuffers() {
     // ssbos
     glCreateBuffers(1, &ABBO);
     glCreateBuffers(1, &BIBO);
+    glCreateBuffers(1, &BOBO);
 
 
     glGenBuffers(1, &commandBuffer);
@@ -90,10 +91,11 @@ void VariantMesh::populateBuffers() {
     glVertexAttribPointer(VA_DEPTH_LOC, 1, GL_FLOAT, GL_FALSE, sizeof(float), 0);
     glVertexAttribDivisor(VA_DEPTH_LOC, 1);  // tell OpenGL this is an instanced vertex attribute.
 
-    animShader = new Shader("anim shader", "../Shaders/test.comp");
+    animShader = new Shader("anim shader", "../Shaders/anim.comp");
     auto bufflag = GL_MAP_WRITE_BIT | GL_MAP_READ_BIT;
     glNamedBufferStorage(ABBO, animations.size() * sizeof(Animation), animations.data(), bufflag);
     glNamedBufferStorage(BIBO, boneInfos.size() * sizeof(BoneInfo), boneInfos.data(), bufflag);
+    glNamedBufferStorage(BOBO, boneTransformOffsets.size() * sizeof(int), boneTransformOffsets.data(), bufflag);
 
     generateCommands();
 }
@@ -158,16 +160,19 @@ void VariantMesh::render(const mat4 *instance_trans_matrix) {
     animShader->setFloat("timeSinceApplicationStarted", SM::getGlobalTime());
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ABBO);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, BIBO);
-    glDispatchCompute(boneInfos.size() / 1, 1, 1);   // declare work group sizes and run compute shader
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, BOBO);
+    glDispatchCompute(boneInfos.size() / 32, 1, 1);   // declare work group sizes and run compute shader
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);  // wait for all threads to be finished
 
-    BoneInfo *matptr;
-    matptr = (BoneInfo *)glMapNamedBuffer(BIBO, GL_READ_WRITE);
-    for (int i = 0; i < boneInfos.size(); ++i) {
-        Util::printMat4(matptr[i].currentTransformation);
-    }
-    printf("\n");
-    glUnmapNamedBuffer(BIBO);
+    // BoneInfo *matptr;
+    // matptr = (BoneInfo *)glMapNamedBuffer(BIBO, GL_READ_WRITE);
+    // for (int i = 0; i < boneInfos.size(); ++i) {
+    //     Util::printMat4(matptr[i].currentTransformation);
+    // }
+    // printf("\n");
+    // glUnmapNamedBuffer(BIBO);
+
+
 
     shader->use();
     glMultiDrawElementsIndirect(

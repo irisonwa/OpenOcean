@@ -81,8 +81,8 @@ class Mesh {
     struct BoneInfo {
         mat4 offsetMatrix;
         mat4 currentTransformation;
-        int ID;
         int children[MAX_JOINTS_PER_BONE];
+        int ID;
         vec2 pdding = vec2(0);
         int pdding2 = 0;
 
@@ -104,14 +104,14 @@ class Mesh {
     // Information about a bone's animation.
     // Includes the length of the animation, the bone's transformation matrix associated with the mesh, and the offset of the matrices for use in an Animation buffer.
     struct Animation {
-        int boneIndex;                  // index of bone this animation applies to
-        float animationLength;                   // length of the animation in ticks
         mat4 relTransformation;                  // transformation relative to parent (aiNode->mTransformation)
         mat4 globalInvTransform;                 // global inverse transform of root node of mesh's skeleton
         vec4 positionKeys[MAX_KEYFRAMES];        // changes in position (first 3) and time of keys (last float)
         vec4 scalingKeys[MAX_KEYFRAMES];         // changes in scaling (first 3) and time of keys (last float)
         quat rotationKeys[MAX_KEYFRAMES];        // changes in rotation
         float rotationKeysTimes[MAX_KEYFRAMES];  // times of rotation keys
+        int boneIndex;                  // index of bone this animation applies to
+        float animationLength;                   // length of the animation in ticks
         vec2 pdding = vec2(0);
 
         Animation() {

@@ -107,6 +107,7 @@ class VariantMesh : public Mesh {
 
     unsigned int ABBO;                        // animated bone transform ssbo
     unsigned int BIBO;                        // bone info ssbo
+    unsigned int BOBO;                        // bone offset ssbo
     unsigned int commandBuffer;               // draw command buffer object (compute shader)
     int totalInstanceCount = 0;               // number of instances across all variants
     std::vector<float> depths;                // texture depths for each variant

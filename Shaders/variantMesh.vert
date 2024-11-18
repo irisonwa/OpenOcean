@@ -4,7 +4,7 @@ layout(location = 1) in vec3 vertex_normal;
 layout(location = 2) in vec2 vertex_texture;
 layout(location = 3) in ivec4 bone_ids;
 layout(location = 4) in vec4 bone_weights;
-layout(location = 5) in mat4 bone_trans; // transform of mesh instance
+layout(location = 5) in mat4 bone_trans;
 layout(location = 9) in mat4 instance_trans; // transform of mesh instance
 layout(location = 13) in float texture_depth;
 layout(location = 14) in vec2 texture_slot;
@@ -15,11 +15,31 @@ layout(location = 2) out vec2 TexCoords;
 layout(location = 3) out float tDepth;
 layout(location = 4) flat out uint drawID;
 
+struct BoneInfo {
+  mat4 offsetMatrix;                       // inverse bind matrix for the bone                                     # 4 * 4 * 4 = 64
+  mat4 currentTransformation;              // current transformation of the bone                                   # 4 * 4 * 4 = 64
+  int children[16];                // ids of children bones                                                # 4 * 16 = 64
+  int ID;                                  // bone id                                                              # 4
+  // vec2 bi_padding;                         // padding                                                              # 4 * 2 = 8
+  // float bi_padding2;                       // padding                                                              # 4
+};
+
+layout (std430, binding = 1) buffer readonly BoneInfos {
+    BoneInfo infos[];
+};
+
+layout (std430, binding = 2) buffer readonly BoneOffsets {
+    int boffsets[];
+};
+
 uniform mat4 view;
 uniform mat4 proj;
 uniform mat4 bones[200];
 
 void main() {
+  drawID = uint(gl_DrawID); // to count variants
+  // drawID = uint(gl_BaseInstance + gl_InstanceID); // to count instances
+
   vec4 totalPos = vec4(0.0);
   vec3 totalNormal = vec3(0.0);
   int cnt = 0; // number of bones
@@ -27,7 +47,7 @@ void main() {
     if (bone_ids[i] == -1) // ignore unbound bones
       continue;
     cnt++;
-    mat4 bone = bones[bone_ids[i]];
+    mat4 bone = infos[bone_ids[i] + boffsets[drawID]].currentTransformation;
     totalPos += bone_weights[i] * bone * vec4(vertex_position, 1.0);
 
     vec3 worldNormal = mat3(transpose(inverse(bone))) * vertex_normal;
@@ -46,7 +66,5 @@ void main() {
 
   TexCoords = vertex_texture;
   tDepth = texture_depth;
-  // drawID = uint(gl_BaseInstance + gl_InstanceID); // to count instances
-  drawID = uint(gl_DrawID); // to count variants
   gl_Position = proj * view * instance_trans * totalPos;
 }
