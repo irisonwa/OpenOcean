@@ -179,18 +179,18 @@ int BoneMesh::createAnimationList(const aiNode* node, int childIdx, mat4 parent)
     }
 
     // debug
-    if (isBone) {
-        if (boneInfos[tAnim.boneIndex].children[0] == -1) {
-            std::cout << nodeName << "(" << boneInfos[tAnim.boneIndex].ID << ")" << " has no children" << std::endl;
-        } else {
-            std::cout << nodeName << "(" << boneInfos[tAnim.boneIndex].ID << ")" << " has children: ";
-            for (auto idx : boneInfos[tAnim.boneIndex].children) {
-                if (idx == -1) break;
-                std::cout << idx << ", ";
-            }
-            std::cout << std::endl;
-        }
-    }
+    // if (isBone) {
+    //     if (boneInfos[tAnim.boneIndex].children[0] == -1) {
+    //         std::cout << nodeName << "(" << boneInfos[tAnim.boneIndex].ID << ")" << " has no children" << std::endl;
+    //     } else {
+    //         std::cout << nodeName << "(" << boneInfos[tAnim.boneIndex].ID << ")" << " has children: ";
+    //         for (auto idx : boneInfos[tAnim.boneIndex].children) {
+    //             if (idx == -1) break;
+    //             std::cout << idx << ", ";
+    //         }
+    //         std::cout << std::endl;
+    //     }
+    // }
 
     return 1 + tDepth;
 }

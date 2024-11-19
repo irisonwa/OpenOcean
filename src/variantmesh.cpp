@@ -91,7 +91,6 @@ void VariantMesh::populateBuffers() {
     glVertexAttribPointer(VA_DEPTH_LOC, 1, GL_FLOAT, GL_FALSE, sizeof(float), 0);
     glVertexAttribDivisor(VA_DEPTH_LOC, 1);  // tell OpenGL this is an instanced vertex attribute.
 
-    animShader = new Shader("anim shader", "../Shaders/anim.comp");
     auto bufflag = GL_MAP_WRITE_BIT | GL_MAP_READ_BIT;
     glNamedBufferStorage(ABBO, animations.size() * sizeof(Animation), animations.data(), bufflag);
     glNamedBufferStorage(BIBO, boneInfos.size() * sizeof(BoneInfo), boneInfos.data(), bufflag);
@@ -156,12 +155,13 @@ void VariantMesh::render(const mat4 *instance_trans_matrix) {
 
     loadMaterials();
 
+    // update animations
     animShader->use();
     animShader->setFloat("timeSinceApplicationStarted", SM::getGlobalTime());
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ABBO);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, BIBO);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, BOBO);
-    glDispatchCompute(boneInfos.size() / 32, 1, 1);   // declare work group sizes and run compute shader
+    glDispatchCompute((int)ceil(boneInfos.size() / 32.f), 1, 1);   // declare work group sizes and run compute shader
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);  // wait for all threads to be finished
 
     // BoneInfo *matptr;
@@ -171,8 +171,6 @@ void VariantMesh::render(const mat4 *instance_trans_matrix) {
     // }
     // printf("\n");
     // glUnmapNamedBuffer(BIBO);
-
-
 
     shader->use();
     glMultiDrawElementsIndirect(
@@ -209,10 +207,10 @@ void VariantMesh::update(Shader *skinnedShader, float animSpeed) {
     update(skinnedShader, std::vector<float>(variants.size(), animSpeed));
 }
 void VariantMesh::update(Shader *skinnedShader, std::vector<float> speeds) {
-    std::vector<mat4> trans = getUpdatedTransforms(skinnedShader, speeds);
-    for (int i = 0; i < trans.size(); i++) {
-        skinnedShader->setMat4("bones[" + std::to_string(i) + "]", trans[i]);
-    }
+    // std::vector<mat4> trans = getUpdatedTransforms(skinnedShader, speeds);
+    // for (int i = 0; i < trans.size(); i++) {
+    //     skinnedShader->setMat4("bones[" + std::to_string(i) + "]", trans[i]);
+    // }
 }
 
 // update transforms with a specified shader and speed for each VARIANT

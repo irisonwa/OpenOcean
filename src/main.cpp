@@ -40,7 +40,7 @@ void init() {
     // smeshes[m4->name] = m4;
     StaticMesh* m5 = new StaticMesh("sea", MESH_SEA);
     smeshes[m5->name] = m5;
-    StaticMesh* m6 = new StaticMesh("kelp", MESH_KELP, -1, -1);
+    StaticMesh* m6 = new StaticMesh("kelp", MESH_KELP);
     smeshes[m6->name] = m6;
     StaticMesh* m7 = new StaticMesh("shark", MESH_SHARK, 1024, 1);
     smeshes[m7->name] = m7;
@@ -75,11 +75,11 @@ void init() {
         "vmesh", shaders["variant"],
         {
             {MESH_MARLIN_ANIM, 300, 1024, 2, std::vector<unsigned int>(300, 0)},  // black marlin
-            {MESH_MARLIN_ANIM, 300, 1024, 2, std::vector<unsigned int>(300, 0)},  // blue marlin
+            {MESH_MARLIN_ANIM, 300, 1024, 2, std::vector<unsigned int>(300, 1)},  // blue marlin
             {MESH_THREADFIN_ANIM, 300, 1024, 1, std::vector<unsigned int>(300, 0)},
             {MESH_SPEARFISH_ANIM, 300, 1024, 1, std::vector<unsigned int>(300, 0)},
             {MESH_SHARK2_ANIM, 10, 1024, 1, std::vector<unsigned int>(10, 0)},
-            {MESH_SHARK2_ANIM, 10, 1024, 1, std::vector<unsigned int>(10, 2)},
+            {MESH_SHARK2_ANIM, 1, 1024, 1, std::vector<unsigned int>(1, 2)},
             // {MESH_PLAYER_ANIM, 10, -1, -1, std::vector<unsigned int>(10, 0)},
             // {TEST_SPEC, 1, 1024, 4, std::vector<unsigned int>(1, 3)},
             // {TEST_BOID, 3, 1024, 4, std::vector<unsigned int>(3, 2)},
@@ -95,9 +95,6 @@ void init() {
     cubemap->loadCubemap(cubemap_faces);
 
     /// -------------------------------------------------- OTHER -------------------------------------------------- ///
-    // Set start time of program near when init() finishes loading
-    SM::startTime = timeGetTime();
-
     float offset = 1.0f;
     float lim = 6;
     int j = 0;
@@ -162,6 +159,9 @@ void init() {
     variantLight->spotLights[variantLight->nSpotLights - 1].quadratic = /* 0.0019; */ sunlightQuad;
     variantLight->spotLights[variantLight->nSpotLights - 1].cutOff = cos(Util::deg2Rad(24.f));
     variantLight->spotLights[variantLight->nSpotLights - 1].outerCutOff = cos(Util::deg2Rad(35.f));
+    
+    // Set start time of program near when init() finishes loading
+    SM::startTime = timeGetTime();
 }
 
 void display() {
@@ -222,13 +222,13 @@ void display() {
         player->render();
     }
     bmeshes["test threadfin"]->update(50);
-    bmeshes["test threadfin"]->render(translate(mat4(1), vec3(0, 40, 0)));
+    bmeshes["test threadfin"]->render(translate(scale(mat4(1), vec3(1)), vec3(0, 50, 0)));
     bmeshes["test marlin"]->update(50);
-    bmeshes["test marlin"]->render(translate(mat4(1), vec3(0, 40, 10)));
+    bmeshes["test marlin"]->render(translate(scale(mat4(1), vec3(1)), vec3(0, -50, 0)));
     bmeshes["test spearfish"]->update(50);
-    bmeshes["test spearfish"]->render(translate(mat4(1), vec3(0, 40, 20)));
+    bmeshes["test spearfish"]->render(translate(scale(mat4(1), vec3(1)), vec3(50)));
     bmeshes["test shark"]->update(100);
-    bmeshes["test shark"]->render(translate(mat4(1), vec3(0, 40, 30)));
+    bmeshes["test shark"]->render(translate(scale(mat4(1), vec3(1)), vec3(0)));
     bmeshes["test kelp"]->update(100);
     bmeshes["test kelp"]->render(transm.size(), transm.data());
 
@@ -264,20 +264,20 @@ void passiveMouseMoved(int x, int y) {
 
 void specKeyPressed(int key, int x, int y) {
     if (key == GLUT_KEY_SHIFT_L) {
-        if (!SM::isFreeCam) {
-            player->DOWN = true;
-        } else {
+        if (SM::isFreeCam) {
             camera.DOWN = true;
+        } else {
+            player->DOWN = true;
         }
     }
 }
 
 void specKeyReleased(int key, int x, int y) {
     if (key == GLUT_KEY_SHIFT_L) {
-        if (!SM::isFreeCam) {
-            player->DOWN = false;
-        } else {
+        if (SM::isFreeCam) {
             camera.DOWN = false;
+        } else {
+            player->DOWN = false;
         }
     }
 }
@@ -302,15 +302,7 @@ void keyPressed(unsigned char key, int x, int y) {
     }
 
     if (key == 'r' || key == 'R') SM::changeCameraState();
-    if (!SM::isFreeCam) {
-        if (key == 'q' || key == 'Q') SM::flashlightToggled = true;
-        if (key == ' ') player->UP = true;
-        if (key == 'w' || key == 'W') player->FORWARD = true;
-        if (key == 's' || key == 'S') player->BACK = true;
-        if (key == 'a' || key == 'A') player->LEFT = true;
-        if (key == 'd' || key == 'D') player->RIGHT = true;
-        if (key == 'e' || key == 'E') player->SPRINT = true;
-    } else {
+    if (SM::isFreeCam) {
         if (key == 'q' || key == 'Q') SM::flashlightToggled = true;
         if (key == ' ') camera.UP = true;
         if (key == 'w' || key == 'W') camera.FORWARD = true;
@@ -318,21 +310,20 @@ void keyPressed(unsigned char key, int x, int y) {
         if (key == 'a' || key == 'A') camera.LEFT = true;
         if (key == 'd' || key == 'D') camera.RIGHT = true;
         if (key == 'e' || key == 'E') camera.SPRINT = true;
+    } else {
+        if (key == 'q' || key == 'Q') SM::flashlightToggled = true;
+        if (key == ' ') player->UP = true;
+        if (key == 'w' || key == 'W') player->FORWARD = true;
+        if (key == 's' || key == 'S') player->BACK = true;
+        if (key == 'a' || key == 'A') player->LEFT = true;
+        if (key == 'd' || key == 'D') player->RIGHT = true;
+        if (key == 'e' || key == 'E') player->SPRINT = true;
     }
 }
 
 // Function ran on key release
 void keyReleased(unsigned char key, int x, int y) {
-    if (!SM::isFreeCam) {
-        if (key == 'q' || key == 'Q') SM::flashlightToggled = false;
-        if (key == ' ') player->UP = false;
-        if (key == 'w' || key == 'W') player->FORWARD = false;
-        if (key == 's' || key == 'S') player->BACK = false;
-        if (key == 'a' || key == 'A') player->LEFT = false;
-        if (key == 'd' || key == 'D') player->RIGHT = false;
-        if (key == 'e' || key == 'E') player->SPRINT = false;
-        if (key == 'p' || key == 'P') player->CAN_FLY = !player->CAN_FLY;
-    } else {
+    if (SM::isFreeCam) {
         if (key == 'q' || key == 'Q') SM::flashlightToggled = false;
         if (key == ' ') camera.UP = false;
         if (key == 'w' || key == 'W') camera.FORWARD = false;
@@ -341,6 +332,15 @@ void keyReleased(unsigned char key, int x, int y) {
         if (key == 'd' || key == 'D') camera.RIGHT = false;
         if (key == 'e' || key == 'E') camera.SPRINT = false;
         if (key == 'p' || key == 'P') camera.CAN_FLY = !camera.CAN_FLY;
+    } else {
+        if (key == 'q' || key == 'Q') SM::flashlightToggled = false;
+        if (key == ' ') player->UP = false;
+        if (key == 'w' || key == 'W') player->FORWARD = false;
+        if (key == 's' || key == 'S') player->BACK = false;
+        if (key == 'a' || key == 'A') player->LEFT = false;
+        if (key == 'd' || key == 'D') player->RIGHT = false;
+        if (key == 'e' || key == 'E') player->SPRINT = false;
+        if (key == 'p' || key == 'P') player->CAN_FLY = !player->CAN_FLY;
     }
 }
 

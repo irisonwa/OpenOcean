@@ -59,13 +59,14 @@ class VariantMesh : public Mesh {
         `_variants` is a list of tuples, each of which represents one mesh. each tuple has:
         - `string`: path to a mesh
         - `unsigned int`: the number of instances of this mesh to draw
-        - `unsigned int`: the square size of the array texture the mesh will use which must be a square texture of size `size x size`. if -1, will use the entire texture available
+        - `unsigned int`: the square size of the array texture of size `size x size`. if -1, will use texture of size `img_width x img_width`
         - `unsigned int`: the number of tiles in the texture, vertically. must be at least 1. if -1, will be set to 1.
-        - `vector<unsigned int>`: a list of depths to use in the mesh. must have a size equal to the number of instances (first int)
+        - `vector<unsigned int>`: a list of depths to use in the mesh. must have a size equal to the number of instances (first unsigned int)
      */
     VariantMesh(std::string nm, Shader* s, std::vector<std::tuple<std::string, unsigned int, unsigned int, unsigned int, std::vector<unsigned int>>> _variants) {
         name = nm;
         shader = s;
+        animShader = new Shader("anim shader", PROJDIR "Shaders/anim.comp");
         for (const auto& [_path, _instanceCount, _textureAtlasSize, _textureAtlasTileCount, _depths] : _variants) {
             VariantInfo* vi = new VariantInfo(name, _path, _instanceCount, _textureAtlasSize, _textureAtlasTileCount, _depths);
             variants.push_back(vi);
@@ -99,11 +100,10 @@ class VariantMesh : public Mesh {
 #define VA_POSITION_LOC 0     // p_vbo
 #define VA_NORMAL_LOC 1       // n_vbo
 #define VA_TEXTURE_LOC 2      // t_vbo
-#define VA_BONE_LOC 3         // bone vbo
-#define VA_BONE_WEIGHT_LOC 4  // bone weight location
-#define VA_BONE_TRANS_LOC 5   // bone transform location
-#define VA_INSTANCE_LOC 9     // instance location
-#define VA_DEPTH_LOC 13       // texture depth vbo
+#define VA_BONE_LOC 3         // bone id vbo
+#define VA_BONE_WEIGHT_LOC 4  // bone weight vbo
+#define VA_INSTANCE_LOC 5     // instance vbo
+#define VA_DEPTH_LOC 9        // texture depth vbo
 
     unsigned int ABBO;                        // animated bone transform ssbo
     unsigned int BIBO;                        // bone info ssbo

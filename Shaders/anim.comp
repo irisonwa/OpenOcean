@@ -17,17 +17,17 @@ struct Animation {
     float rotationKeysTimes[MAX_KEYFRAMES];  // times of rotation keys                                               # 4 * 32 = 128
     int boneIndex;                           // index of bone this animation applies to                              # 4
     float animDuration;                      // length of the animation in ticks                                     # 4
-    // vec2 an_padding;                         // padding                                                              # 4 * 2 = 8
+    // vec2 an_padding;                      // padding                                                              # 4 * 2 = 8
 };
 
-// 64 + 64 + 4 + 64 + 8 = 204 bytes
+// 64 + 64 + 64 + 4 + 12 = 208 bytes
 struct BoneInfo {
     mat4 offsetMatrix;                       // inverse bind matrix for the bone                                     # 4 * 4 * 4 = 64
     mat4 currentTransformation;              // current transformation of the bone                                   # 4 * 4 * 4 = 64
     int children[MAX_JOINTS];                // ids of children bones                                                # 4 * 16 = 64
     int ID;                                  // bone id                                                              # 4
-    // vec2 bi_padding;                         // padding                                                              # 4 * 2 = 8
-    // float bi_padding2;                       // padding                                                              # 4
+    // vec2 bi_padding;                      // padding                                                              # 4 * 2 = 8
+    // float bi_padding2;                    // padding                                                              # 4
 };
 
 layout (std430, binding = 0) buffer Animations {
@@ -37,6 +37,7 @@ layout (std430, binding = 0) buffer Animations {
 layout (std430, binding = 1) buffer BoneInfos {
     BoneInfo infos[];
 };
+
 layout (std430, binding = 2) buffer BoneOffsets {
     int boffsets[];
 };

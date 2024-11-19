@@ -30,26 +30,40 @@ std::string readFile(const char* path) {
     return text;
 }
 
-// Wrap a value between min and max. If val is greater than max, it will
-// wraparound to min and begin climbing from there, and vice versa.
+// Wrap a value between min and max. If val is greater than max, it will wraparound to min and begin climbing from there, and vice versa.
 float wrap(float val, float min, float max) {
     return fmod(min + (val - min), max - min);
 }
 
-// Clamp a value between a minimum and maximum so that val cannot be greater
-// than max or smaller than min.
+vec3 wrapV(vec3 val, vec3 min, vec3 max) {
+    return vec3(
+        wrap(val.x, min.x, max.x),
+        wrap(val.y, min.y, max.y),
+        wrap(val.z, min.z, max.z));
+}
+
+// Clamp a value between a minimum and maximum so that val cannot be greater than max or smaller than min.
 float clamp(float val, float min, float max) {
     if (val < min) val = min;
     if (val > max) val = max;
     return val;
 }
 
+vec3 clampV(vec3 val, vec3 min, vec3 max) {
+    return vec3(
+        clamp(val.x, min.x, max.x),
+        clamp(val.y, min.y, max.y),
+        clamp(val.z, min.z, max.z));
+}
+
+// Linearly interpolate between `a` and `b` at time factor `t`. `t` should be mapped to 0-1
 float lerp(float a, float b, float t) {
     if (t > 1) t = 1;
     if (t < 0) t = 0;
     return (a * (1 - t)) + b * t;
 }
 
+// Lerp the individual components of a vector
 vec3 lerpV(vec3 a, vec3 b, float dt) {
     return vec3(
         lerp(a.x, b.x, dt),
@@ -62,6 +76,14 @@ vec3 lerpV(vec3 a, vec3 b, float dt) {
 float mapRange(float v, float inLow, float inHigh, float outLow, float outHigh) {
     float slope = (outHigh - outLow) / (inHigh - inLow);
     return outLow + slope * (v - inLow);
+}
+
+// Compute the squared distance between `a` and `b`. Use `glm::distance` for actual distance
+float sqDist(vec3 a, vec3 b) {
+    float dx = a[0] - b[0];
+    float dy = a[1] - b[1];
+    float dz = a[2] - b[2];
+    return dx * dx + dy * dy + dz * dz;
 }
 
 // Convert degrees to radians

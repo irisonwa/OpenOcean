@@ -29,10 +29,10 @@
 #include "sm.h"
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
-#define PROJDIR "../"
-#define MODEL_NO_DIR(m) m.substr(0, m.find("."))
-#define MODELDIR(m) PROJDIR "Models/" + m.substr(0, m.find(".")) + "/"
-#define MIN_FLOAT_DIFF 0.00000001f
+#define PROJDIR "../"                                                   // path from executable to workspace folder
+#define MODEL_NO_DIR(m) m.substr(0, m.find("."))                        // get model `m` without directory
+#define MODELDIR(m) PROJDIR "Models/" + m.substr(0, m.find(".")) + "/"  // get model directory for model `m`
+#define MIN_FLOAT_DIFF 0.00000001f                                      // minimum difference (epsilon) between floats to consider then equal
 
 using namespace glm;
 // using namespace SM;
@@ -47,7 +47,10 @@ extern vec3 Z;        // Value of 1 on z axis
 
 extern std::string readFile(const char* path);
 extern float wrap(float val, float min, float max);
+extern vec3 wrapV(vec3 val, vec3 min, vec3 max);
+extern float sqDist(vec3 a, vec3 b);
 extern float clamp(float val, float min, float max);
+extern vec3 clampV(vec3 val, vec3 min, vec3 max);
 extern float deg2Rad(float val);
 extern float rad2Deg(float val);
 extern aiMatrix4x4 GLMtoAI(const mat4& mat);

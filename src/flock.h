@@ -13,7 +13,25 @@ class Flock {
    public:
     Flock(VariantMesh* _vmesh) {
         vmesh = _vmesh;
-        reset();
+        int spread = 10;
+        int id = 0;
+        for (auto v : vmesh->variants) {
+            BoidType type = getTypeFromModel(v->path);
+            for (int i = 0; i < v->instanceCount; ++i) {
+                vec3 pos = vec3((rand() % spread), 10, (rand() % spread));
+                vec3 dir = normalize(vec3(-5 + rand() % 10, -5 + rand() % 10, -5 + rand() % 10));
+                Boid* boid = new Boid(
+                    pos,
+                    dir,
+                    type,
+                    id);
+                boids.push_back(boid);
+                BoidS bs = BoidInfo::createBoidStruct(type, id, pos, dir);
+                boid_structs.push_back(bs);
+                transforms.push_back(translate(mat4(1), boid->pos));
+                id++;
+            }
+        }
     }
 
     BoidType getTypeFromModel(std::string nm) {
@@ -33,8 +51,9 @@ class Flock {
     // Process all boids in the flock
     void process() {
         int i = 0;
+        std::vector<vec3> homes = {vec3(0, 50, 0), vec3(0, -50, 0), vec3(50)};
         for (auto b : boids) {
-            b->process(boids);
+            b->process(boids, homes);
             transforms[i] = scale(Util::lookTowards(b->pos, b->dir), BoidInfo::getBoidScale(b->type));
             i++;
         }
@@ -46,30 +65,20 @@ class Flock {
     }
 
     void reset() {
-        transforms.clear();
-        boids.clear();
         int spread = 10;
-        int id = 0;
-        for (auto v : vmesh->variants) {
-            BoidType type = getTypeFromModel(v->path);
-            for (int i = 0; i < v->instanceCount; ++i) {
-                Boid* boid = new Boid(
-                    vec3((rand() % spread), 10, (rand() % spread)),
-                    normalize(vec3(-5 + rand() % 10, -5 + rand() % 10, -5 + rand() % 10)),
-                    type,
-                    id);
-                boids.push_back(boid);
-                transforms.push_back(translate(mat4(1), boid->pos));
-                id++;
-            }
+        for (auto b : boids) {
+            b->pos = vec3((rand() % spread), 10, (rand() % spread));
+            b->velocity = normalize(vec3(-5 + rand() % 10, -5 + rand() % 10, -5 + rand() % 10));
         }
     }
 
     ~Flock() {}
 
     std::deque<Boid*> boids;
+    std::deque<BoidS> boid_structs;
     std::vector<mat4> transforms;
     VariantMesh* vmesh;
+    Shader *boidShader;
 };
 
 #endif /* FLOCK_H */
