@@ -68,7 +68,7 @@ class Texture {
     std::vector<std::string> file_names;
     GLenum textureEnum;
     unsigned int texture = 0;
-    int _width = 0, _height = 0, _nrChannels = 0;
+    int width_ = 0, height_ = 0, nrChannels_ = 0;
     bool isAtlas = false;
 };
 

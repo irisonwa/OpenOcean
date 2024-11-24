@@ -66,8 +66,8 @@ class Lighting {
     struct SpotLight {
         vec3 position;
         vec3 direction;
-        float cutOff = cos(Util::deg2Rad(2.5f));
-        float outerCutOff = cos(Util::deg2Rad(5.f));
+        float cutOff = cos(Util::d2r(2.5f));
+        float outerCutOff = cos(Util::d2r(5.f));
 
         float constant = 1.f;
         float linear = 0.09f;

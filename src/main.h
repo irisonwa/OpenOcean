@@ -97,10 +97,10 @@ const char* vert_blank = PROJDIR "Shaders/blank.vert";
 const char* frag_blank = PROJDIR "Shaders/blank.frag";
 
 Cubemap* cubemap;
-Camera camera = Camera(0.1f, 1000.0f, (float)SM::width / (float)SM::height);
+// Camera camera = Camera(0.1f, 1000.0f, (float)SM::width / (float)SM::height);
 Lighting *staticLight, *boneLight, *variantLight;
 
-std::deque<Boid*> boids;
+std::vector<Boid*> boids;
 Flock* flock;
 Player* player;
 VariantMesh* vMesh;

@@ -12,6 +12,6 @@ file(GLOB INCLUDE_FILES ${_SOURCE_DIR}/*.h ${_SOURCE_DIR}/*.hpp)
 link_libraries(-lglfw3 -lglew32 -lgdi32 -lassimp -lfreeglut -lopengl32 -lwinmm)
 add_executable(main ${SOURCE_FILES} ${INCLUDE_FILES})
 
-add_compile_options("-fdiagnostics-color=always" "-g" "-Wall" "-Wno-unknown-pragmas" "-Wno-sign-compare" "-Og" )
+add_compile_options("-fdiagnostics-color=always" "-fsanitize=null" "-g" "-Wall" "-Wno-unknown-pragmas" "-Wno-sign-compare" "-Og" )
 
 target_link_libraries(main ${LIBRARIES})

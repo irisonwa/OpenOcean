@@ -6,9 +6,9 @@ void Camera::processView() {
     pitch = std::clamp(pitch + (SM::mouseDY /* * SM::delta */ * -sensitivity), -89.5f, 89.5f);
     yaw = Util::wrap(yaw + (SM::mouseDX /* * SM::delta */ * sensitivity), 0.0f, 359.0f);
     front =
-        normalize(vec3(cos(Util::deg2Rad(yaw)) * cos(Util::deg2Rad(pitch)),
-                       sin(Util::deg2Rad(pitch)),
-                       sin(Util::deg2Rad(yaw)) * cos(Util::deg2Rad(pitch))));
+        normalize(vec3(cos(Util::d2r(yaw)) * cos(Util::d2r(pitch)),
+                       sin(Util::d2r(pitch)),
+                       sin(Util::d2r(yaw)) * cos(Util::d2r(pitch))));
     right = normalize(cross(front, Util::UP));
     up = normalize(cross(right, front));
 
@@ -20,8 +20,8 @@ void Camera::processView() {
         targetVerticalDist = -0.25;
         targetHorizontalDist = fps_zm;
     } else {
-        targetVerticalDist = targetDist * sin(Util::deg2Rad(pitch));
-        targetHorizontalDist = targetDist * cos(Util::deg2Rad(pitch));
+        targetVerticalDist = targetDist * sin(Util::d2r(pitch));
+        targetHorizontalDist = targetDist * cos(Util::d2r(pitch));
     }
 }
 
@@ -30,7 +30,7 @@ void Camera::followTarget(vec3 tPos, vec3 tDir) {
     vec3 fDir = normalize(tDir);
     // rotation from z axis, calculated using rotation about y-axis
     // yaw needs to be negated because as the camera turns right, we want to move leftwards around it, and vice versa
-    float angle = atan2f(fDir.z, fDir.x) - Util::deg2Rad(yaw);
+    float angle = atan2f(fDir.z, fDir.x) - Util::d2r(yaw);
     float xDist = targetHorizontalDist * sin(angle);
     float zDist = targetHorizontalDist * cos(angle);
     pos = vec3(
@@ -100,7 +100,7 @@ mat4 Camera::getViewMatrix() {
     return view;
 }
 
-mat4 Camera::getPerspectiveProjection() {
+mat4 Camera::getProjectionMatrix() {
     return perspectiveProjection;
 }
 

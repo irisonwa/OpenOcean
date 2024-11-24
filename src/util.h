@@ -8,6 +8,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <map>
 #include <string>
 #include <vector>
@@ -51,8 +52,8 @@ extern vec3 wrapV(vec3 val, vec3 min, vec3 max);
 extern float sqDist(vec3 a, vec3 b);
 extern float clamp(float val, float min, float max);
 extern vec3 clampV(vec3 val, vec3 min, vec3 max);
-extern float deg2Rad(float val);
-extern float rad2Deg(float val);
+extern float d2r(float val);
+extern float r2d(float val);
 extern aiMatrix4x4 GLMtoAI(const mat4& mat);
 extern mat4 aiToGLM(const aiMatrix4x4* from);
 extern vec3 aiToGLM(aiVector3D* from);
@@ -69,6 +70,8 @@ extern void printVec2(vec2 v);
 extern void printVec3(vec3 v);
 extern void printMat4(mat4 m);
 extern void printMat4(aiMatrix4x4 m);
+extern void printList(std::vector<int>);
+extern void printList(std::vector<float>);
 extern int compareFloat(float a, float b);
 };  // namespace Util
 

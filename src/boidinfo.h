@@ -8,11 +8,15 @@
 class Boid;
 class Flock;
 
+#define NUM_BOID_TYPES 12
+
 // boid struct. smaller representation of a Boid object. used for compute shaders
 struct BoidS {
     vec4 pos;
     vec4 velocity;
     vec4 lastVelocity;
+    vec4 dir;
+    vec4 scale;
     vec4 home;
     vec2 bounds;
     float min_speed;
@@ -27,10 +31,15 @@ struct BoidS {
     float goalWeight;
     int canHaveHome;
     int hasHome;
-    unsigned int myPredators[12];
-    unsigned int myPrey[12];
+    int isBeingChased;
+    int isChasing;
+    float boidsAround;
+    unsigned int myPredators[NUM_BOID_TYPES];
+    unsigned int myPrey[NUM_BOID_TYPES];
     unsigned int type;
     unsigned int ID;
+    int pd1;
+    int pd2;
 };
 
 enum BoidType {

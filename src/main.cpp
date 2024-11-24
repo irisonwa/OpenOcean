@@ -8,7 +8,9 @@ void init() {
     glEnable(GL_DEBUG_OUTPUT);
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
     glDebugMessageCallback(MessageCallback, 0);
-
+    // glEnable(GL_POLYGON_OFFSET_FILL);
+    // glPolygonOffset(1, 0);
+    // glLineWidth(10);
     srand(time(nullptr));
 
     /// -------------------------------------------------- SHADERS -------------------------------------------------- ///
@@ -76,10 +78,12 @@ void init() {
         {
             {MESH_MARLIN_ANIM, 300, 1024, 2, std::vector<unsigned int>(300, 0)},  // black marlin
             {MESH_MARLIN_ANIM, 300, 1024, 2, std::vector<unsigned int>(300, 1)},  // blue marlin
-            {MESH_THREADFIN_ANIM, 300, 1024, 1, std::vector<unsigned int>(300, 0)},
+            {MESH_THREADFIN_ANIM, 1600, 1024, 1, std::vector<unsigned int>(1600, 0)},
+            {MESH_THREADFIN_ANIM, 170, 1024, 1, std::vector<unsigned int>(170, 0)},
             {MESH_SPEARFISH_ANIM, 300, 1024, 1, std::vector<unsigned int>(300, 0)},
-            {MESH_SHARK2_ANIM, 10, 1024, 1, std::vector<unsigned int>(10, 0)},
-            {MESH_SHARK2_ANIM, 1, 1024, 1, std::vector<unsigned int>(1, 2)},
+            {MESH_SPEARFISH_ANIM, 300, 1024, 1, std::vector<unsigned int>(300, 0)},
+            {MESH_SHARK2_ANIM, 32, 1024, 1, std::vector<unsigned int>(32, 0)},
+            // {MESH_SHARK2_ANIM, 4, 1024, 1, std::vector<unsigned int>(4, 0)},
             // {MESH_PLAYER_ANIM, 10, -1, -1, std::vector<unsigned int>(10, 0)},
             // {TEST_SPEC, 1, 1024, 4, std::vector<unsigned int>(1, 3)},
             // {TEST_BOID, 3, 1024, 4, std::vector<unsigned int>(3, 2)},
@@ -119,15 +123,15 @@ void init() {
     float sunlightLin = 0.00008;
     float sunlightQuad = 0.000008;
     staticLight->addSpotLightAtt(flashlightCoords, flashlightDir, vec3(0.2f), vec3(1), vec3(1));
-    staticLight->spotLights[staticLight->nSpotLights - 1].cutOff = cos(Util::deg2Rad(24.f));
-    staticLight->spotLights[staticLight->nSpotLights - 1].outerCutOff = cos(Util::deg2Rad(35.f));
+    staticLight->spotLights[staticLight->nSpotLights - 1].cutOff = cos(Util::d2r(24.f));
+    staticLight->spotLights[staticLight->nSpotLights - 1].outerCutOff = cos(Util::d2r(35.f));
     staticLight->spotLights[staticLight->nSpotLights - 1].linear = /* 0.022; */ flashAttLin;
     staticLight->spotLights[staticLight->nSpotLights - 1].quadratic = /* 0.0019; */ flashAttQuad;
     staticLight->addSpotLightAtt(sunPos, sunDir, vec3(.3), vec3(1), vec3(1));
     staticLight->spotLights[staticLight->nSpotLights - 1].linear = /* 0.022; */ sunlightLin;
     staticLight->spotLights[staticLight->nSpotLights - 1].quadratic = /* 0.0019; */ sunlightQuad;
-    staticLight->spotLights[staticLight->nSpotLights - 1].cutOff = cos(Util::deg2Rad(24.f));
-    staticLight->spotLights[staticLight->nSpotLights - 1].outerCutOff = cos(Util::deg2Rad(35.f));
+    staticLight->spotLights[staticLight->nSpotLights - 1].cutOff = cos(Util::d2r(24.f));
+    staticLight->spotLights[staticLight->nSpotLights - 1].outerCutOff = cos(Util::d2r(35.f));
     // staticLight->addPointLightAtt(vec3(0), vec3(0.2f), vec3(1), vec3(1));
     // staticLight->setDirLightsAtt(vector<vec3>{vec3(0, -1, 0)});
     // staticLight->setDirLightColour(vec3(.05), vec3(.05), vec3(1));
@@ -135,30 +139,30 @@ void init() {
     // staticLight->spotLights[staticLight->nSpotLights - 1].quadratic = 0.3;
 
     boneLight->addSpotLightAtt(flashlightCoords, flashlightDir, vec3(0.2f), vec3(1), vec3(1));
-    boneLight->spotLights[boneLight->nSpotLights - 1].cutOff = cos(Util::deg2Rad(24.f));
-    boneLight->spotLights[boneLight->nSpotLights - 1].outerCutOff = cos(Util::deg2Rad(35.f));
+    boneLight->spotLights[boneLight->nSpotLights - 1].cutOff = cos(Util::d2r(24.f));
+    boneLight->spotLights[boneLight->nSpotLights - 1].outerCutOff = cos(Util::d2r(35.f));
     boneLight->spotLights[boneLight->nSpotLights - 1].linear = /* 0.022; */ flashAttLin;
     boneLight->spotLights[boneLight->nSpotLights - 1].quadratic = /* 0.0019; */ flashAttQuad;
     boneLight->addSpotLightAtt(sunPos, sunDir, vec3(.3), vec3(1), vec3(1));
     boneLight->spotLights[boneLight->nSpotLights - 1].linear = /* 0.022; */ sunlightLin;
     boneLight->spotLights[boneLight->nSpotLights - 1].quadratic = /* 0.0019; */ sunlightQuad;
-    boneLight->spotLights[boneLight->nSpotLights - 1].cutOff = cos(Util::deg2Rad(24.f));
-    boneLight->spotLights[boneLight->nSpotLights - 1].outerCutOff = cos(Util::deg2Rad(35.f));
+    boneLight->spotLights[boneLight->nSpotLights - 1].cutOff = cos(Util::d2r(24.f));
+    boneLight->spotLights[boneLight->nSpotLights - 1].outerCutOff = cos(Util::d2r(35.f));
     // boneLight->addPointLightAtt(vec3(0), vec3(0.2f), vec3(1), vec3(1));
     // boneLight->setDirLightsAtt(vector<vec3>{vec3(0, -1, 0)});
     // boneLight->setDirLightColour(vec3(.2), vec3(.2), vec3(.2));
     // boneLight->addPointLightAtt(vec3(0), vec3(0.2f), vec3(1), vec3(1));
 
     variantLight->addSpotLightAtt(flashlightCoords, flashlightDir, vec3(0.2f), vec3(1), vec3(1));
-    variantLight->spotLights[variantLight->nSpotLights - 1].cutOff = cos(Util::deg2Rad(24.f));
-    variantLight->spotLights[variantLight->nSpotLights - 1].outerCutOff = cos(Util::deg2Rad(35.f));
+    variantLight->spotLights[variantLight->nSpotLights - 1].cutOff = cos(Util::d2r(24.f));
+    variantLight->spotLights[variantLight->nSpotLights - 1].outerCutOff = cos(Util::d2r(35.f));
     variantLight->spotLights[variantLight->nSpotLights - 1].linear = /* 0.022; */ flashAttLin;
     variantLight->spotLights[variantLight->nSpotLights - 1].quadratic = /* 0.0019; */ flashAttQuad;
     variantLight->addSpotLightAtt(sunPos, sunDir, vec3(.3), vec3(1), vec3(1));
     variantLight->spotLights[variantLight->nSpotLights - 1].linear = /* 0.022; */ sunlightLin;
     variantLight->spotLights[variantLight->nSpotLights - 1].quadratic = /* 0.0019; */ sunlightQuad;
-    variantLight->spotLights[variantLight->nSpotLights - 1].cutOff = cos(Util::deg2Rad(24.f));
-    variantLight->spotLights[variantLight->nSpotLights - 1].outerCutOff = cos(Util::deg2Rad(35.f));
+    variantLight->spotLights[variantLight->nSpotLights - 1].cutOff = cos(Util::d2r(24.f));
+    variantLight->spotLights[variantLight->nSpotLights - 1].outerCutOff = cos(Util::d2r(35.f));
     
     // Set start time of program near when init() finishes loading
     SM::startTime = timeGetTime();
@@ -171,17 +175,17 @@ void display() {
     glEnable(GL_BLEND);       // enable colour blending
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDepthFunc(GL_LESS);  // depth-testing interprets a smaller value as "closer"
-    // vec4 newBg = SM::bgColour * Util::mapRange(player->pos.y, SM::WORLD_BOUND_LOW, SM::WORLD_BOUND_HIGH, 0, 1);
-    vec4 newBg = SM::bgColour * Util::mapRange(camera.pos.y, SM::WORLD_BOUND_LOW, SM::WORLD_BOUND_HIGH, 0, 1);
+    // vec4 newBg = SM::bgColour * Util::mapRange(player->pos.y, WORLD_BOUND_LOW, WORLD_BOUND_HIGH, 0, 1);
+    vec4 newBg = SM::bgColour * Util::mapRange(SM::camera->pos.y, WORLD_BOUND_LOW, WORLD_BOUND_HIGH, 0, 1);
     glClearColor(newBg.x, newBg.y, newBg.z, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    mat4 view = camera.getViewMatrix();
-    mat4 persp_proj = camera.getPerspectiveProjection();
+    mat4 view = SM::camera->getViewMatrix();
+    mat4 persp_proj = SM::camera->getProjectionMatrix();
 
     // Skybox
     // glDepthFunc(GL_LEQUAL);
-    // mat4 nvm = mat4(mat3(camera.getViewMatrix()));
+    // mat4 nvm = mat4(mat3(SM::camera->getViewMatrix()));
     // shaders["skybox"]->use();
     // shaders["skybox"]->setInt("skybox", 0);
     // shaders["skybox"]->setMat4("view", nvm);
@@ -190,10 +194,10 @@ void display() {
     // glDepthFunc(GL_LESS);
 
     // update camera view and flashlight
-    staticLight->setLightAtt(view, persp_proj, camera.pos);
+    staticLight->setLightAtt(view, persp_proj, SM::camera->pos);
     staticLight->setSpotLightAtt(0, flashlightCoords, flashlightDir, vec3(0.2f), vec3(1, .6, .2), vec3(1));
-    // staticLight->spotLights[staticLight->nSpotLights - 1].cutOff = cos(Util::deg2Rad(24.f));
-    // staticLight->spotLights[staticLight->nSpotLights - 1].outerCutOff = cos(Util::deg2Rad(35.f));
+    // staticLight->spotLights[staticLight->nSpotLights - 1].cutOff = cos(Util::d2r(24.f));
+    // staticLight->spotLights[staticLight->nSpotLights - 1].outerCutOff = cos(Util::d2r(35.f));
     staticLight->use();
 
     // smeshes["kelp"]->render(mat4(1));
@@ -201,39 +205,29 @@ void display() {
     smeshes["sun"]->render(translate(mat4(1), sunPos));
 
     /// ---------------- SKINNED MESHES ---------------- ///
-    boneLight->setLightAtt(view, persp_proj, camera.pos);
+    boneLight->setLightAtt(view, persp_proj, SM::camera->pos);
     boneLight->setSpotLightAtt(0, flashlightCoords, flashlightDir, vec3(0.2f), vec3(1, .6, .2), vec3(1));
-    // boneLight->spotLights[boneLight->nSpotLights - 1].cutOff = cos(Util::deg2Rad(24.f));
-    // boneLight->spotLights[boneLight->nSpotLights - 1].outerCutOff = cos(Util::deg2Rad(35.f));
+    // boneLight->spotLights[boneLight->nSpotLights - 1].cutOff = cos(Util::d2r(24.f));
+    // boneLight->spotLights[boneLight->nSpotLights - 1].outerCutOff = cos(Util::d2r(35.f));
     boneLight->shader->setBool("showNormal", SM::showNormal);
     boneLight->use();
 
-    // bmeshes["test shark"]->update();
-    // bmeshes["test shark"]->render(numInstances, models, depths.data());
-
     if (SM::isFirstPerson) {
-        player->lookAt(camera.front);
-        camera.followTarget(player);
+        player->lookAt(SM::camera->front);
+        SM::camera->followTarget(player);
     } else if (SM::isThirdPerson) {
         player->render();
-        player->lookAt(camera.front);
-        camera.followTarget(player);
+        player->lookAt(SM::camera->front);
+        SM::camera->followTarget(player);
     } else /* isFreeCam */ {
         player->render();
     }
-    bmeshes["test threadfin"]->update(50);
-    bmeshes["test threadfin"]->render(translate(scale(mat4(1), vec3(1)), vec3(0, 50, 0)));
-    bmeshes["test marlin"]->update(50);
-    bmeshes["test marlin"]->render(translate(scale(mat4(1), vec3(1)), vec3(0, -50, 0)));
-    bmeshes["test spearfish"]->update(50);
-    bmeshes["test spearfish"]->render(translate(scale(mat4(1), vec3(1)), vec3(50)));
-    bmeshes["test shark"]->update(100);
-    bmeshes["test shark"]->render(translate(scale(mat4(1), vec3(1)), vec3(0)));
+
     bmeshes["test kelp"]->update(100);
     bmeshes["test kelp"]->render(transm.size(), transm.data());
 
     /// ---------------- VARIANT MESHES ---------------- ///
-    variantLight->setLightAtt(view, persp_proj, camera.pos);
+    variantLight->setLightAtt(view, persp_proj, SM::camera->pos);
     variantLight->setSpotLightAtt(0, flashlightCoords, flashlightDir, vec3(0.2f), vec3(1, .6, .2), vec3(1));
     variantLight->use();
     flock->process();
@@ -246,12 +240,12 @@ void updateScene() {
     SM::updateDelta();
     // std::cout << 1 / SM::delta << std::endl; // fps
     if (!SM::isFreeCam) {
-        player->processMovement(camera);
+        player->processMovement();
     } else {
-        camera.processMovement();
+        SM::camera->processMovement();
     }
-    flashlightCoords = SM::flashlightToggled ? (SM::isFreeCam ? camera.pos : player->transform[3]) : vec3(-10000);
-    flashlightDir = SM::flashlightToggled ? camera.front : vec3(0, -1, 0);
+    flashlightCoords = SM::flashlightToggled ? (SM::isFreeCam ? SM::camera->pos : player->transform[3]) : vec3(-10000);
+    flashlightDir = SM::flashlightToggled ? SM::camera->front : vec3(0, -1, 0);
     // Draw the next frame
     glutPostRedisplay();
 }
@@ -259,13 +253,13 @@ void updateScene() {
 // Process the mouse moving without button input
 void passiveMouseMoved(int x, int y) {
     SM::updateMouse(x, y);
-    camera.processView();
+    SM::camera->processView();
 }
 
 void specKeyPressed(int key, int x, int y) {
     if (key == GLUT_KEY_SHIFT_L) {
         if (SM::isFreeCam) {
-            camera.DOWN = true;
+            SM::camera->DOWN = true;
         } else {
             player->DOWN = true;
         }
@@ -275,7 +269,7 @@ void specKeyPressed(int key, int x, int y) {
 void specKeyReleased(int key, int x, int y) {
     if (key == GLUT_KEY_SHIFT_L) {
         if (SM::isFreeCam) {
-            camera.DOWN = false;
+            SM::camera->DOWN = false;
         } else {
             player->DOWN = false;
         }
@@ -298,18 +292,18 @@ void keyPressed(unsigned char key, int x, int y) {
     if (key == '.') {
         flock->reset();
         // player->pos = vec3(0);
-        // camera.setPosition(vec3(0));
+        // SM::camera->setPosition(vec3(0));
     }
 
     if (key == 'r' || key == 'R') SM::changeCameraState();
     if (SM::isFreeCam) {
         if (key == 'q' || key == 'Q') SM::flashlightToggled = true;
-        if (key == ' ') camera.UP = true;
-        if (key == 'w' || key == 'W') camera.FORWARD = true;
-        if (key == 's' || key == 'S') camera.BACK = true;
-        if (key == 'a' || key == 'A') camera.LEFT = true;
-        if (key == 'd' || key == 'D') camera.RIGHT = true;
-        if (key == 'e' || key == 'E') camera.SPRINT = true;
+        if (key == ' ') SM::camera->UP = true;
+        if (key == 'w' || key == 'W') SM::camera->FORWARD = true;
+        if (key == 's' || key == 'S') SM::camera->BACK = true;
+        if (key == 'a' || key == 'A') SM::camera->LEFT = true;
+        if (key == 'd' || key == 'D') SM::camera->RIGHT = true;
+        if (key == 'e' || key == 'E') SM::camera->SPRINT = true;
     } else {
         if (key == 'q' || key == 'Q') SM::flashlightToggled = true;
         if (key == ' ') player->UP = true;
@@ -325,13 +319,13 @@ void keyPressed(unsigned char key, int x, int y) {
 void keyReleased(unsigned char key, int x, int y) {
     if (SM::isFreeCam) {
         if (key == 'q' || key == 'Q') SM::flashlightToggled = false;
-        if (key == ' ') camera.UP = false;
-        if (key == 'w' || key == 'W') camera.FORWARD = false;
-        if (key == 's' || key == 'S') camera.BACK = false;
-        if (key == 'a' || key == 'A') camera.LEFT = false;
-        if (key == 'd' || key == 'D') camera.RIGHT = false;
-        if (key == 'e' || key == 'E') camera.SPRINT = false;
-        if (key == 'p' || key == 'P') camera.CAN_FLY = !camera.CAN_FLY;
+        if (key == ' ') SM::camera->UP = false;
+        if (key == 'w' || key == 'W') SM::camera->FORWARD = false;
+        if (key == 's' || key == 'S') SM::camera->BACK = false;
+        if (key == 'a' || key == 'A') SM::camera->LEFT = false;
+        if (key == 'd' || key == 'D') SM::camera->RIGHT = false;
+        if (key == 'e' || key == 'E') SM::camera->SPRINT = false;
+        if (key == 'p' || key == 'P') SM::camera->CAN_FLY = !SM::camera->CAN_FLY;
     } else {
         if (key == 'q' || key == 'Q') SM::flashlightToggled = false;
         if (key == ' ') player->UP = false;

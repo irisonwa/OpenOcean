@@ -128,8 +128,8 @@ void Lighting::setSpotLightsAtt(std::vector<vec3> pos, std::vector<vec3> dir) {
         spotLights[i].constant = 1.f;
         spotLights[i].linear = 0.09f;
         spotLights[i].quadratic = 0.032f;
-        spotLights[i].cutOff = cos(Util::deg2Rad(12.5f));
-        spotLights[i].outerCutOff = cos(Util::deg2Rad(15.5f));
+        spotLights[i].cutOff = cos(Util::d2r(12.5f));
+        spotLights[i].outerCutOff = cos(Util::d2r(15.5f));
     }
 }
 
@@ -140,8 +140,8 @@ void Lighting::addSpotLightsAtt(std::vector<vec3> pos, std::vector<vec3> dir) {
         spotLights[i].constant = 1.f;
         spotLights[i].linear = 0.09f;
         spotLights[i].quadratic = 0.032f;
-        spotLights[i].cutOff = cos(Util::deg2Rad(12.5f));
-        spotLights[i].outerCutOff = cos(Util::deg2Rad(15.5f));
+        spotLights[i].cutOff = cos(Util::d2r(12.5f));
+        spotLights[i].outerCutOff = cos(Util::d2r(15.5f));
         nSpotLights++;
     }
 }
@@ -156,8 +156,8 @@ void Lighting::addSpotLightAtt(vec3 pos, vec3 dir, vec3 amb, vec3 dif, vec3 spec
         spotLights[nSpotLights].constant = 1.f;
         spotLights[nSpotLights].linear = 0.09f;
         spotLights[nSpotLights].quadratic = 0.032f;
-        spotLights[nSpotLights].cutOff = cos(Util::deg2Rad(12.5f));
-        spotLights[nSpotLights].outerCutOff = cos(Util::deg2Rad(15.5f));
+        spotLights[nSpotLights].cutOff = cos(Util::d2r(12.5f));
+        spotLights[nSpotLights].outerCutOff = cos(Util::d2r(15.5f));
         nSpotLights++;
     }
 }

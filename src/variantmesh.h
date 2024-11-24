@@ -63,12 +63,12 @@ class VariantMesh : public Mesh {
         - `unsigned int`: the number of tiles in the texture, vertically. must be at least 1. if -1, will be set to 1.
         - `vector<unsigned int>`: a list of depths to use in the mesh. must have a size equal to the number of instances (first unsigned int)
      */
-    VariantMesh(std::string nm, Shader* s, std::vector<std::tuple<std::string, unsigned int, unsigned int, unsigned int, std::vector<unsigned int>>> _variants) {
+    VariantMesh(std::string nm, Shader* s, std::vector<std::tuple<std::string, unsigned int, unsigned int, unsigned int, std::vector<unsigned int>>> variants_) {
         name = nm;
         shader = s;
         animShader = new Shader("anim shader", PROJDIR "Shaders/anim.comp");
-        for (const auto& [_path, _instanceCount, _textureAtlasSize, _textureAtlasTileCount, _depths] : _variants) {
-            VariantInfo* vi = new VariantInfo(name, _path, _instanceCount, _textureAtlasSize, _textureAtlasTileCount, _depths);
+        for (const auto& [path_, instanceCount_, textureAtlasSize_, textureAtlasTileCount_, depths_] : variants_) {
+            VariantInfo* vi = new VariantInfo(name, path_, instanceCount_, textureAtlasSize_, textureAtlasTileCount_, depths_);
             variants.push_back(vi);
         }
         if (!loadMeshes()) std::cout << "\n\nfailed to load variant mesh \"" << nm.c_str() << "\" :(\n";

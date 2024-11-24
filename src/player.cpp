@@ -17,33 +17,33 @@ void Player::render() {
     mesh->render(transform);
 }
 
-void Player::processMovement(Camera camera) {
+void Player::processMovement() {
     float t_cpos_y = pos.y;  // y-pos of camera before updates
     if (FORWARD) {
         if (CAN_FLY)
-            pos += normalize(camera.front) * speed * SM::delta;
+            pos += normalize(SM::camera->front) * speed * SM::delta;
         else
-            pos += normalize(vec3(camera.front.x, 0, camera.front.z)) * speed * SM::delta;
+            pos += normalize(vec3(SM::camera->front.x, 0, SM::camera->front.z)) * speed * SM::delta;
     }
     if (BACK) {
         if (CAN_FLY)
-            pos -= normalize(camera.front) * speed * SM::delta;
+            pos -= normalize(SM::camera->front) * speed * SM::delta;
         else
-            pos -= normalize(vec3(camera.front.x, 0, camera.front.z)) * speed * SM::delta;
+            pos -= normalize(vec3(SM::camera->front.x, 0, SM::camera->front.z)) * speed * SM::delta;
     }
     if (LEFT) {
         if (CAN_FLY)
-            pos -= normalize(cross(camera.front, camera.up)) * speed * SM::delta;
+            pos -= normalize(cross(SM::camera->front, SM::camera->up)) * speed * SM::delta;
         else {
-            vec3 c = cross(camera.front, camera.up);
+            vec3 c = cross(SM::camera->front, SM::camera->up);
             pos -= normalize(vec3(c.x, 0, c.z)) * speed * SM::delta;
         }
     }
     if (RIGHT) {
         if (CAN_FLY)
-            pos += normalize(cross(camera.front, camera.up)) * speed * SM::delta;
+            pos += normalize(cross(SM::camera->front, SM::camera->up)) * speed * SM::delta;
         else {
-            vec3 c = cross(camera.front, camera.up);
+            vec3 c = cross(SM::camera->front, SM::camera->up);
             pos += normalize(vec3(c.x, 0, c.z)) * speed * SM::delta;
         }
     }
@@ -59,8 +59,8 @@ void Player::processMovement(Camera camera) {
     if (!CAN_FLY) pos.y = t_cpos_y;  // if can't fly, don't change y_pos
 
     pos = vec3(
-        Util::clamp(pos.x, SM::WORLD_BOUND_LOW, SM::WORLD_BOUND_HIGH),
-        Util::clamp(pos.y, SM::WORLD_BOUND_LOW, SM::WORLD_BOUND_HIGH),
-        Util::clamp(pos.z, SM::WORLD_BOUND_LOW, SM::WORLD_BOUND_HIGH));
+        Util::clamp(pos.x, WORLD_BOUND_LOW, WORLD_BOUND_HIGH),
+        Util::clamp(pos.y, WORLD_BOUND_LOW, WORLD_BOUND_HIGH),
+        Util::clamp(pos.z, WORLD_BOUND_LOW, WORLD_BOUND_HIGH));
     followPos = Util::lerpV(followPos, pos, SM::delta * acceleration);
 }

@@ -30,6 +30,10 @@ layout (std430, binding = 2) buffer readonly BoneOffsets {
     int boffsets[];
 };
 
+// layout (std430, binding = 6) buffer readonly BTransforms {
+//     mat4 instance_trans[];
+// };
+
 uniform mat4 view;
 uniform mat4 proj;
 
@@ -63,5 +67,4 @@ void main() {
 
   TexCoords = vertex_texture;
   tDepth = texture_depth;
-  gl_Position = proj * view * instance_trans * totalPos;
-}
+  gl_Position = proj * view * instance_trans * totalPos;}

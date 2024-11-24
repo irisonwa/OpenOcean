@@ -10,7 +10,7 @@ void Texture::bind(GLenum textureUnit) {
 
 bool Texture::_loadAtlas(std::string path, int tileSize, int tiles) {
     stbi_set_flip_vertically_on_load(true);
-    unsigned char* data = stbi_load(path.c_str(), &_width, &_height, &_nrChannels, 0);
+    unsigned char* data = stbi_load(path.c_str(), &width_, &height_, &nrChannels_, 0);
     if (data) {
         if (textureEnum == GL_TEXTURE_2D_ARRAY) {
             glGenTextures(1, &texture);
@@ -18,7 +18,7 @@ bool Texture::_loadAtlas(std::string path, int tileSize, int tiles) {
 
             glPixelStorei(GL_UNPACK_ALIGNMENT, 1);  // align data to 1-byte. used to prevent warping of certain textures.
             GLint bpp = 0;
-            switch (_nrChannels) {
+            switch (nrChannels_) {
                 case 1:
                     bpp = GL_RED;
                     break;
@@ -33,7 +33,7 @@ bool Texture::_loadAtlas(std::string path, int tileSize, int tiles) {
                     stbi_image_free(data);
                     return glGetError() == GL_NO_ERROR;
             }
-            int tsz = tileSize == -1 ? _width : tileSize;
+            int tsz = tileSize == -1 ? width_ : tileSize;
             int ts = tiles < 1 ? 1 : tiles;
 
             // texture arrays
@@ -73,14 +73,14 @@ bool Texture::load(std::string tex) {
     glGenTextures(1, &texture);
     // load and generate the texture
     stbi_set_flip_vertically_on_load(true);
-    unsigned char* data = stbi_load(tex.c_str(), &_width, &_height, &_nrChannels, 0);
+    unsigned char* data = stbi_load(tex.c_str(), &width_, &height_, &nrChannels_, 0);
     if (data) {
         if (textureEnum == GL_TEXTURE_2D) {
             glBindTexture(textureEnum, texture);
 
             glPixelStorei(GL_UNPACK_ALIGNMENT, 1);  // align data to 1-byte. used to prevent warping of certain textures.
             GLint bpp = 0;
-            switch (_nrChannels) {
+            switch (nrChannels_) {
                 case 1:
                     bpp = GL_RED;
                     break;
@@ -94,7 +94,7 @@ bool Texture::load(std::string tex) {
                     printf("unsupported image bits per pixel");
                     break;
             }
-            glTexImage2D(textureEnum, 0, bpp, _width, _height, 0, bpp, GL_UNSIGNED_BYTE, data);
+            glTexImage2D(textureEnum, 0, bpp, width_, height_, 0, bpp, GL_UNSIGNED_BYTE, data);
             glGenerateMipmap(textureEnum);
             // set the texture wrapping/filtering options (on the currently bound texture object)
             glTexParameteri(textureEnum, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -120,18 +120,18 @@ bool Texture::loadCubemap(std::vector<std::string> faces) {
     // load and generate the texture
     for (int i = 0; i < faces.size(); i++) {
         stbi_set_flip_vertically_on_load(false);
-        unsigned char* data = stbi_load(faces[i].c_str(), &_width, &_height, &_nrChannels, 0);
+        unsigned char* data = stbi_load(faces[i].c_str(), &width_, &height_, &nrChannels_, 0);
         if (data) {
             glPixelStorei(GL_UNPACK_ALIGNMENT, 1);  // align data to 1-byte. used to prevent warping of certain textures.
-            switch (_nrChannels) {
+            switch (nrChannels_) {
                 case 1:
-                    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA8, _width, _height, 0, GL_RED, GL_UNSIGNED_BYTE, data);
+                    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA8, width_, height_, 0, GL_RED, GL_UNSIGNED_BYTE, data);
                     break;
                 case 3:
-                    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA8, _width, _height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+                    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA8, width_, height_, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
                     break;
                 case 4:
-                    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA8, _width, _height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+                    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA8, width_, height_, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
                     break;
                 default:
                     printf("unsupported image bits per pixel");
@@ -156,20 +156,20 @@ bool Texture::loadCubemap(std::vector<std::string> faces) {
 }
 
 bool Texture::load(unsigned int buffer, void* img_data) {
-    void* data = stbi_load_from_memory((const stbi_uc*)img_data, buffer, &_width, &_height, &_nrChannels, 0);
+    void* data = stbi_load_from_memory((const stbi_uc*)img_data, buffer, &width_, &height_, &nrChannels_, 0);
     stbi_set_flip_vertically_on_load(true);
     glGenTextures(1, &texture);
     glBindTexture(textureEnum, texture);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);  // align data to 1-byte. used to prevent warping of certain textures.
-    switch (_nrChannels) {
+    switch (nrChannels_) {
         case 1:
-            glTexImage2D(textureEnum, 0, GL_RED, _width, _height, 0, GL_RED, GL_UNSIGNED_BYTE, data);
+            glTexImage2D(textureEnum, 0, GL_RED, width_, height_, 0, GL_RED, GL_UNSIGNED_BYTE, data);
             break;
         case 3:
-            glTexImage2D(textureEnum, 0, GL_RGB8, _width, _height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+            glTexImage2D(textureEnum, 0, GL_RGB8, width_, height_, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
             break;
         case 4:
-            glTexImage2D(textureEnum, 0, GL_RGBA, _width, _height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+            glTexImage2D(textureEnum, 0, GL_RGBA, width_, height_, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
             break;
         default:
             printf("unsupported image bits per pixel");

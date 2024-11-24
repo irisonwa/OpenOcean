@@ -8,6 +8,7 @@
 #include <GL/freeglut.h>
 
 class Player;
+//  SM;
 
 class Camera {
    private:
@@ -23,14 +24,14 @@ class Camera {
         // setup rotation quaternion
         processView();
         view = getViewMatrix();
-        perspectiveProjection = perspective(Util::deg2Rad(FOV), aspectRatio, nearClipDist, farClipDist);
+        perspectiveProjection = perspective(Util::d2r(FOV), aspectRatio, nearClipDist, farClipDist);
     }
 
     Camera(float _nearClipDist, float _farClipDist, float aspect) : Camera() {
         nearClipDist = _nearClipDist;
         farClipDist = _farClipDist;
         aspectRatio = aspect;
-        perspectiveProjection = perspective(Util::deg2Rad(FOV), aspectRatio, nearClipDist, farClipDist);
+        perspectiveProjection = perspective(Util::d2r(FOV), aspectRatio, nearClipDist, farClipDist);
     }
 
     // Process and update the camera's view matrix. The mouse's x- and y-coordinates are used to dictate the direction the player is looking.
@@ -43,7 +44,7 @@ class Camera {
     mat4 getViewMatrix();
 
     // Get the prospective projection matrix for the camera.
-    mat4 getPerspectiveProjection();
+    mat4 getProjectionMatrix();
 
     // Follow the target position `pos` who is pointing in the direction `dir` at some fixed distance
     void followTarget(vec3 pos, vec3 dir);

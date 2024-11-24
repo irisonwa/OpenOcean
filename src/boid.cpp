@@ -1,19 +1,16 @@
 #include "boid.h"
 using namespace BoidInfo;
 
-void Boid::process(std::deque<Boid*> boids, std::vector<vec3> homes) {
+void Boid::process(std::vector<Boid*> boids, std::vector<vec3> homes) {
     dir = normalize(velocity);
     move(boids, homes);
     limitSpeed();
     update();
 }
 
-void Boid::move(std::deque<Boid*> boids, std::vector<vec3> homes) {
-    int numNeighbors = boids.size() - 1;
-
-    // only move by family rules if near family. otherwise, boid will move towards origin due to
-    // subtraction in alignment and cohesion checks
-    int numFamily = 0;
+void Boid::move(std::vector<Boid*> boids, std::vector<vec3> homes) {
+    int numNeighbors = 0;
+    int numFamily = 0;  // only move by family rules if near family. otherwise, boid will move towards origin due to subtraction in alignment and cohesion checks
 
     // alignment variable
     vec3 avgVel(0);
@@ -33,50 +30,52 @@ void Boid::move(std::deque<Boid*> boids, std::vector<vec3> homes) {
     bool isInChasing = false;      // am i chasing prey (chasing only)
     vec3 closestPrey = vec3(1e9);  // chase closest prey instead of group if it's within chase distance
     float closestPreyDist = 1e9;
+    float biggestFearWeight = 0;
 
     for (Boid* otherBoid : boids) {
-        if (otherBoid->ID != ID) {
-            float distFromBoid = distance(pos, otherBoid->pos);
-
-            if (distFromBoid < family_range) {
+        if (otherBoid->ID == ID) continue;
+        float tDist = Util::sqDist(pos, otherBoid->pos);
+        if (tDist < visibleRange * visibleRange) {
+            float distFromBoid = sqrt(tDist);
+            numNeighbors++;
+            if (isFamily(type, otherBoid->type)) {
                 // stay within group of same boid type
-                if (isFamily(type, otherBoid->type)) {
-                    numFamily++;
+                numFamily++;
 
-                    // alignment
-                    avgVel += otherBoid->velocity;
+                // alignment
+                avgVel += otherBoid->velocity;
 
-                    // cohesion
-                    avgCentre += otherBoid->pos;
+                // cohesion
+                avgCentre += otherBoid->pos;
 
-                    // separation
-                    if (distFromBoid < minSepDistance) {
-                        avgMove += pos - otherBoid->pos;
+                // separation
+                if (distFromBoid < getBoidSepDistance(type)) {
+                    avgMove += pos - otherBoid->pos;
+                }
+            } else if (!SM::canBoidsAttack) {
+                // to avoid altering if-statement structure in case i decide to remove this
+                // todo: add slight flocking behaviour to non-enemmies
+            } else {
+                if (isPreyTo(type, otherBoid->type)) {
+                    if (distFromBoid <= getBoidInterceptDistance(type)) {
+                        isBeingChased = true;
                     }
-                } else if (!SM::canBoidsAttack) {
-                    // to avoid altering if-statement structure in case i decide to remove this
-                } else {
-                    if (isPreyTo(type, otherBoid->type)) {
-                        if (distFromBoid <= minEnemyInterceptDistance) {
-                            isBeingChased = true;
-                            // printf("CHASED\n");
+                    biggestFearWeight = max(biggestFearWeight, getBoidFearWeight(type, otherBoid->type));
+                    avgMoveFlee += (pos - otherBoid->pos) * biggestFearWeight;
+                } else if (isPredatorTo(type, otherBoid->type)) {
+                    isInPursuit = isInPursuit || distFromBoid <= getBoidInterceptDistance(type);
+                    if (distFromBoid <= getBoidChaseDistance(type)) {
+                        // move towards goal
+                        isInChasing = true;
+                        if (distFromBoid < closestPreyDist) {
+                            closestPrey = otherBoid->pos;
+                            closestPreyDist = distFromBoid;
                         }
-                        avgMoveFlee += (pos - otherBoid->pos) * fearWeight;
-                    } else if (isPredatorTo(type, otherBoid->type)) {
-                        isInPursuit = isInPursuit || distFromBoid <= minEnemyInterceptDistance;
-                        if (distFromBoid <= minEnemyChaseDistance) {
-                            // move towards goal
-                            isInChasing = true;
-                            if (distFromBoid < closestPreyDist) {
-                                closestPrey = otherBoid->pos;
-                                closestPreyDist = distFromBoid;
-                            }
-                            avgMoveAtt -= (pos - otherBoid->pos) * goalWeight;
-                        } else if (distFromBoid <= minEnemyInterceptDistance) {
-                            // intercept goal
-                            // doing it like this means predators are drawn towards larger groups more than single prey
-                            avgMoveAtt -= (pos - (otherBoid->pos + otherBoid->dir * otherBoid->speed)) * goalWeight;
-                        }
+                        avgMoveAtt -= (pos - otherBoid->pos) * getBoidGoalWeight(type);
+                    } else if (distFromBoid <= getBoidInterceptDistance(type)) {
+                        // intercept goal
+                        // doing it like this means predators are drawn towards larger groups more than single prey
+                        avgMoveAtt -= (pos - (otherBoid->pos + otherBoid->velocity)) * getBoidGoalWeight(type);
                     }
                 }
             }
@@ -91,7 +90,7 @@ void Boid::move(std::deque<Boid*> boids, std::vector<vec3> homes) {
             for (vec3 home : homes) {
                 if (Util::sqDist(pos, home) < consideredHomeDist) {
                     // printf("%.2f\n", Util::sqDist(pos, currentHome));
-                    Util::printVec3(home);
+                    // Util::printVec3(home);
                     currentHome = home;
                     hasHome = true;
                     break;
@@ -104,38 +103,40 @@ void Boid::move(std::deque<Boid*> boids, std::vector<vec3> homes) {
         if (numFamily != 0) {
             // alignment
             avgVel /= numFamily;
-            velocity += (avgVel - velocity) * matchingFactor;
+            velocity += (avgVel - velocity) * getBoidMatchingFactor(type);
 
             // cohesion
             avgCentre /= numFamily;
-            velocity += (avgCentre - pos) * centeringFactor;
+            velocity += (avgCentre - pos) * getBoidCenteringFactor(type);
         }
 
         // separation
         if (isBeingChased) {
             if (hasHome) {
-                avgMoveFlee -= (pos - currentHome) * fearWeight * .5f;  // fleeing home
+                avgMoveFlee -= (pos - currentHome) * biggestFearWeight * .5f;  // fleeing home
             }
-            velocity += avgMoveFlee * avoidFactor;
+            velocity += avgMoveFlee * getBoidAvoidFactor(type);
         } else if (isInPursuit) {
             if (isInChasing) {
                 // chase closest target only
-                avgMoveAtt = -(pos - closestPrey) * goalWeight;
+                avgMoveAtt = -(pos - closestPrey) * getBoidGoalWeight(type);
             }
-            velocity += avgMoveAtt * avoidFactor;
+            velocity += avgMoveAtt * getBoidAvoidFactor(type);
         }
         if (hasHome) {
             velocity -= (pos - currentHome) * 0.005f; // drift towards home
         }
-        velocity += avgMove * avoidFactor;
+        velocity += avgMove * getBoidAvoidFactor(type);
     }
 }
 
 void Boid::limitSpeed() {
     float tspeed = dot(velocity, velocity);
     // can use glsl's isnan in a compute shader, so this is fine: https://registry.khronos.org/OpenGL-Refpages/gl4/html/isnan.xhtml
-    if (tspeed < min_speed * min_speed || glm::all(glm::isnan(velocity))) {
-        velocity = vec3(min_speed);
+    if (glm::all(glm::isnan(velocity))) resetVelocity();
+    if (tspeed < getBoidMinSpeed(type) * getBoidMinSpeed(type)) {
+        velocity *= vec3(1.1);
+        dir = normalize(velocity);
     } else {
         float max_speed = getBoidMaxSpeed(type);
         if (tspeed > max_speed * max_speed) {
@@ -146,18 +147,23 @@ void Boid::limitSpeed() {
 
 void Boid::update() {
     float tf = 1;
-    if (pos.x < SM::WORLD_BOUND_LOW)
+    if (pos.x < WORLD_BOUND_LOW)
         velocity.x += tf;
-    if (pos.x > SM::WORLD_BOUND_HIGH)
+    if (pos.x > WORLD_BOUND_HIGH)
         velocity.x -= tf;
-    if (pos.y < SM::WORLD_BOUND_LOW)
+    if (pos.y < WORLD_BOUND_LOW)
         velocity.y += tf;
-    if (pos.y > SM::WORLD_BOUND_HIGH)
+    if (pos.y > WORLD_BOUND_HIGH)
         velocity.y -= tf;
-    if (pos.z < SM::WORLD_BOUND_LOW)
+    if (pos.z < WORLD_BOUND_LOW)
         velocity.z += tf;
-    if (pos.z > SM::WORLD_BOUND_HIGH)
+    if (pos.z > WORLD_BOUND_HIGH)
         velocity.z -= tf;
+    if (glm::all(glm::isnan(velocity))) resetVelocity();
     lastVelocity = Util::lerpV(lastVelocity, velocity, SM::delta * lerpAcceleration);
     pos += lastVelocity * SM::delta;
+}
+
+void Boid::resetVelocity() {
+    velocity = normalize(vec3(-5 + rand() % 10, -5 + rand() % 10, -5 + rand() % 10));
 }

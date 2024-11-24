@@ -48,10 +48,6 @@ void VariantMesh::populateBuffers() {
     glCreateBuffers(1, &BIBO);
     glCreateBuffers(1, &BOBO);
 
-
-    glGenBuffers(1, &commandBuffer);
-    // glNamedBufferStorage(commandBuffer, sizeof(IndirectDrawCommand) * cmds.size(), (const void *)cmds.data(), GL_DYNAMIC_STORAGE_BIT); // for compute shaders
-
     glBindBuffer(GL_ARRAY_BUFFER, p_VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices[0]) * vertices.size(), &vertices[0], GL_STATIC_DRAW);
     glEnableVertexAttribArray(VA_POSITION_LOC);
@@ -100,10 +96,12 @@ void VariantMesh::populateBuffers() {
 }
 
 void VariantMesh::generateCommands() {
+    glGenBuffers(1, &commandBuffer);
+
     IndirectDrawCommand cmds[variants.size()];
     unsigned int baseVertex = 0, baseInstance = 0, baseIndex = 0;
-    int i = 0;
-    for (const auto &v : variants) {
+    for (int i = 0; i < variants.size(); ++i) {
+        const auto &v = variants[i];
         int vCount = v->mesh->vertices.size();  // vertices in this mesh
         int iCount = v->mesh->indices.size();   // indices in thie mesh
 
@@ -116,7 +114,6 @@ void VariantMesh::generateCommands() {
         baseVertex += vCount;
         baseIndex += iCount;
         baseInstance += v->instanceCount;
-        i++;
     }
 
     // send command buffers to gpu

@@ -3,7 +3,11 @@
 #include <windows.h>
 #include <iostream>
 #include "util.h"
-// #include "camera.h"
+
+#define WORLD_BOUND_HIGH 32
+#define WORLD_BOUND_LOW -32
+
+class Camera;
 
 // Scene Manager singleton
 namespace SM {
@@ -36,8 +40,6 @@ extern bool flashlightToggled;
 extern int width;   // screen width
 extern int height;  // screen height
 
-extern float WORLD_BOUND_HIGH;
-extern float WORLD_BOUND_LOW;
 extern glm::vec4 bgColour;
 extern glm::vec2 fogBounds;
 extern float seaLevel;
@@ -52,7 +54,7 @@ extern float mouseDY;  // mouse delta y
 extern bool isFreeCam;      // in free cam, the player model is loaded and updates but does not move with the camera
 extern bool isFirstPerson;  // in first person, the player model is not updated but the camera follows it anyway
 extern bool isThirdPerson;  // in third person, the player model is loaded and the camera moves with it
-// extern Camera activeCamera;
+extern Camera *camera;
 extern CAMERA_MODE camMode;
 extern bool showNormal;
 

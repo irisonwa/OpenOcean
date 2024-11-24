@@ -1,10 +1,5 @@
 #include "util.h"
 
-// const used to convert degrees into radians
-#define TWO_PI 2.0f * 3.14159265358979323846
-#define ONE_DEG_IN_RAD (2.0f * 3.14159265358979323846) / 360.0f  // 0.017444444
-#define ONE_RAD_IN_DEG 57.2957795
-
 namespace Util {
 vec3 UP = vec3(0.f, 1.f, 0.f);
 vec3 FORWARD = vec3(0.f, 0.f, -1.f);
@@ -80,26 +75,24 @@ float mapRange(float v, float inLow, float inHigh, float outLow, float outHigh) 
 
 // Compute the squared distance between `a` and `b`. Use `glm::distance` for actual distance
 float sqDist(vec3 a, vec3 b) {
-    float dx = a[0] - b[0];
-    float dy = a[1] - b[1];
-    float dz = a[2] - b[2];
-    return dx * dx + dy * dy + dz * dz;
+    vec3 diff = a - b;
+    return dot(diff, diff);
 }
 
 // Convert degrees to radians
-float deg2Rad(float val) { return val * ONE_DEG_IN_RAD; }
+float d2r(float val) { return glm::radians(val); }
 
 // Convert radians to degrees
-float rad2Deg(float val) { return val * ONE_RAD_IN_DEG; }
+float r2d(float val) { return glm::degrees(val); }
 
 // Convert an angle in degrees to a vec3. The angle will use the y-axis as the floor; i.e., the y-axis value will be 0.
 vec3 angleToVec3(float angle) {
-    return vec3(-cosf(deg2Rad(angle)), 0, -sinf(deg2Rad(angle)));
+    return vec3(-cosf(d2r(angle)), 0, -sinf(d2r(angle)));
 }
 
 // Convert a vector to an angle in degrees. The angle will use the y-axis as the floor; i.e., the y-axis value will be ignored during the calculation.
 float vec3ToAngle(vec3 v) {
-    return rad2Deg(atan2(v.y, v.x));
+    return r2d(atan2(v.y, v.x));
 }
 
 // Compare float values.
@@ -215,5 +208,27 @@ void printMat4(mat4 m) {
 
 void printMat4(aiMatrix4x4 m) {
     printMat4(aiToGLM(&m));
+}
+
+void printList(std::vector<int> vs) {
+    printf("[");
+    for (int i = 0; i < vs.size(); ++i) {
+        printf("%d", vs[i]);
+        if (i != vs.size() - 1)
+            printf(", ");
+        
+    }
+    printf("]\n");
+}
+
+void printList(std::vector<float> vs) {
+    printf("[");
+    for (int i = 0; i < vs.size(); ++i) {
+        printf("%.2f", vs[i]);
+        if (i != vs.size() - 1)
+            printf(", ");
+        
+    }
+    printf("]\n");
 }
 }  // namespace Util
