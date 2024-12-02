@@ -1,10 +1,11 @@
+// Uses instance transforms taken from boids.comp (GPU)
 #version 460 core
 layout(location = 0) in vec3 vertex_position;
 layout(location = 1) in vec3 vertex_normal;
 layout(location = 2) in vec2 vertex_texture;
 layout(location = 3) in ivec4 bone_ids;
 layout(location = 4) in vec4 bone_weights;
-layout(location = 5) in mat4 instance_trans; // transform of mesh instance
+layout(location = 5) in mat4 instance_transs; // transform of mesh instance
 layout(location = 9) in float texture_depth;
 
 layout(location = 0) out vec3 FragPos;
@@ -30,15 +31,16 @@ layout (std430, binding = 2) buffer readonly BoneOffsets {
     int boffsets[];
 };
 
-// layout (std430, binding = 6) buffer readonly BTransforms {
-//     mat4 instance_trans[];
-// };
+layout (std430, binding = 6) buffer readonly BTransforms {
+    mat4 instance_trans[];
+};
 
 uniform mat4 view;
 uniform mat4 proj;
 
 void main() {
   drawID = uint(gl_DrawID); // to count variants
+  uint iid = uint(gl_BaseInstance + gl_InstanceID); // instance id
   // drawID = uint(gl_BaseInstance + gl_InstanceID); // to count instances
 
   vec4 totalPos = vec4(0.0);
@@ -58,13 +60,13 @@ void main() {
   if (cnt == 0) {
     // if no bones, animate as if it's static
     totalPos = vec4(vertex_position, 1.0);
-    FragPos = vec3(instance_trans * vec4(vertex_position, 1.0));
-    Normal = mat3(transpose(inverse(instance_trans))) * vertex_normal;
+    FragPos = vec3(instance_trans[iid] * vec4(vertex_position, 1.0));
+    Normal = mat3(transpose(inverse(instance_trans[iid]))) * vertex_normal;
   } else {
-    FragPos = vec3(instance_trans * totalPos);
-    Normal = vec3(normalize(instance_trans * vec4(totalNormal, 0.0)));
+    FragPos = vec3(instance_trans[iid] * totalPos);
+    Normal = vec3(normalize(instance_trans[iid] * vec4(totalNormal, 0.0)));
   }
 
   TexCoords = vertex_texture;
   tDepth = texture_depth;
-  gl_Position = proj * view * instance_trans * totalPos;}
+  gl_Position = proj * view * instance_trans[iid] * totalPos;}

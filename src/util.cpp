@@ -7,6 +7,8 @@ vec3 RIGHT = vec3(1.f, 0.f, 0.f);
 vec3 X = vec3(1.f, 0.f, 0.f);
 vec3 Y = vec3(0.f, 1.f, 0.f);
 vec3 Z = vec3(0.f, 0.f, 1.f);
+std::random_device rand_dev;
+std::mt19937 mt_gen(rand_dev());
 
 std::string readFile(const char* path) {
     std::ifstream file(path);
@@ -64,6 +66,22 @@ vec3 lerpV(vec3 a, vec3 b, float dt) {
         lerp(a.x, b.x, dt),
         lerp(a.y, b.y, dt),
         lerp(a.z, b.z, dt));
+}
+
+// Generate a random number in the range (`lo`, `hi`).
+int random(int lo, int hi) {
+    std::uniform_int_distribution<> d(lo, hi);
+    return d(mt_gen);
+}
+
+// Generate a vector with random components in the range (`lo`, `hi`).
+vec3 randomv(int lo, int hi) {
+    std::uniform_int_distribution<> d(lo, hi);
+    return vec3(
+        d(mt_gen),
+        d(mt_gen),
+        d(mt_gen)
+    );
 }
 
 // Map a value `v` from input range `[inLow, inHigh]` to output range `[outLow, outHigh]`

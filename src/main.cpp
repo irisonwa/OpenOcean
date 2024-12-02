@@ -22,9 +22,13 @@ void init() {
 
     Shader* s3 = new Shader("bones", vert_bmesh, frag_bmesh);
     shaders[s3->name] = s3;
-
-    Shader* s4 = new Shader("variant", vert_vmesh, frag_vmesh);
+#ifdef TREE
+    Shader* s4 = new Shader("variant", vert_vmesh_cpu, frag_vmesh);
     shaders[s4->name] = s4;
+#else
+    Shader* s4 = new Shader("variant", vert_vmesh_gpu, frag_vmesh);
+    shaders[s4->name] = s4;
+#endif
 
     /// -------------------------------------------------- LIGHTING -------------------------------------------------- ///
     staticLight = new Lighting("stony light", shaders["static"], MATERIAL_SHINY);
@@ -76,13 +80,17 @@ void init() {
     vMesh = new VariantMesh(
         "vmesh", shaders["variant"],
         {
+            {MESH_SHARK2_ANIM, 32, 1024, 1, std::vector<unsigned int>(32, 0)},
             {MESH_MARLIN_ANIM, 300, 1024, 2, std::vector<unsigned int>(300, 0)},  // black marlin
             {MESH_MARLIN_ANIM, 300, 1024, 2, std::vector<unsigned int>(300, 1)},  // blue marlin
-            {MESH_THREADFIN_ANIM, 1600, 1024, 1, std::vector<unsigned int>(1600, 0)},
+            {MESH_SPEARFISH_ANIM, 300, 1024, 1, std::vector<unsigned int>(300, 0)},
+            {MESH_SPEARFISH_ANIM, 300, 1024, 1, std::vector<unsigned int>(300, 0)},
+            {MESH_THREADFIN_ANIM, 3600, 1024, 1, std::vector<unsigned int>(3600, 0)},
             {MESH_THREADFIN_ANIM, 170, 1024, 1, std::vector<unsigned int>(170, 0)},
-            {MESH_SPEARFISH_ANIM, 300, 1024, 1, std::vector<unsigned int>(300, 0)},
-            {MESH_SPEARFISH_ANIM, 300, 1024, 1, std::vector<unsigned int>(300, 0)},
-            {MESH_SHARK2_ANIM, 32, 1024, 1, std::vector<unsigned int>(32, 0)},
+            // {MESH_THREADFIN_ANIM, 170, 1024, 1, std::vector<unsigned int>(170, 0)},
+            // {MESH_THREADFIN_ANIM, 170, 1024, 1, std::vector<unsigned int>(170, 0)},
+            // {MESH_SHARK2_ANIM, 2, 1024, 1, std::vector<unsigned int>(2, 0)},
+            // {MESH_THREADFIN_ANIM, 31, 1024, 1, std::vector<unsigned int>(31, 0)},
             // {MESH_SHARK2_ANIM, 4, 1024, 1, std::vector<unsigned int>(4, 0)},
             // {MESH_PLAYER_ANIM, 10, -1, -1, std::vector<unsigned int>(10, 0)},
             // {TEST_SPEC, 1, 1024, 4, std::vector<unsigned int>(1, 3)},
@@ -201,10 +209,10 @@ void display() {
     staticLight->use();
 
     // smeshes["kelp"]->render(mat4(1));
-    smeshes["island"]->render(scale(mat4(1), vec3(25)));
+    // smeshes["island"]->render(scale(mat4(1), vec3(25)));
     smeshes["sun"]->render(translate(mat4(1), sunPos));
 
-    /// ---------------- SKINNED MESHES ---------------- ///
+    /// ------------------------------------------------ SKINNED MESHES ------------------------------------------------ ///
     boneLight->setLightAtt(view, persp_proj, SM::camera->pos);
     boneLight->setSpotLightAtt(0, flashlightCoords, flashlightDir, vec3(0.2f), vec3(1, .6, .2), vec3(1));
     // boneLight->spotLights[boneLight->nSpotLights - 1].cutOff = cos(Util::d2r(24.f));
@@ -223,10 +231,10 @@ void display() {
         player->render();
     }
 
-    bmeshes["test kelp"]->update(100);
-    bmeshes["test kelp"]->render(transm.size(), transm.data());
+    // bmeshes["test kelp"]->update(100);
+    // bmeshes["test kelp"]->render(transm.size(), transm.data());
 
-    /// ---------------- VARIANT MESHES ---------------- ///
+    /// ------------------------------------------------ VARIANT MESHES ------------------------------------------------ ///
     variantLight->setLightAtt(view, persp_proj, SM::camera->pos);
     variantLight->setSpotLightAtt(0, flashlightCoords, flashlightDir, vec3(0.2f), vec3(1, .6, .2), vec3(1));
     variantLight->use();

@@ -34,12 +34,13 @@ struct BoidS {
     int isBeingChased;
     int isChasing;
     float boidsAround;
-    unsigned int myPredators[NUM_BOID_TYPES];
-    unsigned int myPrey[NUM_BOID_TYPES];
     unsigned int type;
     unsigned int ID;
+    unsigned int myPredators[NUM_BOID_TYPES];
+    unsigned int myPrey[NUM_BOID_TYPES];
     int pd1;
-    int pd2;
+    // int pd2;
+    // int pd3;
 };
 
 enum BoidType {
@@ -77,6 +78,7 @@ namespace BoidInfo {
     extern bool isPreyTo(BoidType a, BoidType b);
     extern bool isPredatorTo(BoidType a, BoidType b);
     extern BoidS createBoidStruct(BoidType t, unsigned id, vec3 pos, vec3 dirs);
+    extern std::string getBoidName(BoidType t);
 } // namespace BoidInfo
 
 

@@ -1,6 +1,6 @@
 #version 460 core
 
-layout (local_size_x = 16, local_size_y = 1, local_size_z = 1) in;
+layout (local_size_x = 1024, local_size_y = 1, local_size_z = 1) in;
 
 #define NUM_BOID_TYPES 12
 
@@ -27,13 +27,11 @@ struct Boid {
     int hasHome;                          // 4          # 240
     int isBeingChased;                    // 4          # 244
     int isChasing;                        // 4          # 248
-    float boidsAround;                    // 4 * 12     # 252
-    uint myPredators[NUM_BOID_TYPES];     // 4 * 12     # 300
-    uint myPrey[NUM_BOID_TYPES];          // 4          # 304
-    uint type;                            // 4          # 308
-    uint ID;                              // 4          # 312
-    // int pd1;
-    // int pd2;
+    float boidsAround;                    // 4          # 252
+    uint type;                            // 4          # 256
+    uint ID;                              // 4          # 260
+    uint myPredators[NUM_BOID_TYPES];     // 4 * 12     # 308
+    uint myPrey[NUM_BOID_TYPES];          // 4 * 12     # 320
 };
 
 uint F_THREADFIN = 0;
@@ -49,6 +47,8 @@ uint WHALE = 9;
 uint DOLPHIN = 10;
 uint PLANKTON = 11;
 
+float sq(float s) { return s * s; }
+float sq(int s) { return s * s; }
 mat4 getTranslationMat(vec3 pos);
 mat4 getScaleMat(vec3 scale);
 float sqDist(vec4 a, vec4 b);
@@ -62,6 +62,10 @@ void constrainBounds(uint idx);
 void move(uint idx);
 void update(uint idx);
 void process(uint idx);
+bool checkNan(vec3 v);
+bool checkNan(vec4 v);
+void resetVelocity(uint bidx);
+void checkAndResetVelocity(uint bidx);
 
 layout(std430, binding = 3) buffer BoidStructs {
     Boid boids[];
@@ -71,9 +75,9 @@ layout(std430, binding = 4) buffer readonly HomeLocs {
     vec4 homes[];
 };
 
-// layout(std430, binding = 5) buffer WallLocs {
-//     vec4 walls;
-// };
+layout(std430, binding = 5) buffer BIndices {
+    uint indices[];
+};
 
 layout(std430, binding = 6) buffer writeonly TransOut {
     mat4 transforms[];
@@ -82,24 +86,22 @@ layout(std430, binding = 6) buffer writeonly TransOut {
 uniform float deltaTime;
 uniform bool canAttack;
 uniform vec3 gridSize;
+uniform int idBase;
 // uniform vec3 playerPos;
 
 void main() {
-    // uint gid = gl_GlobalInvocationID.x;
-    // if (gid >= boids.length()) return;
-    // process(gid);
-    // transforms[gid] = getLookAtMat(gid) * getScaleMat(boids[gid].scale.xyz);
-    for (uint i = 0; i < boids.length(); ++i) {
-        process(i);
-        transforms[i] = getLookAtMat(i) * getScaleMat(boids[i].scale.xyz);
-    }
+    uint gid = gl_GlobalInvocationID.x;
+    uint rid = idBase + gid;
+    if (rid >= boids.length()) return;
+    process(rid);
+    transforms[rid] = getLookAtMat(rid) * getScaleMat(boids[rid].scale.xyz);
 }
 
 // Create a lookAt matrix from a position, direction, and up vector. Taken from GLM
 mat4 getLookAtMat(uint idx) {
     vec3 up = vec3(0, 1, 0);
     vec3 from = boids[idx].pos.xyz;
-    vec3 to = normalize(boids[idx].dir.xyz);
+    vec3 to = normalize(boids[idx].velocity.xyz);
 
     vec3 f = normalize((from + to) - from);
     vec3 s = normalize(cross(f, up));
@@ -148,7 +150,7 @@ void move(uint idx) {
     float closestPreyDisttmp = 1e9;
     float biggestFearWeight = 0;
 
-    float visibleRange = 8;
+    float visibleRange = 4;
     // if (boids[idx].type >= S_BLUE && boids[idx].type <= DOLPHIN) visibleRange = 180;
     float homeRange = 40;
     float newHomeDistDrift = 20; // distance to determine new home when drifting (i.e., not fleeing or chasing)
@@ -157,51 +159,50 @@ void move(uint idx) {
     for (int i = 0; i < boids.length(); ++i) {
         // uint odx = (idx + i) % boids.length();
         uint odx = i;
-        if (boids[odx].ID != boids[idx].ID) {
-            float tDist = sqDist(boids[idx].pos, boids[odx].pos);
-            if (tDist < visibleRange * visibleRange) {
-                float distFromBoid = sqrt(tDist);
-                numNeighbors++;
-                // stay within group of same boid type
-                if (isFamily(idx, odx)) {
-                    numFamily++;
+        if (boids[odx].ID == boids[idx].ID) continue;
+        float tDist = sqDist(boids[idx].pos, boids[odx].pos);
+        if (tDist < sq(visibleRange)) {
+            float distFromBoid = sqrt(tDist);
+            numNeighbors++;
+            // stay within group of same boid type
+            if (isFamily(idx, odx)) {
+                numFamily++;
 
-                    // alignment
-                    avgVel += boids[odx].velocity;
+                // alignment
+                avgVel += boids[odx].velocity;
 
-                    // cohesion
-                    avgCentre += boids[odx].pos;
+                // cohesion
+                avgCentre += boids[odx].pos;
 
-                    // separation
-                    if (distFromBoid < boids[idx].minSepDistance) {
-                        avgMove += boids[idx].pos - boids[odx].pos;
+                // separation
+                if (tDist < sq(boids[idx].minSepDistance)) {
+                    avgMove += boids[idx].pos - boids[odx].pos;
+                }
+            } else if (!canAttack) {
+                // to avoid altering if-statement structure in case i decide to remove this
+                // todo: add slight flocking behaviour to non-enemmies
+                continue;
+            } else {
+                if (isPreyTo(idx, odx)) {
+                    if (tDist <= sq(boids[idx].minEnemyInterceptDistance)) {
+                        isBeingChased = true;
                     }
-                } else if (!canAttack) {
-                    // to avoid altering if-statement structure in case i decide to remove this
-                    // todo: add slight flocking behaviour to non-enemmies
-                    continue;
-                } else {
-                    if (isPreyTo(idx, odx)) {
-                        if (distFromBoid <= boids[idx].minEnemyInterceptDistance) {
-                            isBeingChased = true;
+                    biggestFearWeight = max(biggestFearWeight, getFearWeight(idx, odx));
+                    avgMoveFlee += (boids[idx].pos - boids[odx].pos) * biggestFearWeight;
+                } else if (isPredatorTo(idx, odx)) {
+                    isInPursuit = isInPursuit || tDist <= sq(boids[idx].minEnemyInterceptDistance);
+                    if (tDist <= sq(boids[idx].minEnemyChaseDistance)) {
+                        // move towards goal
+                        isInChasing = true;
+                        if (tDist < sq(closestPreyDist)) {
+                            closestPrey = boids[odx].pos;
+                            closestPreyDist = tDist;
                         }
-                        biggestFearWeight = max(biggestFearWeight, getFearWeight(idx, odx));
-                        avgMoveFlee += (boids[idx].pos - boids[odx].pos) * biggestFearWeight;
-                    } else if (isPredatorTo(idx, odx)) {
-                        isInPursuit = isInPursuit || distFromBoid <= boids[idx].minEnemyInterceptDistance;
-                        if (distFromBoid <= boids[idx].minEnemyChaseDistance) {
-                            // move towards goal
-                            isInChasing = true;
-                            if (distFromBoid < closestPreyDist) {
-                                closestPrey = boids[odx].pos;
-                                closestPreyDist = distFromBoid;
-                            }
-                            avgMoveAtt -= (boids[idx].pos - boids[odx].pos) * boids[idx].goalWeight;
-                        } else if (distFromBoid <= boids[idx].minEnemyInterceptDistance) {
-                            // intercept goal
-                            // doing it like this means predators are drawn towards larger groups more than single prey
-                            avgMoveAtt -= (boids[idx].pos - (boids[odx].pos + boids[odx].velocity)) * boids[idx].goalWeight;
-                        }
+                        avgMoveAtt -= (boids[idx].pos - boids[odx].pos) * boids[idx].goalWeight;
+                    } else if (tDist <= sq(boids[idx].minEnemyInterceptDistance)) {
+                        // intercept goal
+                        // doing it like this means predators are drawn towards larger groups more than single prey
+                        avgMoveAtt -= (boids[idx].pos - (boids[odx].pos + boids[odx].velocity)) * boids[idx].goalWeight;
                     }
                 }
             }
@@ -210,13 +211,12 @@ void move(uint idx) {
 
     boids[idx].isBeingChased = int(isBeingChased);
     boids[idx].isChasing = int(isInPursuit);
-    // boids[idx].boidsAround = int(numNeighbors);
 
     // Determine where the home is
     if (boids[idx].canHaveHome == 1) {
         if (sqDist(boids[idx].pos, boids[idx].currentHome) > homeRange * homeRange) {
             boids[idx].hasHome = 0;
-            float consideredHomeDist = isBeingChased ? newHomeDistFlee * newHomeDistFlee : newHomeDistDrift * newHomeDistDrift;
+            float consideredHomeDist = isBeingChased ? sq(newHomeDistFlee) : sq(newHomeDistDrift);
             for (int i = 0; i < homes.length(); ++i) {
                 if (sqDist(boids[idx].pos, homes[i]) < consideredHomeDist) {
                     boids[idx].currentHome = homes[i];
@@ -242,7 +242,7 @@ void move(uint idx) {
         // separation
         if (isBeingChased) {
             if (boids[idx].hasHome == 1) {
-                // avgMoveFlee -= (boids[idx].pos - boids[idx].currentHome) * biggestFearWeight * 0.5;  // fleeing home
+                avgMoveFlee -= (boids[idx].pos - boids[idx].currentHome) * biggestFearWeight * 0.000005;  // fleeing home
             }
             boids[idx].velocity += avgMoveFlee * boids[idx].avoidFactor;
         } else if (isInPursuit) {
@@ -253,9 +253,9 @@ void move(uint idx) {
             boids[idx].velocity += avgMoveAtt * boids[idx].avoidFactor;
         }
         if (boids[idx].hasHome == 1) {
-            // boids[idx].velocity -= (boids[idx].pos - boids[idx].currentHome) * 0.005; // drift towards home
+            boids[idx].velocity -= (boids[idx].pos - boids[idx].currentHome) * 0.0005; // drift towards home
         } else {
-            // boids[idx].velocity -= (boids[idx].pos - vec4(0)) * 0.00005; // drift towards centre
+            boids[idx].velocity -= (boids[idx].pos - vec4(0)) * 0.000005; // drift towards centre
         }
         boids[idx].velocity += avgMove * boids[idx].avoidFactor;
     }
@@ -263,18 +263,20 @@ void move(uint idx) {
 
 void limitSpeed(uint idx) {
     float tspeed = dot(boids[idx].velocity, boids[idx].velocity);
-    if ((tspeed < boids[idx].min_speed * boids[idx].min_speed) || any(isnan(boids[idx].velocity))) {
-        boids[idx].velocity = vec4(boids[idx].min_speed);
+    if ((tspeed < boids[idx].min_speed * boids[idx].min_speed)) {
+        boids[idx].velocity *= 1.1;
+        boids[idx].dir = normalize(boids[idx].velocity);
     } else {
         float max_speed = boids[idx].max_speed;
         if (tspeed > boids[idx].max_speed * boids[idx].max_speed) {
             boids[idx].velocity = normalize(boids[idx].velocity) * boids[idx].max_speed;
         }
     }
+    checkAndResetVelocity(idx);
 }
 
 void constrainBounds(uint idx) {
-    float tf = 2;
+    float tf = .2;
     if (boids[idx].pos.x < -gridSize.x)
         boids[idx].velocity.x += tf;
     if (boids[idx].pos.x > gridSize.x)
@@ -290,6 +292,7 @@ void constrainBounds(uint idx) {
 }
 
 void update(uint idx) {
+    checkAndResetVelocity(idx);
     boids[idx].lastVelocity = mix(boids[idx].lastVelocity, boids[idx].velocity, deltaTime * 8);
     boids[idx].pos += boids[idx].lastVelocity * deltaTime;
 }
@@ -316,7 +319,7 @@ bool isPreyTo(uint idxa, uint idxb) {
 
 float getFearWeight(uint idxa, uint idxb) {
     if (isPreyTo(idxa, idxb)) {
-        return 150;
+        return 5;
     } else if (isPredatorTo(idxa, idxb) || isFamily(idxa, idxb)) {
         return 0;
     } else {
@@ -349,3 +352,19 @@ mat4 getScaleMat(vec3 scale) {
 // uint flatten3(vec3 v) {
 //     return v.x + v.y * gridSize.x + v.z * gridSize.x * gridSize.y;
 // }
+
+bool checkNan(vec3 v) {
+    return any(isnan(v));
+}
+bool checkNan(vec4 v) {
+    return any(isnan(v));
+}
+void checkAndResetVelocity(uint idx) {
+    if (checkNan(boids[idx].velocity)) {
+        resetVelocity(idx);
+    }
+}
+void resetVelocity(uint idx) {
+    boids[idx].velocity = vec4(boids[idx].min_speed);
+    boids[idx].dir = normalize(boids[idx].velocity);
+}

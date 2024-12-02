@@ -145,6 +145,7 @@ void VariantMesh::unloadMaterials() {
     }
 }
 
+// Update and render all animations for each variant
 void VariantMesh::render(const mat4 *instance_trans_matrix) {
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, IBO);
@@ -186,48 +187,4 @@ void VariantMesh::render(const mat4 *instance_trans_matrix) {
 void VariantMesh::render(mat4 mm) {
     this->mat = mm;
     render(&mm);
-}
-
-void VariantMesh::update() {
-    update(shader, 1);
-}
-void VariantMesh::update(Shader *skinnedShader) {
-    update(skinnedShader, 1);
-}
-void VariantMesh::update(float speed) {
-    update(shader, std::vector<float>(variants.size(), speed));
-}
-void VariantMesh::update(std::vector<float> speeds) {
-    update(shader, speeds);
-}
-void VariantMesh::update(Shader *skinnedShader, float animSpeed) {
-    update(skinnedShader, std::vector<float>(variants.size(), animSpeed));
-}
-void VariantMesh::update(Shader *skinnedShader, std::vector<float> speeds) {
-    // std::vector<mat4> trans = getUpdatedTransforms(skinnedShader, speeds);
-    // for (int i = 0; i < trans.size(); i++) {
-    //     skinnedShader->setMat4("bones[" + std::to_string(i) + "]", trans[i]);
-    // }
-}
-
-// update transforms with a specified shader and speed for each VARIANT
-std::vector<mat4> VariantMesh::getUpdatedTransforms(Shader *skinnedShader, std::vector<float> speeds) {
-    assert(speeds.size() == variants.size() && "length of 'speeds' must match variant count");
-    std::vector<mat4> trans;
-    for (int i = 0; i < variants.size(); ++i) {
-        for (const auto &m : variants[i]->mesh->getUpdatedTransforms(skinnedShader, speeds[i])) {
-            trans.push_back(m);
-        }
-    }
-    return trans;
-}
-
-// update transforms with a specified shader and speed for all variants
-std::vector<mat4> VariantMesh::getUpdatedTransforms(Shader *skinnedShader, float animSpeed) {
-    return getUpdatedTransforms(skinnedShader, std::vector<float>(variants.size(), animSpeed));
-}
-
-// update transforms with a specified speed for all variants
-std::vector<mat4> VariantMesh::getUpdatedTransforms(float animSpeed) {
-    return getUpdatedTransforms(shader, animSpeed);
 }

@@ -66,26 +66,26 @@ float getBoidMinSpeed(BoidType t) {
 }
 
 float getBoidMaxSpeed(BoidType t) {
-    float m = 1.f/2;
+    float m = 1.f/16;
     switch (t) {
         case F_THREADFIN:
-            return 11 * m;
+            return 8 * m;
         case F_MARLIN:
             return 8 * m;
         case F_SPEAR_FISH:
             return 8 * m;
         case F_TUNA:
-            return 10 * m;
+            return 8 * m;
         case F_HERRING:
-            return 11 * m;
+            return 8 * m;
         case F_CLOWNFISH:
-            return 11 * m;
+            return 8 * m;
         case S_BLUE:
-            return 14 * m;
+            return 12 * m;
         case S_WHALE:
-            return 14 * m;
+            return 12 * m;
         case S_WHITE:
-            return 14 * m;
+            return 12 * m;
         case WHALE:
             return 1 * m;
         case DOLPHIN:
@@ -343,15 +343,16 @@ float getBoidFearWeight(BoidType a, BoidType b) {
     }
 }
 
-BoidS createBoidStruct(BoidType t, unsigned id, vec3 pos, vec3 dirs) {
+BoidS createBoidStruct(BoidType t, unsigned id, vec3 pos, vec3 vel) {
     BoidS b = BoidS();
     b.ID = id;
-    b.pos = vec4(pos, 1);
-    b.velocity = b.lastVelocity = vec4(dirs, 1);
-    b.dir = normalize(b.velocity);
+    b.pos = vec4(pos, 0);
+    b.velocity = vec4(vel, 0);
+    b.lastVelocity = vec4(vel, 0);
+    b.dir = normalize(vec4(vel, 0));
     b.type = t;
     b.scale = vec4(getBoidScale(t), 1);
-    b.min_speed = getBoidMinSpeed(t);
+    b.min_speed = 1;
     b.max_speed = getBoidMaxSpeed(t);
     b.minSepDistance = getBoidSepDistance(t);
     b.minEnemyChaseDistance = getBoidChaseDistance(t);
@@ -365,7 +366,7 @@ BoidS createBoidStruct(BoidType t, unsigned id, vec3 pos, vec3 dirs) {
     b.hasHome = false;
     b.isBeingChased = false;
     b.isChasing = false;
-    b.boidsAround = 0;
+    b.boidsAround = 999;
     for (int i = 0; i < NUM_BOID_TYPES; ++i) {
         if (isPreyTo(t, (BoidType)i)) b.myPredators[i] = 1;
         else b.myPredators[i] = 0;
@@ -373,5 +374,36 @@ BoidS createBoidStruct(BoidType t, unsigned id, vec3 pos, vec3 dirs) {
         else b.myPrey[i] = 0;
     }
     return b;
+}
+
+std::string getBoidName(BoidType t) {
+    switch (t) {
+        case F_THREADFIN:
+            return "Threadfin";
+        case F_MARLIN:
+            return "Marlin";
+        case F_SPEAR_FISH:
+            return "Spear Fish";
+        case F_TUNA:
+            return "Tuna";
+        case F_HERRING:
+            return "Herring";
+        case F_CLOWNFISH:
+            return "Clownfish";
+        case S_BLUE:
+            return "Blue Shark";
+        case S_WHALE:
+            return "Whale Shark";
+        case S_WHITE:
+            return "White Shark";
+        case WHALE:
+            return "Whale";
+        case DOLPHIN:
+            return "Dolphin";
+        case PLANKTON:
+            return "Plankton";
+        default:
+            return "_GENERIC_BOID_";
+    }
 }
 }  // namespace BoidInfo

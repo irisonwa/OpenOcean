@@ -12,6 +12,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <random>
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <GL/glew.h>
@@ -45,6 +46,8 @@ extern vec3 RIGHT;    // World right
 extern vec3 X;        // Value of 1 on x axis
 extern vec3 Y;        // Value of 1 on y axis
 extern vec3 Z;        // Value of 1 on z axis
+extern std::random_device rand_dev;
+extern std::mt19937 mt_gen;
 
 extern std::string readFile(const char* path);
 extern float wrap(float val, float min, float max);
@@ -73,6 +76,8 @@ extern void printMat4(aiMatrix4x4 m);
 extern void printList(std::vector<int>);
 extern void printList(std::vector<float>);
 extern int compareFloat(float a, float b);
+extern int random(int lo, int hi);
+extern vec3 randomv(int lo, int hi);
 };  // namespace Util
 
 #endif  // UTIL_H

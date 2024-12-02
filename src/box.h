@@ -74,6 +74,17 @@ public:
                p.z <= high.z && p.z >= low.z;
     }
 
+    // is this box's closest point contained within the sphere at point `p` with radius `sqrt(radSqr)`?
+    // i.e., is the box at all touching the given sphere?
+    bool inRange(vec3 p, float radSqr) {
+        if (contains(p)) return true;
+        vec3 closest = vec3(0);
+        closest.x = std::min(std::max(low.x, p.x), high.x);
+        closest.y = std::min(std::max(low.y, p.y), high.y);
+        closest.z = std::min(std::max(low.z, p.z), high.z);
+        return Util::sqDist(closest, p) <= radSqr;
+    }
+
     // give the box a point. if the point is outside the box's bounds, the box will grow to include the point. returns true if the box grew
     bool grow(vec3 p) {
         if (contains(p)) return false;

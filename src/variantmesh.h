@@ -87,15 +87,12 @@ class VariantMesh : public Mesh {
     void populateBuffers();
     void render(const mat4*);
     void render(mat4);
-    void update();
-    void update(Shader* skinnedShader);
-    void update(float speed);
-    void update(std::vector<float> speeds);
-    void update(Shader* skinnedShader, float animSpeed);
-    void update(Shader* skinnedShader, std::vector<float> speeds);
-    std::vector<mat4> getUpdatedTransforms(Shader* skinnedShader, float animSpeed);
-    std::vector<mat4> getUpdatedTransforms(Shader* skinnedShader, std::vector<float> speeds);
-    std::vector<mat4> getUpdatedTransforms(float animSpeed);
+    std::vector<mat4> getUpdatedTransforms(Shader* skinnedShader, float animSpeed) { return {}; }  // unused
+    std::vector<mat4> getUpdatedTransforms(float animSpeed) { return {}; }                         // unused
+    void update() {}                                                                   // unused
+    void update(float speed) {}                                                        // unused
+    void update(Shader* shader) {}                                                     // unused
+    void update(Shader* shader, float speed) {}                                        // unused
 
 #define VA_POSITION_LOC 0     // p_vbo
 #define VA_NORMAL_LOC 1       // n_vbo

@@ -4,8 +4,8 @@
 #include <iostream>
 #include "util.h"
 
-#define WORLD_BOUND_HIGH 32
-#define WORLD_BOUND_LOW -32
+#define WORLD_BOUND_HIGH 64
+#define WORLD_BOUND_LOW -64
 
 class Camera;
 

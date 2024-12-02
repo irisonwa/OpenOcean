@@ -1,6 +1,7 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
+
 #include "util.h"
 #include "sm.h"
 #include "player.h"
@@ -8,7 +9,6 @@
 #include <GL/freeglut.h>
 
 class Player;
-//  SM;
 
 class Camera {
    private:
