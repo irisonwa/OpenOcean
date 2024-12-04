@@ -98,7 +98,7 @@ void VariantMesh::populateBuffers() {
 void VariantMesh::generateCommands() {
     glGenBuffers(1, &commandBuffer);
 
-    IndirectDrawCommand cmds[variants.size()];
+    IndirectDrawCommand *cmds = new IndirectDrawCommand[variants.size()];
     unsigned int baseVertex = 0, baseInstance = 0, baseIndex = 0;
     for (int i = 0; i < variants.size(); ++i) {
         const auto &v = variants[i];
@@ -118,7 +118,7 @@ void VariantMesh::generateCommands() {
 
     // send command buffers to gpu
     glBindBuffer(GL_DRAW_INDIRECT_BUFFER, commandBuffer);
-    glBufferData(GL_DRAW_INDIRECT_BUFFER, sizeof(cmds), cmds, GL_DYNAMIC_DRAW);
+    glBufferData(GL_DRAW_INDIRECT_BUFFER, sizeof(IndirectDrawCommand) * variants.size(), &cmds[0], GL_DYNAMIC_DRAW);
 }
 
 void VariantMesh::loadMaterials() {
@@ -148,9 +148,10 @@ void VariantMesh::unloadMaterials() {
 // Update and render all animations for each variant
 void VariantMesh::render(const mat4 *instance_trans_matrix) {
     glBindVertexArray(VAO);
+#ifdef TREE
     glBindBuffer(GL_ARRAY_BUFFER, IBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(mat4) * totalInstanceCount, &instance_trans_matrix[0], GL_DYNAMIC_DRAW);
-
+#endif
     loadMaterials();
 
     // update animations
@@ -161,14 +162,6 @@ void VariantMesh::render(const mat4 *instance_trans_matrix) {
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, BOBO);
     glDispatchCompute((int)ceil(boneInfos.size() / 32.f), 1, 1);   // declare work group sizes and run compute shader
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);  // wait for all threads to be finished
-
-    // BoneInfo *matptr;
-    // matptr = (BoneInfo *)glMapNamedBuffer(BIBO, GL_READ_WRITE);
-    // for (int i = 0; i < boneInfos.size(); ++i) {
-    //     Util::printMat4(matptr[i].currentTransformation);
-    // }
-    // printf("\n");
-    // glUnmapNamedBuffer(BIBO);
 
     shader->use();
     glMultiDrawElementsIndirect(

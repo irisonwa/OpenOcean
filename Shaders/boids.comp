@@ -55,6 +55,7 @@ float sqDist(vec4 a, vec4 b);
 bool isFamily(uint idxa, uint idxb);
 bool isPredatorTo(uint idxa, uint idxb);
 bool isPreyTo(uint idxa, uint idxb);
+bool isNeutral(uint idxa, uint idxb);
 float getFearWeight(uint idxa, uint idxb);
 void limitSpeed(uint idx);
 mat4 getLookAtMat(uint idx);
@@ -128,15 +129,19 @@ mat4 getLookAtMat(uint idx) {
 void move(uint idx) {
     int numNeighbors = 0;
     int numFamily = 0; // only move by family rules if near family. otherwise, boid will move towards origin due to subtraction in alignment and cohesion checks
+    int numStrangers = 0;
 
     // alignment variable
     vec4 avgVel = vec4(0);
+    vec4 avgStrangerVel = vec4(0);
 
     // cohesion
     vec4 avgCentre = vec4(0);
+    vec4 avgStrangerCentre = vec4(0);
 
     // separation variables
     vec4 avgMove = vec4(0);
+    vec4 avgStrangerMove = vec4(0);
     // if being chased, ignore all prey. define separate attacking and fleeing so that any behaviour defined
     // before fully seen (i.e., deciding to chase before finding a predator in boid list) can be undone
     vec4 avgMoveAtt = vec4(0);
@@ -149,6 +154,7 @@ void move(uint idx) {
     float closestPreyDist = 1e9;
     float closestPreyDisttmp = 1e9;
     float biggestFearWeight = 0;
+    float strangerFactor = 0.001;
 
     float visibleRange = 4;
     // if (boids[idx].type >= S_BLUE && boids[idx].type <= DOLPHIN) visibleRange = 180;
@@ -177,6 +183,19 @@ void move(uint idx) {
                 // separation
                 if (tDist < sq(boids[idx].minSepDistance)) {
                     avgMove += boids[idx].pos - boids[odx].pos;
+                }
+            } else if (isNeutral(idx, odx)) {
+                numStrangers++;
+
+                // alignment
+                avgStrangerVel += boids[odx].velocity;
+
+                // cohesion
+                avgStrangerCentre += boids[odx].pos;
+
+                // separation
+                if (tDist < sq(boids[idx].minSepDistance)) {
+                    avgStrangerMove += boids[idx].pos - boids[odx].pos;
                 }
             } else if (!canAttack) {
                 // to avoid altering if-statement structure in case i decide to remove this
@@ -238,6 +257,15 @@ void move(uint idx) {
             avgCentre /= numFamily;
             boids[idx].velocity += (avgCentre - boids[idx].pos) * boids[idx].centeringFactor;
         }
+        if (numStrangers != 0) {
+            // alignment
+            avgStrangerVel /= numStrangers;
+            boids[idx].velocity += (avgStrangerVel - boids[idx].velocity) * boids[idx].matchingFactor * strangerFactor;
+
+            // cohesion
+            avgStrangerCentre /= numStrangers;
+            boids[idx].velocity += (avgStrangerCentre - boids[idx].pos) * boids[idx].centeringFactor * strangerFactor;
+        }
 
         // separation
         if (isBeingChased) {
@@ -258,6 +286,7 @@ void move(uint idx) {
             boids[idx].velocity -= (boids[idx].pos - vec4(0)) * 0.000005; // drift towards centre
         }
         boids[idx].velocity += avgMove * boids[idx].avoidFactor;
+        boids[idx].velocity += avgStrangerMove * boids[idx].avoidFactor * strangerFactor;
     }
 }
 
@@ -307,6 +336,10 @@ void process(uint idx) {
 
 bool isFamily(uint idxa, uint idxb) {
     return boids[idxa].type == boids[idxb].type;
+}
+
+bool isNeutral(uint idxa, uint idxb) {
+    return !isPredatorTo(idxa, idxb) && !isPreyTo(idxa, idxb);
 }
 
 bool isPredatorTo(uint idxa, uint idxb) {

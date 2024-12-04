@@ -4,6 +4,8 @@
 #include <iostream>
 #include "util.h"
 
+// #define TREE  // uncomment to enable cpu octree
+
 #define WORLD_BOUND_HIGH 64
 #define WORLD_BOUND_LOW -64
 

@@ -84,6 +84,8 @@
 #define MESH_THREADFIN_ANIM "fish_threadfin.gltf"
 #define MESH_MARLIN_ANIM "fish_marlin.gltf"
 #define MESH_SPEARFISH_ANIM "fish_spear.gltf"
+#define MESH_CLOWNFISH_ANIM "fish_clown.gltf"
+#define MESH_SIMPLE_ANIM "test_ballb.gltf"
 
 const char* vert_smesh = PROJDIR "Shaders/staticMesh.vert";
 const char* frag_smesh = PROJDIR "Shaders/staticMesh.frag";

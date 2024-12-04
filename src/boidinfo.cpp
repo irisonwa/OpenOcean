@@ -43,7 +43,7 @@ vec3 getBoidScale(BoidType t) {
         case F_HERRING:
             return vec3(1);
         case F_CLOWNFISH:
-            return vec3(1);
+            return vec3(.125);
         case S_BLUE:
             return vec3(1);
         case S_WHALE:
@@ -99,29 +99,29 @@ float getBoidMaxSpeed(BoidType t) {
 float getBoidSepDistance(BoidType t) {
     switch (t) {
         case F_THREADFIN:
-            return 0.5;
+            return getBoidScale(t).x * 2;
         case F_MARLIN:
-            return 0.5;
+            return getBoidScale(t).x * 2;
         case F_SPEAR_FISH:
-            return 0.5;
+            return getBoidScale(t).x * 2;
         case F_TUNA:
-            return 0.5;
+            return getBoidScale(t).x * 2;
         case F_HERRING:
-            return 0.5;
+            return getBoidScale(t).x * 2;
         case F_CLOWNFISH:
-            return 0.5;
+            return getBoidScale(t).x * 2;
         case S_BLUE:
-            return 0.5;
+            return getBoidScale(t).x * 2;
         case S_WHALE:
-            return 0.5;
+            return getBoidScale(t).x * 2;
         case S_WHITE:
-            return 0.5;
+            return getBoidScale(t).x * 2;
         case WHALE:
-            return 1.5;
+            return getBoidScale(t).x * 2;
         case DOLPHIN:
-            return 0.5;
+            return getBoidScale(t).x * 2;
         case PLANKTON:
-            return 0.1;
+            return getBoidScale(t).x * 2;
         default:
             return 0.5;
     }
@@ -291,29 +291,9 @@ vec2 getBoidBounds(BoidType t) {
 int getHomeValidation(BoidType t) {
     switch (t) {
         case F_THREADFIN:
-            return true;
-        case F_MARLIN:
-            return false;
-        case F_SPEAR_FISH:
-            return false;
-        case F_TUNA:
-            return false;
         case F_HERRING:
-            return true;
         case F_CLOWNFISH:
             return true;
-        case S_BLUE:
-            return false;
-        case S_WHALE:
-            return false;
-        case S_WHITE:
-            return false;
-        case WHALE:
-            return false;
-        case DOLPHIN:
-            return false;
-        case PLANKTON:
-            return false;
         default:
             return false;
     }

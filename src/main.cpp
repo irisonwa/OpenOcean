@@ -8,9 +8,6 @@ void init() {
     glEnable(GL_DEBUG_OUTPUT);
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
     glDebugMessageCallback(MessageCallback, 0);
-    // glEnable(GL_POLYGON_OFFSET_FILL);
-    // glPolygonOffset(1, 0);
-    // glLineWidth(10);
     srand(time(nullptr));
 
     /// -------------------------------------------------- SHADERS -------------------------------------------------- ///
@@ -80,13 +77,14 @@ void init() {
     vMesh = new VariantMesh(
         "vmesh", shaders["variant"],
         {
-            {MESH_SHARK2_ANIM, 32, 1024, 1, std::vector<unsigned int>(32, 0)},
+            {MESH_SHARK2_ANIM, 64, 1024, 1, std::vector<unsigned int>(64, 0)},
             {MESH_MARLIN_ANIM, 300, 1024, 2, std::vector<unsigned int>(300, 0)},  // black marlin
             {MESH_MARLIN_ANIM, 300, 1024, 2, std::vector<unsigned int>(300, 1)},  // blue marlin
+            {MESH_CLOWNFISH_ANIM, 1300, 1024, 1, std::vector<unsigned int>(1300, 0)},
             {MESH_SPEARFISH_ANIM, 300, 1024, 1, std::vector<unsigned int>(300, 0)},
-            {MESH_SPEARFISH_ANIM, 300, 1024, 1, std::vector<unsigned int>(300, 0)},
-            {MESH_THREADFIN_ANIM, 3600, 1024, 1, std::vector<unsigned int>(3600, 0)},
-            {MESH_THREADFIN_ANIM, 170, 1024, 1, std::vector<unsigned int>(170, 0)},
+            {MESH_THREADFIN_ANIM, 2736, 1024, 1, std::vector<unsigned int>(2736, 0)},
+            // {MESH_THREADFIN_ANIM, 5000, 1024, 1, std::vector<unsigned int>(5000, 0)},
+            // {MESH_SIMPLE_ANIM, 5000, 1024, 1, std::vector<unsigned int>(5000, 0)},
             // {MESH_THREADFIN_ANIM, 170, 1024, 1, std::vector<unsigned int>(170, 0)},
             // {MESH_THREADFIN_ANIM, 170, 1024, 1, std::vector<unsigned int>(170, 0)},
             // {MESH_SHARK2_ANIM, 2, 1024, 1, std::vector<unsigned int>(2, 0)},
