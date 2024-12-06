@@ -69,4 +69,5 @@ void main() {
 
   TexCoords = vertex_texture;
   tDepth = texture_depth;
-  gl_Position = proj * view * instance_trans * totalPos;}
+  gl_Position = proj * view * instance_trans * totalPos;
+}

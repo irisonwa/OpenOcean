@@ -6,29 +6,27 @@ std::map<BoidType, std::set<BoidType>> preyTable = {
     {F_THREADFIN, {PLANKTON}},
     {F_MARLIN, {PLANKTON}},
     {F_SPEAR_FISH, {PLANKTON}},
-    {F_TUNA, {PLANKTON}},
     {F_HERRING, {PLANKTON}},
     {F_CLOWNFISH, {PLANKTON}},
-    {S_BLUE, {F_THREADFIN, F_MARLIN, F_SPEAR_FISH, F_TUNA, F_HERRING, F_CLOWNFISH}},
-    {S_WHALE, {}},
+    {S_BLUE, {F_THREADFIN, F_MARLIN, F_SPEAR_FISH, F_HERRING, F_CLOWNFISH}},
+    {S_WHALE, {PLANKTON, F_HERRING}},
     {S_WHITE, {}},
     {DOLPHIN, {}},
-    {WHALE, {}},
+    {WHALE, {PLANKTON, F_HERRING}},
     {PLANKTON, {}}};
 
 std::map<BoidType, std::set<BoidType>> predTable = {
-    {F_THREADFIN, {S_BLUE, S_WHALE, S_WHITE, WHALE}},
-    {F_MARLIN, {S_BLUE, S_WHALE, S_WHITE, WHALE}},
-    {F_SPEAR_FISH, {S_BLUE, S_WHALE, S_WHITE, WHALE}},
-    {F_TUNA, {S_BLUE, S_WHALE, S_WHITE, WHALE}},
+    {F_THREADFIN, {S_BLUE, S_WHITE, WHALE}},
+    {F_MARLIN, {S_BLUE, S_WHITE, WHALE}},
+    {F_SPEAR_FISH, {S_BLUE, S_WHITE, WHALE}},
     {F_HERRING, {S_BLUE, S_WHALE, S_WHITE, WHALE}},
     {F_CLOWNFISH, {S_BLUE, S_WHALE, S_WHITE, WHALE}},
-    {S_BLUE, {WHALE}},
-    {S_WHALE, {WHALE}},
-    {S_WHITE, {WHALE}},
-    {DOLPHIN, {WHALE}},
+    {S_BLUE, {}},
+    {S_WHALE, {}},
+    {S_WHITE, {WHALE}}, // scared for no reason (dumb idiot)
+    {DOLPHIN, {}},
     {WHALE, {}},
-    {PLANKTON, {F_THREADFIN, F_MARLIN, F_SPEAR_FISH, F_TUNA, F_HERRING, F_CLOWNFISH, S_BLUE, S_WHALE, S_WHITE, WHALE, DOLPHIN}}};
+    {PLANKTON, {F_THREADFIN, F_MARLIN, F_SPEAR_FISH, F_HERRING, F_CLOWNFISH, S_BLUE, S_WHALE, S_WHITE, WHALE, DOLPHIN}}};
 
 vec3 getBoidScale(BoidType t) {
     switch (t) {
@@ -38,22 +36,20 @@ vec3 getBoidScale(BoidType t) {
             return vec3(.5);
         case F_SPEAR_FISH:
             return vec3(.5);
-        case F_TUNA:
-            return vec3(1);
         case F_HERRING:
-            return vec3(1);
+            return vec3(.1);
         case F_CLOWNFISH:
-            return vec3(.125);
+            return vec3(.1);
         case S_BLUE:
             return vec3(1);
         case S_WHALE:
-            return vec3(1);
+            return vec3(1.5);
         case S_WHITE:
             return vec3(1);
         case WHALE:
-            return vec3(3);
+            return vec3(2);
         case DOLPHIN:
-            return vec3(1);
+            return vec3(0.5);
         case PLANKTON:
             return vec3(.1);
         default:
@@ -74,8 +70,6 @@ float getBoidMaxSpeed(BoidType t) {
             return 8 * m;
         case F_SPEAR_FISH:
             return 8 * m;
-        case F_TUNA:
-            return 8 * m;
         case F_HERRING:
             return 8 * m;
         case F_CLOWNFISH:
@@ -89,7 +83,7 @@ float getBoidMaxSpeed(BoidType t) {
         case WHALE:
             return 1 * m;
         case DOLPHIN:
-            return 14 * m;
+            return 32 * m;
         case PLANKTON:
             return 4 * m;
         default:
@@ -103,8 +97,6 @@ float getBoidSepDistance(BoidType t) {
         case F_MARLIN:
             return getBoidScale(t).x * 2;
         case F_SPEAR_FISH:
-            return getBoidScale(t).x * 2;
-        case F_TUNA:
             return getBoidScale(t).x * 2;
         case F_HERRING:
             return getBoidScale(t).x * 2;
@@ -134,8 +126,6 @@ float getBoidChaseDistance(BoidType t) {
             return 1;
         case F_SPEAR_FISH:
             return 1;
-        case F_TUNA:
-            return 1;
         case F_HERRING:
             return 1;
         case F_CLOWNFISH:
@@ -163,8 +153,6 @@ float getBoidInterceptDistance(BoidType t) {
         case F_MARLIN:
             return 8;
         case F_SPEAR_FISH:
-            return 8;
-        case F_TUNA:
             return 8;
         case F_HERRING:
             return 8;
@@ -194,8 +182,6 @@ float getBoidAvoidFactor(BoidType t) {
             return 0.1;
         case F_SPEAR_FISH:
             return 0.1;
-        case F_TUNA:
-            return 0.1;
         case F_HERRING:
             return 0.1;
         case F_CLOWNFISH:
@@ -223,8 +209,6 @@ float getBoidGoalWeight(BoidType t) {
         case F_MARLIN:
             return 0.1;
         case F_SPEAR_FISH:
-            return 0.1;
-        case F_TUNA:
             return 0.1;
         case F_HERRING:
             return 0.1;
@@ -261,8 +245,6 @@ vec2 getBoidBounds(BoidType t) {
         case F_MARLIN:
             return {WORLD_BOUND_LOW, WORLD_BOUND_HIGH};
         case F_SPEAR_FISH:
-            return {WORLD_BOUND_LOW, WORLD_BOUND_HIGH};
-        case F_TUNA:
             return {WORLD_BOUND_LOW, WORLD_BOUND_HIGH};
         case F_HERRING:
             return {WORLD_BOUND_LOW, WORLD_BOUND_HIGH};
@@ -364,8 +346,6 @@ std::string getBoidName(BoidType t) {
             return "Marlin";
         case F_SPEAR_FISH:
             return "Spear Fish";
-        case F_TUNA:
-            return "Tuna";
         case F_HERRING:
             return "Herring";
         case F_CLOWNFISH:

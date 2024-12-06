@@ -76,16 +76,25 @@
 /* Animated meshes */
 #define MESH_SEA_ANIM "sea_surface.gltf"
 #define MESH_PLAYER_ANIM "sub.gltf"
-#define MESH_SHARK_ANIM "shark.gltf"
-#define MESH_SHARK2_ANIM "shark2.gltf"
 #define MESH_GUY_ANIM "boblampclean.md5mesh"
 #define MESH_WLL_ANIM "wll.gltf"
-#define MESH_KELP_ANIM "kelp.gltf"
-#define MESH_THREADFIN_ANIM "fish_threadfin.gltf"
-#define MESH_MARLIN_ANIM "fish_marlin.gltf"
-#define MESH_SPEARFISH_ANIM "fish_spear.gltf"
-#define MESH_CLOWNFISH_ANIM "fish_clown.gltf"
 #define MESH_SIMPLE_ANIM "test_ballb.gltf"
+// Plants
+#define MESH_KELP_ANIM "kelp.gltf"                 // Kelp model (animated)
+#define MESH_ANEMONE_ANIM "anemone.gltf"           // Anemone model (animated)
+// Fish
+#define MESH_SHARK_ANIM "shark.gltf"               // Generic shark model (animated)
+#define MESH_WHALE_SHARK_ANIM "shark_whale.gltf"   // Whale shark model (animated)
+#define MESH_WHITE_SHARK_ANIM "shark_white.gltf"   // White shark model (animated)
+#define MESH_BLUE_SHARK_ANIM "shark_blue.gltf"     // Blue shark model (animated)
+#define MESH_WHALE_ANIM "whale.gltf"               // Whale model (animated)
+#define MESH_DOLPHIN_ANIM "dolphin.gltf"           // Dolphin model (animated)
+#define MESH_PLANKTON_ANIM "plankton.gltf"         // Plankton model (animated)
+#define MESH_THREADFIN_ANIM "fish_threadfin.gltf"  // Threadfin model (animated)
+#define MESH_MARLIN_ANIM "fish_marlin.gltf"        // Marlin model (animated)
+#define MESH_SPEARFISH_ANIM "fish_spear.gltf"      // Spearfish model (animated)
+#define MESH_CLOWNFISH_ANIM "fish_clown.gltf"      // Clownfish model (animated)
+#define MESH_HERRING_ANIM "fish_herring.gltf"      // Herring model (animated)
 
 const char* vert_smesh = PROJDIR "Shaders/staticMesh.vert";
 const char* frag_smesh = PROJDIR "Shaders/staticMesh.frag";
@@ -100,7 +109,6 @@ const char* vert_blank = PROJDIR "Shaders/blank.vert";
 const char* frag_blank = PROJDIR "Shaders/blank.frag";
 
 Cubemap* cubemap;
-// Camera camera = Camera(0.1f, 1000.0f, (float)SM::width / (float)SM::height);
 Lighting *staticLight, *boneLight, *variantLight;
 
 std::vector<Boid*> boids;

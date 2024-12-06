@@ -43,7 +43,6 @@ class Flock {
         region.loadWireframe();
         tree = new Octree(bc, region);
 #else
-        // todo: somehow the direction always includes null values, which are annoying to deal with in the compute shader
         // create and bind ssbos to vmesh
         boidShader = new Shader("boid shader", PROJDIR "Shaders/boids.comp");
         glBindVertexArray(vmesh->VAO);
@@ -56,6 +55,7 @@ class Flock {
         glNamedBufferStorage(BTBO, transforms.size() * sizeof(mat4), transforms.data(), bufflag);
         glBindVertexArray(0);
 #endif
+    process();
     }
 
     BoidType getTypeFromModel(std::string nm) {
@@ -68,8 +68,20 @@ class Flock {
             return BoidType::F_SPEAR_FISH;
         } else if (pth == "fish_clown") {
             return BoidType::F_CLOWNFISH;
-        } else if (pth == "shark2") {
+        } else if (pth == "fish_herring") {
+            return BoidType::F_HERRING;
+        } else if (pth == "shark_whale") {
+            return BoidType::S_WHALE;
+        } else if (pth == "shark_white") {
+            return BoidType::S_WHITE;
+        } else if (pth == "shark_blue") {
             return BoidType::S_BLUE;
+        } else if (pth == "whale") {
+            return BoidType::WHALE;
+        } else if (pth == "dolphin") {
+            return BoidType::DOLPHIN;
+        } else if (pth == "plankton") {
+            return BoidType::PLANKTON;
         }
         return BoidType::F_THREADFIN;
     }

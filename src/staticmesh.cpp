@@ -219,9 +219,6 @@ void StaticMesh::populateBuffers() {
 /// <param name="nInstances">The number of instances you would like to draw.</param>
 /// <param name="model_matrix">The matrices you would like to transform each instance with.</param>
 void StaticMesh::render(unsigned int nInstances, const mat4* model_matrix, const float* atlasDepths) {
-    if (nInstances > SM::MAX_NUM_BOIDS) {
-        printf("PROGRAM ERROR: TOO MANY OBJECTS TOO RENDER. USE A COUNT OF N <= 10000. N = %d. N WAS LIMITED TO 10000.\n\n", nInstances);
-    }
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, IBO);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(mat4) * nInstances, &model_matrix[0]);

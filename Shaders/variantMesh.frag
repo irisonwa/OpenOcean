@@ -29,6 +29,8 @@ layout(binding = 18) uniform highp sampler2DArray diffSampler10;
 layout(binding = 19) uniform highp sampler2DArray mtlSampler10;
 layout(binding = 20) uniform highp sampler2DArray diffSampler11;
 layout(binding = 21) uniform highp sampler2DArray mtlSampler11;
+layout(binding = 22) uniform highp sampler2DArray diffSampler12;
+layout(binding = 23) uniform highp sampler2DArray mtlSampler12;
 
 layout(binding = 30) uniform highp sampler2DArray samplers[][2];
 
@@ -235,6 +237,14 @@ vec3 getLightFromSamplers(float diff, float spec, float attenuation,
               vec3(texture(diffSampler11, vec3(TexCoords, tDepth)));
     specular = light_specular * spec *
                vec3(texture(mtlSampler11, vec3(TexCoords, tDepth)));
+    break;
+  case 11:
+    ambient =
+        light_ambient * vec3(texture(diffSampler12, vec3(TexCoords, tDepth)));
+    diffuse = light_diffuse * diff *
+              vec3(texture(diffSampler12, vec3(TexCoords, tDepth)));
+    specular = light_specular * spec *
+               vec3(texture(mtlSampler12, vec3(TexCoords, tDepth)));
     break;
   default:
     ambient =

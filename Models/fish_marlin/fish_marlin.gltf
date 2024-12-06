@@ -308,7 +308,9 @@
                 "baseColorTexture" : {
                     "index" : 0
                 },
-                "metallicFactor" : 0,
+                "metallicRoughnessTexture" : {
+                    "index" : 1
+                },
                 "roughnessFactor" : 0.5
             }
         }
@@ -335,6 +337,10 @@
         {
             "sampler" : 0,
             "source" : 0
+        },
+        {
+            "sampler" : 0,
+            "source" : 1
         }
     ],
     "images" : [
@@ -342,6 +348,11 @@
             "mimeType" : "image/png",
             "name" : "atlas.png",
             "uri" : "Textures/atlas.png"
+        },
+        {
+            "mimeType" : "image/png",
+            "name" : "atlas_spec.png",
+            "uri" : "Textures/atlas_spec.png"
         }
     ],
     "skins" : [

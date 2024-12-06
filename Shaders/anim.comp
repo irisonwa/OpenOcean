@@ -54,8 +54,8 @@ vec3 interpolateScale(int animIdx, float atime);
 vec4 interpolateRotation(int animIdx, float atime);
 
 void main() {
-    int idStack[100];
-    mat4 parentStack[100];
+    int idStack[150];
+    mat4 parentStack[150];
     for (int i = 0; i < boffsets.length() - 1; i++) { // offsets length is #variants + 1
         float wrappedTime = mod(timeSinceApplicationStarted * 24 * 20, anims[boffsets[i]].animDuration);
         int idP = 0;

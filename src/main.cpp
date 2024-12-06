@@ -57,7 +57,7 @@ void init() {
     bmeshes[bm1->name] = bm1;
     // BoneMesh* bm2 = new BoneMesh("test guy", MESH_GUY_ANIM, shaders["bones"]);
     // bmeshes[bm2->name] = bm2;
-    BoneMesh* bm3 = new BoneMesh("test shark", MESH_SHARK2_ANIM, shaders["bones"]);
+    BoneMesh* bm3 = new BoneMesh("test shark", MESH_BLUE_SHARK_ANIM, shaders["bones"]);
     bmeshes[bm3->name] = bm3;
     // BoneMesh* bm4 = new BoneMesh("test sea", MESH_SEA_ANIM, shaders["bones"]);
     // bmeshes[bm4->name] = bm4;
@@ -77,12 +77,19 @@ void init() {
     vMesh = new VariantMesh(
         "vmesh", shaders["variant"],
         {
-            {MESH_SHARK2_ANIM, 64, 1024, 1, std::vector<unsigned int>(64, 0)},
-            {MESH_MARLIN_ANIM, 300, 1024, 2, std::vector<unsigned int>(300, 0)},  // black marlin
-            {MESH_MARLIN_ANIM, 300, 1024, 2, std::vector<unsigned int>(300, 1)},  // blue marlin
-            {MESH_CLOWNFISH_ANIM, 1300, 1024, 1, std::vector<unsigned int>(1300, 0)},
-            {MESH_SPEARFISH_ANIM, 300, 1024, 1, std::vector<unsigned int>(300, 0)},
-            {MESH_THREADFIN_ANIM, 2736, 1024, 1, std::vector<unsigned int>(2736, 0)},
+            {MESH_BLUE_SHARK_ANIM   , 32,   -1,   -1, std::vector<unsigned int>(32, 0)},
+            {MESH_WHITE_SHARK_ANIM  , 32,   -1,   -1, std::vector<unsigned int>(32, 0)},
+            {MESH_WHALE_SHARK_ANIM  , 32,   -1,   -1, std::vector<unsigned int>(32, 0)},
+            {MESH_WHALE_ANIM        , 5,    -1,   -1, std::vector<unsigned int>(5, 0)},
+            {MESH_MARLIN_ANIM       , 300,  1024,  2, std::vector<unsigned int>(300, 0)},  // black marlin
+            {MESH_MARLIN_ANIM       , 300,  1024,  2, std::vector<unsigned int>(300, 1)},  // blue marlin
+            {MESH_DOLPHIN_ANIM      , 100,  -1,   -1, std::vector<unsigned int>(100, 0)},
+            {MESH_SPEARFISH_ANIM    , 300,  -1,   -1, std::vector<unsigned int>(300, 0)},
+            {MESH_CLOWNFISH_ANIM    , 600,  -1,   -1, std::vector<unsigned int>(600, 0)},
+            {MESH_HERRING_ANIM      , 600,  -1,   -1, std::vector<unsigned int>(600, 0)},
+            {MESH_PLANKTON_ANIM     , 1000, -1,   -1, std::vector<unsigned int>(1000, 0)},
+            {MESH_THREADFIN_ANIM    , 1700, -1,   -1, std::vector<unsigned int>(1700, 0)},
+
             // {MESH_THREADFIN_ANIM, 5000, 1024, 1, std::vector<unsigned int>(5000, 0)},
             // {MESH_SIMPLE_ANIM, 5000, 1024, 1, std::vector<unsigned int>(5000, 0)},
             // {MESH_THREADFIN_ANIM, 170, 1024, 1, std::vector<unsigned int>(170, 0)},
@@ -169,7 +176,7 @@ void init() {
     variantLight->spotLights[variantLight->nSpotLights - 1].quadratic = /* 0.0019; */ sunlightQuad;
     variantLight->spotLights[variantLight->nSpotLights - 1].cutOff = cos(Util::d2r(24.f));
     variantLight->spotLights[variantLight->nSpotLights - 1].outerCutOff = cos(Util::d2r(35.f));
-    
+
     // Set start time of program near when init() finishes loading
     SM::startTime = timeGetTime();
 }
@@ -236,7 +243,7 @@ void display() {
     variantLight->setLightAtt(view, persp_proj, SM::camera->pos);
     variantLight->setSpotLightAtt(0, flashlightCoords, flashlightDir, vec3(0.2f), vec3(1, .6, .2), vec3(1));
     variantLight->use();
-    flock->process();
+    // flock->process();
     flock->show();
 
     glutSwapBuffers();

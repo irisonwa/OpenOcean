@@ -287,7 +287,9 @@
                 "baseColorTexture" : {
                     "index" : 0
                 },
-                "metallicFactor" : 0,
+                "metallicRoughnessTexture" : {
+                    "index" : 1
+                },
                 "roughnessFactor" : 0.5
             }
         }
@@ -314,6 +316,10 @@
         {
             "sampler" : 0,
             "source" : 0
+        },
+        {
+            "sampler" : 0,
+            "source" : 1
         }
     ],
     "images" : [
@@ -321,6 +327,11 @@
             "mimeType" : "image/png",
             "name" : "diff.png",
             "uri" : "Textures/diff.png"
+        },
+        {
+            "mimeType" : "image/png",
+            "name" : "spec.png",
+            "uri" : "Textures/spec.png"
         }
     ],
     "skins" : [

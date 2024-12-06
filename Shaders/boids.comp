@@ -2,7 +2,7 @@
 
 layout (local_size_x = 1024, local_size_y = 1, local_size_z = 1) in;
 
-#define NUM_BOID_TYPES 12
+#define NUM_BOID_TYPES 11
 
 struct Boid {
     // todo: recalculate bytes
@@ -30,22 +30,23 @@ struct Boid {
     float boidsAround;                    // 4          # 252
     uint type;                            // 4          # 256
     uint ID;                              // 4          # 260
-    uint myPredators[NUM_BOID_TYPES];     // 4 * 12     # 308
-    uint myPrey[NUM_BOID_TYPES];          // 4 * 12     # 320
+    uint myPredators[NUM_BOID_TYPES+1];     // 4 * 11     # 304
+    uint myPrey[NUM_BOID_TYPES+1];          // 4 * 11     # 348
 };
 
 uint F_THREADFIN = 0;
 uint F_MARLIN = 1;
 uint F_SPEAR_FISH = 2;
-uint F_TUNA = 3;
-uint F_HERRING = 4;
-uint F_CLOWNFISH = 5;
-uint S_BLUE = 6;
-uint S_WHALE = 7;
-uint S_WHITE = 8;
-uint WHALE = 9;
-uint DOLPHIN = 10;
-uint PLANKTON = 11;
+uint F_HERRING = 3;
+uint F_CLOWNFISH = 4;
+uint S_BLUE = 5;
+uint S_WHALE = 6;
+uint S_WHITE = 7;
+uint WHALE = 8;
+uint DOLPHIN = 9;
+uint PLANKTON = 10;
+
+float acc = 8; // acceleration
 
 float sq(float s) { return s * s; }
 float sq(int s) { return s * s; }
@@ -154,7 +155,7 @@ void move(uint idx) {
     float closestPreyDist = 1e9;
     float closestPreyDisttmp = 1e9;
     float biggestFearWeight = 0;
-    float strangerFactor = 0.001;
+    float strangerFactor = 0.1;
 
     float visibleRange = 4;
     // if (boids[idx].type >= S_BLUE && boids[idx].type <= DOLPHIN) visibleRange = 180;
@@ -322,7 +323,7 @@ void constrainBounds(uint idx) {
 
 void update(uint idx) {
     checkAndResetVelocity(idx);
-    boids[idx].lastVelocity = mix(boids[idx].lastVelocity, boids[idx].velocity, deltaTime * 8);
+    boids[idx].lastVelocity = mix(boids[idx].lastVelocity, boids[idx].velocity, deltaTime * acc);
     boids[idx].pos += boids[idx].lastVelocity * deltaTime;
 }
 
