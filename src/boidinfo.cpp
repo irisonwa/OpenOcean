@@ -62,7 +62,7 @@ float getBoidMinSpeed(BoidType t) {
 }
 
 float getBoidMaxSpeed(BoidType t) {
-    float m = getBoidMinSpeed(t)/32;
+    float m = getBoidMinSpeed(t)/4;
     switch (t) {
         case F_THREADFIN:
             return 1 + (8 * m);
@@ -95,21 +95,21 @@ float getBoidSepDistance(BoidType t) {
         case F_THREADFIN:
             return getBoidScale(t).x * 2;
         case F_MARLIN:
-            return getBoidScale(t).x * 2;
+            return getBoidScale(t).x * 2.125;
         case F_SPEAR_FISH:
-            return getBoidScale(t).x * 2;
+            return getBoidScale(t).x * 2.125;
         case F_HERRING:
             return getBoidScale(t).x * 2;
         case F_CLOWNFISH:
             return getBoidScale(t).x * 2;
         case S_BLUE:
-            return getBoidScale(t).x * 2;
+            return getBoidScale(t).x * 2.5;
         case S_WHALE:
-            return getBoidScale(t).x * 2;
+            return getBoidScale(t).x * 3;
         case S_WHITE:
-            return getBoidScale(t).x * 2;
+            return getBoidScale(t).x * 2.5;
         case WHALE:
-            return getBoidScale(t).x * 2;
+            return getBoidScale(t).x * 4;
         case DOLPHIN:
             return getBoidScale(t).x * 2;
         case PLANKTON:

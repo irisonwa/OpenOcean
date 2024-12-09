@@ -6,8 +6,8 @@
 
 // #define TREE  // uncomment to enable cpu octree
 
-#define WORLD_BOUND_HIGH 128
-#define WORLD_BOUND_LOW -128
+#define WORLD_BOUND_HIGH 112
+#define WORLD_BOUND_LOW -112
 
 class Camera;
 class Box;
@@ -64,6 +64,7 @@ extern CAMERA_MODE camMode;
 extern bool showNormal;
 
 extern Box *sceneBox;
+extern bool debug;
 
 constexpr int MAX_NUM_BOIDS = 10000;    // maximum count of boids allowed to be rendered.
 extern bool canBoidsAttack;  // toggle predator/prey behaviour of boids

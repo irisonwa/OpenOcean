@@ -30,45 +30,50 @@ void init() {
     shaders[s5->name] = s5;
 
     /// -------------------------------------------------- LIGHTING -------------------------------------------------- ///
-    staticLight = new Lighting("stony light", shaders["static"], MATERIAL_SHINY);
+    staticLight = new Lighting("stony light", shaders["variant_static"], MATERIAL_SHINY);
     boneLight = new Lighting("boney light", shaders["bones"], MATERIAL_SHINY);
     variantLight = new Lighting("variant light", shaders["variant_skinned"], MATERIAL_SHINY);
 
     /// -------------------------------------------------- STATIC MESHES -------------------------------------------------- ///
-    StaticMesh* m1 = new StaticMesh("beacon", MESH_BEACON);
-    smeshes[m1->name] = m1;
-    StaticMesh* m2 = new StaticMesh("beach_items", MESH_BEACH_ITEM);
-    smeshes[m2->name] = m2;
-    StaticMesh* m3 = new StaticMesh("beach", MESH_BEACH);
-    smeshes[m3->name] = m3;
-    StaticMesh* m4 = new StaticMesh("terr", MESH_TERRAIN);
-    smeshes[m4->name] = m4;
-    // StaticMesh* m5 = new StaticMesh("sea", MESH_SEA);
-    // smeshes[m5->name] = m5;
-    // StaticMesh* m6 = new StaticMesh("kelp", MESH_KELP);
-    // smeshes[m6->name] = m6;
-    StaticMesh* m7 = new StaticMesh("anemone", MESH_ANEMONE);
-    smeshes[m7->name] = m7;
-    StaticMesh* m8 = new StaticMesh("island", MESH_ISLAND);
-    smeshes[m8->name] = m8;
-    StaticMesh* m9 = new StaticMesh("sun", MESH_BEACON);
-    smeshes[m9->name] = m9;
+    float offset = 1.0f;
+    float lim = 6;
+    int spread = 60;
+    for (vec3 p : beaconLightPos) {
+        stvMats.push_back(translate(mat4(1), p)); // beacon
+    }
+    for (vec3 p : anemonePos) {
+        stvMats.push_back(translate(scale(mat4(1), vec3(.25)), p * vec3(4))); // anemone
+        for (int z = -lim / 2; z < lim / 2; z += 1) {
+            for (int y = -lim / 2; y < lim / 2; y += 1) {
+                for (int x = -lim / 2; x < lim / 2; x += 1) {
+                    if (x == 0 || y == 0 || z == 0) continue;
+                    vec3 translation(
+                        p.x + (float)x * (rand() % spread),
+                        p.y + (float)y * (rand() % (spread / 4)), // minimal height variation
+                        p.z + (float)z * (rand() % spread));
+                    skvMats.push_back(scale(translate(mat4(1), translation), vec3(.25))); // kelp
+                }
+            }
+        }
+    }
+    for (const auto &m : islandMats) stvMats.push_back(m); // islands
+    stvMats.push_back(translate(mat4(1), vec3(288, 268, 257))); // beach item
+    stvMats.push_back(translate(scale(mat4(1), vec3(1.f)), vec3(0, -220, 0))); // terrain
+    stvMats.push_back(translate(mat4(1), sunPos)); // sun
+    staticVariants = new VariantMesh(
+        "static vmesh", shaders["variant_static"], VariantType::STATIC,
+        {
+            {MESH_BEACON, beaconLightPos.size(), -1, -1, std::vector<unsigned>(beaconLightPos.size(), 0)},
+            {MESH_ANEMONE, anemonePos.size(), -1, -1, std::vector<unsigned>(anemonePos.size(), 0)},
+            {MESH_BEACH, islandMats.size(), -1, -1, std::vector<unsigned>(islandMats.size(), 0)},
+            {MESH_BEACH_ITEM, 1, -1, -1, std::vector<unsigned>(1, 0)},
+            {MESH_TERRAIN, 1, -1, -1, std::vector<unsigned>(1, 0)},
+            {MESH_SUN, 1, -1, -1, std::vector<unsigned>(1, 0)},
+        });
 
     /// -------------------------------------------------- SKINNED MESHES -------------------------------------------------- ///
     BoneMesh* bm1 = new BoneMesh("kelp", MESH_KELP_ANIM, shaders["bones"]);
     bmeshes[bm1->name] = bm1;
-    // BoneMesh* bm2 = new BoneMesh("test guy", MESH_GUY_ANIM, shaders["bones"]);
-    // bmeshes[bm2->name] = bm2;
-    BoneMesh* bm3 = new BoneMesh("test shark", MESH_BLUE_SHARK_ANIM, shaders["bones"]);
-    bmeshes[bm3->name] = bm3;
-    // BoneMesh* bm4 = new BoneMesh("terr", MESH_TERRAIN, shaders["bones"]);
-    // bmeshes[bm4->name] = bm4;
-    BoneMesh* bm5 = new BoneMesh("test threadfin", MESH_THREADFIN_ANIM, shaders["bones"]);
-    bmeshes[bm5->name] = bm5;
-    BoneMesh* bm6 = new BoneMesh("test marlin", MESH_MARLIN_ANIM, shaders["bones"]);
-    bmeshes[bm6->name] = bm6;
-    BoneMesh* bm7 = new BoneMesh("test spearfish", MESH_SPEARFISH_ANIM, shaders["bones"]);
-    bmeshes[bm7->name] = bm7;
 
     /// -------------------------------------------------- PLAYER -------------------------------------------------- ///
     player = new Player("Player", vec3(288.050171, 271.612457, 257.632996), Util::FORWARD);
@@ -76,68 +81,33 @@ void init() {
     player->setShader(shaders["bones"]);
 
     /// -------------------------------------------------- BOIDS -------------------------------------------------- ///
-    float offset = 1.0f;
-    float lim = 6;
-    int spread = 60;
-    for (vec3 p : anemonePos) {
-        anemoneMats.push_back(translate(scale(mat4(1), vec3(.25)), p * vec3(4)));
-        for (int z = -lim / 2; z < lim / 2; z += 1) {
-            for (int y = -lim / 2; y < lim / 2; y += 1) {
-                for (int x = -lim / 2; x < lim / 2; x += 1) {
-                    if (x == 0 || y == 0 || z == 0) continue;
-                    vec3 translation(
-                        p.x + (float)x * (rand() % spread),
-                        p.y + (float)y * (rand() % (spread / 4)),
-                        p.z + (float)z * (rand() % spread));
-                    kelpMats.push_back(scale(translate(mat4(1), translation), vec3(.25)));
-                }
-            }
-        }
-    }
-    vMesh = new VariantMesh(
-        "vmesh", shaders["variant_skinned"], VariantType::SKINNED,
+    flockVariants = new VariantMesh(
+        "flock vmesh", shaders["variant_skinned"], VariantType::SKINNED,
         {
-            {MESH_BLUE_SHARK_ANIM   , 120,  -1,   -1, std::vector<unsigned int>(120, 0)},
+            {MESH_BLUE_SHARK_ANIM   , 32,   -1,   -1, std::vector<unsigned int>(32, 0)},
             {MESH_WHITE_SHARK_ANIM  , 32,   -1,   -1, std::vector<unsigned int>(32, 0)},
             {MESH_WHALE_SHARK_ANIM  , 32,   -1,   -1, std::vector<unsigned int>(32, 0)},
-            {MESH_WHALE_ANIM        , 4,    -1,   -1, std::vector<unsigned int>(4, 0)},
-            {MESH_MARLIN_ANIM       , 300,  1024,  2, std::vector<unsigned int>(300, 0)},  // black marlin
-            {MESH_MARLIN_ANIM       , 300,  1024,  2, std::vector<unsigned int>(300, 1)},  // blue marlin
-            {MESH_SPEARFISH_ANIM    , 300,  -1,   -1, std::vector<unsigned int>(300, 0)},
+            {MESH_WHALE_ANIM        , 60,    -1,   -1, std::vector<unsigned int>(60, 0)},
+            {MESH_MARLIN_ANIM       , 500,  1024,  2, std::vector<unsigned int>(500, 0)},  // black marlin
+            {MESH_MARLIN_ANIM       , 500,  1024,  2, std::vector<unsigned int>(500, 1)},  // blue marlin
+            {MESH_SPEARFISH_ANIM    , 500,  -1,   -1, std::vector<unsigned int>(500, 0)},
             {MESH_DOLPHIN_ANIM      , 100,  -1,   -1, std::vector<unsigned int>(100, 0)},
             {MESH_CLOWNFISH_ANIM    , 1500, -1,   -1, std::vector<unsigned int>(1500, 0)},
-            {MESH_HERRING_ANIM      , 1500, -1,   -1, std::vector<unsigned int>(1500, 0)},
-            {MESH_PLANKTON_ANIM     , 800,  -1,   -1, std::vector<unsigned int>(800, 0)},
-            {MESH_THREADFIN_ANIM    , 1500, -1,   -1, std::vector<unsigned int>(1500, 0)},
-
-            // {MESH_THREADFIN_ANIM, 5000, 1024, 1, std::vector<unsigned int>(5000, 0)},
-            // {MESH_SIMPLE_ANIM, 5000, 1024, 1, std::vector<unsigned int>(5000, 0)},
-            // {MESH_THREADFIN_ANIM, 170, 1024, 1, std::vector<unsigned int>(170, 0)},
-            // {MESH_THREADFIN_ANIM, 170, 1024, 1, std::vector<unsigned int>(170, 0)},
-            // {MESH_SHARK2_ANIM, 2, 1024, 1, std::vector<unsigned int>(2, 0)},
-            // {MESH_THREADFIN_ANIM, 31, 1024, 1, std::vector<unsigned int>(31, 0)},
-            // {MESH_SHARK2_ANIM, 4, 1024, 1, std::vector<unsigned int>(4, 0)},
-            // {MESH_PLAYER_ANIM, 10, -1, -1, std::vector<unsigned int>(10, 0)},
-            // {TEST_SPEC, 1, 1024, 4, std::vector<unsigned int>(1, 3)},
-            // {TEST_BOID, 3, 1024, 4, std::vector<unsigned int>(3, 2)},
-            // {MESH_KELP, 3, 1024, 1, std::vector<unsigned int>(3, 3)},
-            // {MESH_SUB, 2, 2048, 1, std::vector<unsigned int>(2, 3)},
-            // {TEST_BOID, 100, 1024, 4, std::vector<unsigned int>(100, 1)},
-            // {MESH_SUB, 1, 2048, 1, std::vector<unsigned int>(1, 3)},
+            {MESH_HERRING_ANIM      , 2500, -1,   -1, std::vector<unsigned int>(2500, 0)},
+            {MESH_PLANKTON_ANIM     , 1000, -1,   -1, std::vector<unsigned int>(1000, 0)},
+            {MESH_THREADFIN_ANIM    , 2500, -1,   -1, std::vector<unsigned int>(2500, 0)},
         });
-    flock = new Flock(vMesh, anemonePos);
+    flock = new Flock(flockVariants, anemonePos);
 
     /// -------------------------------------------------- CUBEMAP -------------------------------------------------- ///
     // cubemap = new Cubemap();
     // cubemap->loadCubemap(cubemap_faces);
 
-    /// -------------------------------------------------- OTHER -------------------------------------------------- ///
+    /// -------------------------------------------------- LIGHTS -------------------------------------------------- ///
     float beaconAttLin = 0.00000009;
     float beaconAttQuad = 0.000000009;
-    beaconLightMats.resize(beaconLightPos.size());
     for (vec3 p : beaconLightPos) {
         vec3 ofst = vec3(0, 2.f, 0);
-        beaconLightMats.push_back(translate(mat4(1), p));
         staticLight->addPointLightAtt(p + ofst, vec3(1), vec3(1), vec3(1));
         staticLight->spotLights[staticLight->nSpotLights - 1].linear = beaconAttLin;
         staticLight->spotLights[staticLight->nSpotLights - 1].quadratic = beaconAttQuad;
@@ -200,6 +170,8 @@ void init() {
     // Set start time of program near when init() finishes loading
     SM::startTime = timeGetTime();
     SM::sceneBox->loadWireframe();
+    updateBox = new Box(vec3(-20), vec3(20));
+    updateBox->loadWireframe();
 }
 
 void display() {
@@ -209,8 +181,7 @@ void display() {
     glEnable(GL_BLEND);       // enable colour blending
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDepthFunc(GL_LESS);  // depth-testing interprets a smaller value as "closer"
-    // vec4 newBg = SM::bgColour * Util::mapRange(player->pos.y, WORLD_BOUND_LOW, WORLD_BOUND_HIGH, 0, 1);
-    vec4 newBg = SM::bgColour * Util::mapRange(SM::camera->pos.y, WORLD_BOUND_LOW, WORLD_BOUND_HIGH, 0.1, 1);
+    vec4 newBg = SM::bgColour * Util::mapRange(SM::camera->pos.y, WORLD_BOUND_LOW, WORLD_BOUND_HIGH, useHeightBackground ? 0.2 : 0.99999f, 1);
     SM::seaLevel = SM::isFreeCam ? -1000 : 300;
     glClearColor(newBg.x, newBg.y, newBg.z, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -224,14 +195,9 @@ void display() {
     staticLight->setSpotLightAtt(0, flashlightCoords, flashlightDir, vec3(0.2f), vec3(1, .6, .2), vec3(1));
     staticLight->use();
 
-    // smeshes["kelp"]->render(mat4(1));
-    // smeshes["island"]->render(translate(scale(mat4(1), vec3(1)), vec3(0, 20, 0)));
-    smeshes["sun"]->render(translate(mat4(1), sunPos));
-    smeshes["terr"]->render(translate(scale(mat4(1), vec3(1.f)), vec3(0, -220, 0)));
-    smeshes["beacon"]->render(beaconLightMats.size(), beaconLightMats.data());
-    smeshes["anemone"]->render(anemoneMats.size(), anemoneMats.data());
-    smeshes["beach_items"]->render(translate(mat4(1), vec3(288.050171, 271.612457, 257.632996)));
-    smeshes["beach"]->render(translate(scale(mat4(1), vec3(22)), vec3(13, -6, 13)));
+    if (showGround) {
+        staticVariants->render(stvMats.data());
+    }
 
     /// ------------------------------------------------ SKINNED MESHES ------------------------------------------------ ///
     boneLight->setLightAtt(view, persp_proj, SM::camera->pos);
@@ -249,28 +215,62 @@ void display() {
     } else /* isFreeCam */ {
         player->render();
         player->lookAt(player->dir);
-        // SM::sceneBox->drawWireframe();
     }
 
-    bmeshes["kelp"]->update(100);
-    bmeshes["kelp"]->render(kelpMats.size(), kelpMats.data());
+    if (showGround) {
+        bmeshes["kelp"]->update(100);
+        bmeshes["kelp"]->render(skvMats.size(), skvMats.data());
+    }
+
+    if (showLevelBounds) {
+        SM::sceneBox->drawWireframe();
+    }
+    if (showUpdateBounds) {
+        vec3 pp = vec3(player->transform[3]);
+        updateBox->transform = scale(translate(mat4(1), pp), vec3(SM::updateDistance * 2));
+        updateBox->drawWireframe();
+    }
 
     /// ------------------------------------------------ VARIANT MESHES ------------------------------------------------ ///
     variantLight->setLightAtt(view, persp_proj, SM::camera->pos);
     variantLight->setSpotLightAtt(0, flashlightCoords, flashlightDir, vec3(0.2f), vec3(1, .6, .2), vec3(1));
     variantLight->use();
     flock->process(player->pos, SM::updateDistance);
-    flock->show();
+    if (showBoids) flock->show();
+
+    /// ------------------------------------------------ DEBUG MENU ------------------------------------------------ ///
+    // Handle ImGui window
+    if (SM::debug) {
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGLUT_NewFrame();
+        ImGui::NewFrame();
+        ImGuiIO& io = ImGui::GetIO();
+        io.MouseDrawCursor = true;
+        ImGui::Begin("Debug Menu", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+        ImGui::Checkbox("Show Fish", &showBoids);
+        ImGui::Checkbox("Show Ground", &showGround);
+        ImGui::Checkbox("Show Level Bounds", &showLevelBounds);
+        ImGui::Checkbox("Change background colour from height", &useHeightBackground);
+        ImGui::Checkbox("Enable Attacking", &SM::canBoidsAttack);
+        ImGui::Text("\nThe Update Distance value controls the distance at \nwhich boids are updated, from a radius surrounding the player.");
+        ImGui::Checkbox("Show Update Bounds", &showUpdateBounds);
+        ImGui::SliderFloat("Update Distance", &SM::updateDistance, 25.f, 2048.f);
+        SM::fogBounds.y = SM::updateDistance; // update fog bounds too
+        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+        if (ImGui::Button("Centre Player")) {
+            player->pos = vec3(0);
+        }
+        ImGui::End();
+        glUseProgram(0); // ?
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    }
 
     glutSwapBuffers();
 }
 
 void updateScene() {
     SM::updateDelta();
-    // std::cout << 1 / SM::delta << std::endl; // fps
-    // if (!SM::isFreeCam) {
-    // } else {
-    // }
     player->processMovement();
     SM::camera->processMovement();
     flashlightCoords = SM::flashlightToggled ? (SM::isFreeCam ? SM::camera->pos : player->transform[3]) : vec3(-10000);
@@ -279,28 +279,49 @@ void updateScene() {
     glutPostRedisplay();
 }
 
+void mouseDragged(int x, int y) {
+    ImGuiIO& io = ImGui::GetIO();
+    io.AddMousePosEvent(x, y);
+}
+
 // Process the mouse moving without button input
 void passiveMouseMoved(int x, int y) {
+    ImGuiIO& io = ImGui::GetIO();
+    io.AddMousePosEvent(x, y);
     SM::updateMouse(x, y);
-    SM::camera->processView();
+    if (!SM::debug) {
+        glutWarpPointer(SM::width / 2, SM::height / 2);
+        SM::camera->processView();
+    }
 }
 
 void passiveMouseWheel(int button, int dir, int x, int y) {
-    const float MAX_DISTANCE = 1024;
-    const float inc = 5;
-    if (dir > 0) {
-        // increase "render" distance
-        SM::updateDistance = Util::clamp(SM::updateDistance - inc, SM::fogBounds.x, MAX_DISTANCE);
-        SM::fogBounds.y = Util::clamp(SM::fogBounds.y - inc, SM::fogBounds.x + 1, MAX_DISTANCE);
-    } else {
-        // decrease "render" distance
-        SM::updateDistance = Util::clamp(SM::updateDistance + inc, SM::fogBounds.x, MAX_DISTANCE);
-        SM::fogBounds.y = Util::clamp(SM::fogBounds.y + inc, SM::fogBounds.x + 1, MAX_DISTANCE);
+    ImGuiIO& io = ImGui::GetIO();
+    io.AddMouseWheelEvent(x, y);
+    if (!SM::debug) {
+        const float MAX_DISTANCE = 2048;
+        const float inc = 5;
+        if (dir > 0) {
+            // increase "render" distance
+            SM::updateDistance = Util::clamp(SM::updateDistance - inc, SM::fogBounds.x, MAX_DISTANCE);
+            SM::fogBounds.y = SM::updateDistance;
+        } else {
+            // decrease "render" distance
+            SM::updateDistance = Util::clamp(SM::updateDistance + inc, SM::fogBounds.x, MAX_DISTANCE);
+            SM::fogBounds.y = SM::updateDistance;
+        }
+        printf("New fog bounds: "); Util::print(SM::fogBounds);
     }
-    printf("New fog bounds: "); Util::print(SM::fogBounds);
+}
+
+void mousePressed(int button, int state, int x, int y) {
+    ImGuiIO& io = ImGui::GetIO();
+    io.AddMouseButtonEvent(button, state == GLUT_DOWN);
 }
 
 void specKeyPressed(int key, int x, int y) {
+    // ImGuiIO& io = ImGui::GetIO();
+    // io.AddMouseButtonEvent(key, true);
     if (key == GLUT_KEY_SHIFT_L) {
         if (SM::isFreeCam) {
             SM::camera->DOWN = true;
@@ -314,6 +335,8 @@ void specKeyPressed(int key, int x, int y) {
 }
 
 void specKeyReleased(int key, int x, int y) {
+    // ImGuiIO& io = ImGui::GetIO();
+    // io.AddMouseButtonEvent(key, false);
     if (key == GLUT_KEY_SHIFT_L) {
         if (SM::isFreeCam) {
             SM::camera->DOWN = false;
@@ -328,22 +351,28 @@ void specKeyReleased(int key, int x, int y) {
 
 // Function ran on key press
 void keyPressed(unsigned char key, int x, int y) {
+    // ImGuiIO& io = ImGui::GetIO();
+    // io.AddMouseButtonEvent(key, true);
     if (key == VK_ESCAPE) {
         cout << endl
              << endl
              << "Exiting..." << endl;
         exit(0);
     }
-
+    if (key == VK_TAB) {
+        SM::debug = !SM::debug;
+        if (SM::debug && !SM::isFreeCam) SM::toggleFreeCam(); // enable free cam when in debug mode
+    }
     if (key == ',') SM::showNormal = !SM::showNormal;
     if (key == '\\') Util::print(SM::camera->pos);
 
     if (key == '.') {
-        flock->reset();
+        // flock->reset();
         // player->pos = vec3(0);
         // SM::camera->setPosition(vec3(0));
     }
 
+    if (key == 'h' || key == 'H') showGround = !showGround;
     if (key == '`') SM::toggleFreeCam();
     if (key == 'z' || key == 'Z') SM::changeBoidAttackState();
     if (key == 'r' || key == 'R') SM::switchFirstAndThirdCam();
@@ -375,6 +404,8 @@ void keyPressed(unsigned char key, int x, int y) {
 
 // Function ran on key release
 void keyReleased(unsigned char key, int x, int y) {
+    // ImGuiIO& io = ImGui::GetIO();
+    // io.AddMouseButtonEvent(key, false);
     if (SM::isFreeCam) {
         if (key == ' ') SM::camera->UP = false;
         if (key == 'w' || key == 'W') SM::camera->FORWARD = false;
@@ -418,8 +449,10 @@ int main(int argc, char** argv) {
     glutKeyboardUpFunc(keyReleased);
     glutSpecialFunc(specKeyPressed);
     glutSpecialUpFunc(specKeyReleased);
+    glutMotionFunc(mouseDragged);
     glutPassiveMotionFunc(passiveMouseMoved);
     glutMouseWheelFunc(passiveMouseWheel);
+    glutMouseFunc(mousePressed);
     glutSetCursor(GLUT_CURSOR_NONE);  // hide cursor
 
     // A call to glewInit() must be done after glut is initialized!
@@ -429,9 +462,25 @@ int main(int argc, char** argv) {
         fprintf(stderr, "Error: '%s'\n", glewGetErrorString(res));
         return 1;
     }
+
+    // Setup ImGui
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    io.DisplaySize = ImVec2(SM::width, SM::height);
+    (void)io;
+    ImGui::StyleColorsDark();
+    // io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
+    ImGui_ImplGLUT_Init();
+    ImGui_ImplOpenGL3_Init("#version 460");
+    // ImGui_ImplGLUT_InstallFuncs();
+
     // Set up your objects and shaders
     init();
     // Begin infinite event loop
     glutMainLoop();
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGLUT_Shutdown();
+    ImGui::DestroyContext();
     return 0;
 }

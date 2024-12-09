@@ -31,6 +31,11 @@
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 
+// ImGUI includes
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_glut.h"
+#include "imgui/imgui_impl_opengl3.h"
+
 // Project includes
 #include "camera.h"
 #include "mesh.h"
@@ -63,7 +68,6 @@
 #define TEST_ROOM "box.obj"
 
 #define MESH_SUB "sub.obj"
-#define MESH_SUN "sun.obj"
 #define MESH_SHARK "shark.obj"
 #define MESH_SHARK2 "shark2.obj"
 #define MESH_KELP "kelp.obj"
@@ -76,7 +80,7 @@
 /* Meshes */
 // Plants
 #define MESH_KELP_ANIM "kelp.gltf"  // Kelp model (animated)
-#define MESH_ANEMONE "anemone.obj"  // Anemone model (static)
+#define MESH_ANEMONE "anemone.obj"  // Anemone model (static) [THIRD PARTY, see README.md]
 // Fish
 #define MESH_SHARK_ANIM "shark.gltf"               // Generic shark model (animated)
 #define MESH_WHALE_SHARK_ANIM "shark_whale.gltf"   // Whale shark model (animated)
@@ -91,11 +95,12 @@
 #define MESH_CLOWNFISH_ANIM "fish_clown.gltf"      // Clownfish model (animated)
 #define MESH_HERRING_ANIM "fish_herring.gltf"      // Herring model (animated)
 // Other
-#define MESH_PLAYER_ANIM "sub.gltf"  // Player submarine (animated)
-#define MESH_BEACON "beacon.gltf"    // Light beacon (static)
-#define MESH_TERRAIN "terrain.gltf"
-#define MESH_BEACH "beach.gltf"
-#define MESH_BEACH_ITEM "beach_item.obj"
+#define MESH_SUN "sun.obj"
+#define MESH_PLAYER_ANIM "sub.gltf"       // Player submarine (animated)
+#define MESH_BEACON "beacon.gltf"         // Light beacon (static)
+#define MESH_TERRAIN "terrain.gltf"       // Terrain model (static)
+#define MESH_BEACH "beach.gltf"           // Beach model (static)
+#define MESH_BEACH_ITEM "beach_item.obj"  // Beach items model (static) [THIRD PARTY, see README.md]
 
 const char* vert_smesh = PROJDIR "Shaders/staticMesh.vert";
 const char* frag_smesh = PROJDIR "Shaders/staticMesh.frag";
@@ -115,8 +120,15 @@ Lighting *staticLight, *boneLight, *variantLight;
 std::vector<Boid*> boids;
 Flock* flock;
 Player* player;
-VariantMesh* vMesh;
+VariantMesh* flockVariants, *skinnedVariants, *staticVariants;
+std::vector<mat4> skvMats, stvMats;
+Box* updateBox;
 
+bool showBoids = true;
+bool showGround = false;
+bool showLevelBounds = true;
+bool showUpdateBounds = true;
+bool useHeightBackground = true;
 vec3 flashlightCoords = vec3(-10000);
 vec3 flashlightDir = vec3(0, -1, 0);
 vec3 sunPos = vec3(0, 500, 0);
@@ -172,6 +184,13 @@ std::vector<vec3> anemonePos = {
     vec3(310.439575, -194.521057, 79.667366),
     vec3(282.533051, -183.193207, -126.183655),
     vec3(230.126678, -174.246231, -106.679169),
+};
+
+std::vector<mat4> islandMats = {
+    translate(scale(mat4(1), vec3(22)), vec3(13, -6, 13)),
+    translate(scale(mat4(1), vec3(15)), vec3(-184.215073, -152.724846, -139.598846) / 15.f),
+    translate(scale(mat4(1), vec3(15)), vec3(291.893799, -140.834908, -227.146240) / 15.f),
+    translate(scale(mat4(1), vec3(15)), vec3(-354.657928, -163.792442, 226.254578) / 15.f),
 };
 
 std::vector<std::string> cubemap_faces = {

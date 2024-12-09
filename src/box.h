@@ -146,12 +146,12 @@ public:
     vec3 high;    // top right position
     vec3 size;    // diagonal size of box (high - low)
     vec3 centre;  // centre point of box (low + size / 2)
+    mat4 transform;
 
 private:
     unsigned int VAO;
     unsigned int VBO;
     unsigned int EBO;
-    mat4 transform;
     Shader *shader;
     std::vector<float> vertices = {
         // positions

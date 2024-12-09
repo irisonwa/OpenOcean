@@ -15,7 +15,7 @@ class Flock {
    public:
     Flock(VariantMesh* _vmesh, std::vector<vec3> homes_) {
         vmesh = _vmesh;
-        int spread = WORLD_BOUND_HIGH;
+        int spread = WORLD_BOUND_HIGH/16;
         int id = 0;
         bc = new BoidContainer();
         bc->boids = new Boid*[vmesh->totalInstanceCount];
@@ -43,10 +43,7 @@ class Flock {
             if (abs(h.x) >= WORLD_BOUND_HIGH * 2 || abs(h.y) >= WORLD_BOUND_HIGH * 2 || abs(h.z) >= WORLD_BOUND_HIGH * 2) continue;
             cs_homes.push_back(vec4(h, 0));
         }
-        // if (cs_homes.empty()) cs_homes.push_back(vec4(0));
 
-        // region = Box(vec3(WORLD_BOUND_LOW * 2), vec3(WORLD_BOUND_HIGH * 2));
-        // region.loadWireframe();
 #ifdef TREE
         tree = new Octree(bc, *SM::sceneBox);
 #else
@@ -94,7 +91,6 @@ class Flock {
 
     // Process all boids in the flock. Only boids within a sphere at `updateCentre` with radius `updateDist` are updated.
     void process(vec3 updateCentre, float updateDist) {
-        // region.drawWireframe();
 #ifdef TREE
         tree->reset();
         for (int i = 0; i < bc->size; ++i) {
@@ -137,7 +133,7 @@ class Flock {
     }
 
     void show() {
-        vmesh->render(transforms.data());
+        vmesh->render();
     }
 
     void reset() {

@@ -1,6 +1,6 @@
 #version 460 core
 
-layout (local_size_x = 1024, local_size_y = 1, local_size_z = 1) in;
+layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 
 #define NUM_BOID_TYPES 11
 
@@ -248,16 +248,13 @@ void move(uint idx) {
     float homeRange = 40; // distance to consider home the current home
     float newHomeDistDrift = 100; // distance to determine new home when drifting (i.e., not fleeing or chasing)
     float newHomeDistFlee = newHomeDistDrift/4; // distance to determine new home when fleeing
-    // vec4 closestHome = vec4(1e9);
     float closestHomeDist = 1e9;
     // Determine where the closest home is
     boids[idx].hasHome = 0;
     boids[idx].currentHome = vec4(1e9);
     if (boids[idx].canHaveHome == 1) {
         float consideredHomeDistSq = isBeingChased ? sq(newHomeDistFlee) : sq(newHomeDistDrift);
-        // boids[idx].boidsAround = boids[idx].hasHome;
         for (int i = 0; i < homes.length(); ++i) {
-            // boids[idx].boidsAround = int(sqDist(boids[idx].pos, homes[i]));
             vec4 hm = (homes[i] / 2) + vec4(0, 5, 0, 0);
             float hDist = sqDist(boids[idx].pos, hm);
             if (hDist <= consideredHomeDistSq) {
@@ -271,9 +268,6 @@ void move(uint idx) {
                 }
             }
         }
-        // boids[idx].boidsAround = boids[idx].hasHome;
-        // if (sqDist(boids[idx].pos, boids[idx].currentHome) > sq(homeRange)) {
-        // }
     }
 
     // Flock with boids
@@ -334,18 +328,16 @@ void move(uint idx) {
             boids[idx].velocity -= (boids[idx].pos - boids[idx].currentHome) * 0.01;
         }
     } else {
-        // boids[idx].velocity -= (boids[idx].pos - vec4(0)) * 0.005; // drift towards centre
+        boids[idx].velocity += (boids[idx].pos - vec4(0)) * 0.0005; // drift away from centre
     }
-}
+}   
 
 void limitSpeed(uint idx) {
     float tspeed = dot(boids[idx].velocity, boids[idx].velocity); // squared magnitude
     if ((tspeed < sq(boids[idx].min_speed))) {
         boids[idx].velocity *= 1.1;
-        // boids[idx].dir = normalize(boids[idx].velocity);
     } else {
         float max_speed = boids[idx].max_speed;
-        // float max_speed = 1;
         if (tspeed > sq(boids[idx].max_speed)) {
             boids[idx].velocity = normalize(boids[idx].velocity) * boids[idx].max_speed;
         }
@@ -354,7 +346,7 @@ void limitSpeed(uint idx) {
 }
 
 void constrainBounds(uint idx) {
-    float tf = .2;
+    float tf = 1;
     vec3 tg = gridSize;
     tg.y = boids[idx].bounds.y;
     if (boids[idx].pos.x < -tg.x)
@@ -403,14 +395,14 @@ bool isPreyTo(uint idxa, uint idxb) {
 }
 
 float getFearWeight(uint idxa, uint idxb) {
-    if (isPreyTo(idxa, idxb)) {
-        return 5;
-    } else if (isPredatorTo(idxa, idxb) || isFamily(idxa, idxb)) {
-        return 0;
-    } else {
-        return max(((boids[idxb].scale / boids[idxa].scale) - boids[idxa].scale).x, 0.0f);
-    }
-    // return 1;
+    // if (isPreyTo(idxa, idxb)) {
+    //     return 5;
+    // } else if (isPredatorTo(idxa, idxb) || isFamily(idxa, idxb)) {
+    //     return 0;
+    // } else {
+    //     return max(((boids[idxb].scale / boids[idxa].scale) - boids[idxa].scale).x, 0.0f);
+    // }
+    return 5;
 }
 
 // Compute the squared distance between `a` and `b`. Use `glm::distance` for actual distance
@@ -436,5 +428,4 @@ void checkAndResetVelocity(uint idx) {
 }
 void resetVelocity(uint idx) {
     boids[idx].velocity = vec4(boids[idx].min_speed);
-    // boids[idx].dir = normalize(boids[idx].velocity);
 }

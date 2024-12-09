@@ -8,8 +8,8 @@ int height = 600;
 
 glm::vec4 bgColour = glm::vec4(0.2, 0.3, 0.5, 1);  // lightest colour of background. any distance fog should match this colour
 glm::vec2 fogBounds = glm::vec2(25, 100);          // near and far bounds for fog
-float seaLevel = 290;                              // y-level of ocean
 float updateDistance = 100;                        // distance at which to update boids
+float seaLevel = 290;                              // y-level of ocean
 
 const float floor_position = 0.f;
 bool flashlightToggled = false;
@@ -34,7 +34,7 @@ Camera *camera = new Camera(0.1f, 1000.0f, (float)SM::width / (float)SM::height)
 Box *sceneBox = new Box(vec3(WORLD_BOUND_LOW * 2), vec3(WORLD_BOUND_HIGH * 2));
 
 bool showNormal = false;
-
+bool debug = false;
 bool canBoidsAttack = true;
 
 void updateDelta() {
@@ -54,7 +54,6 @@ void updateMouse(int nx, int ny) {
     float yPos = height / 2.0;
     mouseDX = nx - xPos;
     mouseDY = ny - yPos;
-    glutWarpPointer(xPos, yPos);
 }
 
 void switchFirstAndThirdCam() {

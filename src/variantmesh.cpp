@@ -43,10 +43,6 @@ void VariantMesh::populateBuffers() {
     glGenBuffers(1, &EBO);
     glGenBuffers(1, &IBO);
     glGenBuffers(1, &BBO);
-    // ssbos
-    glCreateBuffers(1, &ABBO);
-    glCreateBuffers(1, &BIBO);
-    glCreateBuffers(1, &BOBO);
 
     glBindBuffer(GL_ARRAY_BUFFER, p_VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices[0]) * vertices.size(), &vertices[0], GL_STATIC_DRAW);
@@ -63,7 +59,7 @@ void VariantMesh::populateBuffers() {
     glEnableVertexAttribArray(VA_TEXTURE_LOC);
     glVertexAttribPointer(VA_TEXTURE_LOC, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
-    glBindBuffer(GL_ARRAY_BUFFER, BBO);
+    glBindBuffer(GL_ARRAY_BUFFER, BBO); // todo move into check
     glBufferData(GL_ARRAY_BUFFER, sizeof(vBones[0]) * vBones.size(), &vBones[0], GL_STATIC_DRAW);
     glEnableVertexAttribArray(VA_BONE_LOC);
     glVertexAttribIPointer(VA_BONE_LOC, MAX_NUM_BONES_PER_VERTEX, GL_INT, sizeof(VertexBoneData), (const GLvoid *)0);
@@ -88,11 +84,16 @@ void VariantMesh::populateBuffers() {
     glVertexAttribPointer(VA_DEPTH_LOC, 1, GL_FLOAT, GL_FALSE, sizeof(float), 0);
     glVertexAttribDivisor(VA_DEPTH_LOC, 1);  // tell OpenGL this is an instanced vertex attribute.
 
-    auto bufflag = GL_MAP_WRITE_BIT | GL_MAP_READ_BIT;
-    glNamedBufferStorage(ABBO, animations.size() * sizeof(Animation), animations.data(), bufflag);
-    glNamedBufferStorage(BIBO, boneInfos.size() * sizeof(BoneInfo), boneInfos.data(), bufflag);
-    glNamedBufferStorage(BOBO, boneTransformOffsets.size() * sizeof(int), boneTransformOffsets.data(), bufflag);
-
+    if (type == SKINNED) {
+        // ssbos
+        glCreateBuffers(1, &ABBO);
+        glCreateBuffers(1, &BIBO);
+        glCreateBuffers(1, &BOBO);
+        auto bufflag = GL_MAP_WRITE_BIT | GL_MAP_READ_BIT;
+        glNamedBufferStorage(ABBO, animations.size() * sizeof(Animation), animations.data(), bufflag);
+        glNamedBufferStorage(BIBO, boneInfos.size() * sizeof(BoneInfo), boneInfos.data(), bufflag);
+        glNamedBufferStorage(BOBO, boneTransformOffsets.size() * sizeof(int), boneTransformOffsets.data(), bufflag);
+    }
     generateCommands();
 }
 
@@ -150,6 +151,7 @@ void VariantMesh::unloadMaterials() {
 // Update and render all animations for each variant
 void VariantMesh::render(const mat4 *instance_trans_matrix) {
     glBindVertexArray(VAO);
+    glBindBuffer(GL_DRAW_INDIRECT_BUFFER, commandBuffer); // rebind command buffer
     if (type == SKINNED) {
 #ifdef TREE
         glBindBuffer(GL_ARRAY_BUFFER, IBO);
@@ -180,11 +182,40 @@ void VariantMesh::render(const mat4 *instance_trans_matrix) {
     );
 
     unloadMaterials();
-
+    glUseProgram(0);
     glBindVertexArray(0);  // prevent VAO from being changed externally
 }
 
 void VariantMesh::render(mat4 mm) {
     this->mat = mm;
     render(&mm);
+}
+
+void VariantMesh::render() {
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_DRAW_INDIRECT_BUFFER, commandBuffer);  // rebind command buffer
+    
+    // update animations
+    animShader->use();
+    animShader->setFloat("timeSinceApplicationStarted", SM::getGlobalTime());
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ABBO);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, BIBO);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, BOBO);
+    glDispatchCompute((int)ceil(boneInfos.size() / 32.f), 1, 1);  // declare work group sizes and run compute shader
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);               // wait for all threads to be finished
+
+    loadMaterials();
+
+    shader->use();
+    glMultiDrawElementsIndirect(
+        GL_TRIANGLES,     // draw triangles
+        GL_UNSIGNED_INT,  // data type in indices
+        (const void *)0,  // no offset; commands already bound to buffer
+        variants.size(),  // number of variants
+        0                 // no stride
+    );
+
+    unloadMaterials();
+    glUseProgram(0);
+    glBindVertexArray(0);  // prevent VAO from being changed externally
 }

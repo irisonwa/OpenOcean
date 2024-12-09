@@ -97,6 +97,7 @@ class VariantMesh : public Mesh {
     void populateBuffers();
     void render(const mat4*);
     void render(mat4);
+    void render();
     std::vector<mat4> getUpdatedTransforms(Shader* skinnedShader, float animSpeed) { return {}; }  // unused
     std::vector<mat4> getUpdatedTransforms(float animSpeed) { return {}; }                         // unused
     void update() {}                                                                   // unused
