@@ -72,7 +72,6 @@ class Mesh {
                 }
                 cnt++;
             }
-            if (cnt >= MAX_NUM_BONES_PER_VERTEX - 1) assert(false && "too many bones per vertex (> 4)");
             assert(false && "no vertices affected by this bone");
         }
     };
@@ -86,7 +85,7 @@ class Mesh {
         vec2 pdding = vec2(0);
         int pdding2 = 0;
 
-        BoneInfo (int id) {
+        BoneInfo(int id) {
             ID = id;
             for (int i = 0; i < MAX_JOINTS_PER_BONE; ++i) {
                 children[i] = -1;
@@ -110,7 +109,7 @@ class Mesh {
         vec4 scalingKeys[MAX_KEYFRAMES];         // changes in scaling (first 3) and time of keys (last float)
         quat rotationKeys[MAX_KEYFRAMES];        // changes in rotation
         float rotationKeysTimes[MAX_KEYFRAMES];  // times of rotation keys
-        int boneIndex;                  // index of bone this animation applies to
+        int boneIndex;                           // index of bone this animation applies to
         float animationLength;                   // length of the animation in ticks
         vec2 pdding = vec2(0);
 

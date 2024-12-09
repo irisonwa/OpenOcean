@@ -40,12 +40,12 @@ using namespace glm;
 // using namespace SM;
 
 namespace Util {
-extern vec3 UP;       // World up
-extern vec3 FORWARD;  // World forward
-extern vec3 RIGHT;    // World right
-extern vec3 X;        // Value of 1 on x axis
-extern vec3 Y;        // Value of 1 on y axis
-extern vec3 Z;        // Value of 1 on z axis
+extern vec3 UP;       // World up (0, 1, 0)
+extern vec3 FORWARD;  // World forward (0, 0, -1)
+extern vec3 RIGHT;    // World right (1, 0, 0)
+extern vec3 X;        // Value of 1 on x axis (1, 0, 0)
+extern vec3 Y;        // Value of 1 on y axis (0, 1, 0)
+extern vec3 Z;        // Value of 1 on z axis (0, 0, 1)
 extern std::random_device rand_dev;
 extern std::mt19937 mt_gen;
 
@@ -69,12 +69,13 @@ extern vec3 lerpV(vec3 a, vec3 b, float dt);
 extern float mapRange(float v, float inLow, float inHigh, float outLow, float outHigh);
 extern mat4 lookTowards(vec3 pos, vec3 to);
 extern mat4 lookTowards(vec3 pos, vec3 to, vec3 up);
-extern void printVec2(vec2 v);
-extern void printVec3(vec3 v);
-extern void printMat4(mat4 m);
-extern void printMat4(aiMatrix4x4 m);
-extern void printList(std::vector<int>);
-extern void printList(std::vector<float>);
+extern void print(vec2 v);
+extern void print(vec3 v);
+extern void print(vec4 v);
+extern void print(mat4 m);
+extern void print(aiMatrix4x4 m);
+extern void print(std::vector<int>);
+extern void print(std::vector<float>);
 extern int compareFloat(float a, float b);
 extern int random(int lo, int hi);
 extern vec3 randomv(int lo, int hi);

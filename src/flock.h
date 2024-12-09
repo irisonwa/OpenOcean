@@ -13,7 +13,7 @@ using namespace BoidInfo;
 
 class Flock {
    public:
-    Flock(VariantMesh* _vmesh) {
+    Flock(VariantMesh* _vmesh, std::vector<vec3> homes_) {
         vmesh = _vmesh;
         int spread = WORLD_BOUND_HIGH;
         int id = 0;
@@ -23,6 +23,7 @@ class Flock {
         for (auto v : vmesh->variants) {
             BoidType type = getTypeFromModel(v->path);
             for (int i = 0; i < v->instanceCount; ++i) {
+                // vec3 pos = Util::randomv(-spread, -spread / 2);
                 vec3 pos = Util::randomv(-spread / 2, spread / 2);
                 vec3 vel = Util::randomv(-5, 5);
                 Boid* boid = new Boid(
@@ -38,10 +39,16 @@ class Flock {
             }
         }
 
+        for (auto h : homes_) {
+            if (abs(h.x) >= WORLD_BOUND_HIGH * 2 || abs(h.y) >= WORLD_BOUND_HIGH * 2 || abs(h.z) >= WORLD_BOUND_HIGH * 2) continue;
+            cs_homes.push_back(vec4(h, 0));
+        }
+        // if (cs_homes.empty()) cs_homes.push_back(vec4(0));
+
+        // region = Box(vec3(WORLD_BOUND_LOW * 2), vec3(WORLD_BOUND_HIGH * 2));
+        // region.loadWireframe();
 #ifdef TREE
-        region = Box(vec3(WORLD_BOUND_LOW * 2), vec3(WORLD_BOUND_HIGH * 2));
-        region.loadWireframe();
-        tree = new Octree(bc, region);
+        tree = new Octree(bc, *SM::sceneBox);
 #else
         // create and bind ssbos to vmesh
         boidShader = new Shader("boid shader", PROJDIR "Shaders/boids.comp");
@@ -55,7 +62,6 @@ class Flock {
         glNamedBufferStorage(BTBO, transforms.size() * sizeof(mat4), transforms.data(), bufflag);
         glBindVertexArray(0);
 #endif
-    process();
     }
 
     BoidType getTypeFromModel(std::string nm) {
@@ -86,10 +92,10 @@ class Flock {
         return BoidType::F_THREADFIN;
     }
 
-    // Process all boids in the flock
-    void process() {
+    // Process all boids in the flock. Only boids within a sphere at `updateCentre` with radius `updateDist` are updated.
+    void process(vec3 updateCentre, float updateDist) {
+        // region.drawWireframe();
 #ifdef TREE
-        region.drawWireframe();
         tree->reset();
         for (int i = 0; i < bc->size; ++i) {
             tree->insert(bc->boids[i]);
@@ -102,8 +108,10 @@ class Flock {
         glBindVertexArray(vmesh->VAO);
         boidShader->use();
         boidShader->setFloat("deltaTime", SM::delta);
-        boidShader->setBool("canAttack", true);
+        boidShader->setBool("canAttack", SM::canBoidsAttack);
         boidShader->setVec3("gridSize", vec3(WORLD_BOUND_HIGH));
+        boidShader->setVec3("updateCentre", updateCentre);
+        boidShader->setFloat("updateDistance", updateDist);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, BSBO);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, HLBO);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, BTBO);
@@ -114,7 +122,7 @@ class Flock {
         int idBase = 0;
         while (n > 0) {
             boidShader->setInt("idBase", idBase);
-            glDispatchCompute(DISPATCH_SIZE, 1, 1);                     // declare work group sizes and run compute shader
+            glDispatchCompute(DISPATCH_SIZE, 1, 1);          // declare work group sizes and run compute shader
             glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);  // wait for all threads to be finished
             n -= DISPATCH_SIZE;
             idBase += DISPATCH_SIZE;
@@ -144,16 +152,25 @@ class Flock {
         }
         tree->reset();
 #else
-        BoidS *map_bs;
-        map_bs = (BoidS *)glMapNamedBuffer(BSBO, GL_READ_WRITE);
+        BoidS* map_bs;
+        map_bs = (BoidS*)glMapNamedBuffer(BSBO, GL_READ_WRITE);
         if (map_bs) {
             for (int i = 0; i < boid_count; ++i) {
-                vec3 np = Util::randomv(-spread / 2, spread / 2);
-                vec3 nv = normalize(Util::randomv(-5, 5));
+                // vec3 np = Util::randomv(-spread / 2, spread / 2);
+                // vec3 nv = normalize(Util::randomv(-5, 5));
                 BoidS b = map_bs[i];
-                b.pos = vec4(np, 0);
-                b.velocity = vec4(nv, 0);
+                // b.pos = vec4(np, 0);
+                // b.velocity = vec4(nv, 0);
+                // if (b.boidsAround == 99) printf("home\n");
+                // printf("%d, %d\n", b.boidsAround, b.canHaveHome);
+
+                printf("Pos: "); Util::print(b.dir);
+                printf("Home: "); Util::print(b.home);
+                printf("Squared distance: %d\n\n", b.boidsAround);
+
+                // printf("%d\n", b.boidsAround);
             }
+            printf("\n\n\n\n\n");
 
         } else {
             printf("map failed\n");
@@ -172,7 +189,7 @@ class Flock {
     std::vector<mat4> transforms;
     VariantMesh* vmesh;
     Shader* boidShader;
-    std::vector<vec4> cs_homes = {vec4(0, 50, 0, 1), vec4(0, -50, 0, 1), vec4(50)};
+    std::vector<vec4> cs_homes;
     std::vector<vec3> homes = {vec3(0, 10, 0), vec3(0, -10, 0), vec3(10)};
     int boid_count = 0;
 

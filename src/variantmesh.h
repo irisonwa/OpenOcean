@@ -11,6 +11,11 @@
 #include "bonemesh.h"
 #include "shader.h"
 
+enum VariantType {
+    STATIC,
+    SKINNED
+};
+
 // Inherits the Mesh class. Can be used with instantiate any variant of meshes and textures using instancing, which allows for the retaining of
 // data read from the GPU via SSBOs.
 class VariantMesh : public Mesh {
@@ -24,23 +29,26 @@ class VariantMesh : public Mesh {
     };
 
     struct VariantInfo {
-        VariantInfo(std::string _parentName,
-                    std::string _path,
-                    unsigned int _instanceCount,
-                    unsigned int _textureAtlasSize,
-                    unsigned int _textureAtlasTileCount,
-                    std::vector<unsigned int> _depths) {
-            parentName = _parentName;
-            path = _path;
-            instanceCount = _instanceCount;
-            textureAtlasSize = _textureAtlasSize;
-            textureAtlasTileCount = _textureAtlasTileCount;
-            depths = _depths;
+        VariantInfo(std::string parentName_,
+                    std::string path_,
+                    VariantType type_,
+                    unsigned int instanceCount_,
+                    unsigned int textureAtlasSize_,
+                    unsigned int textureAtlasTileCount_,
+                    std::vector<unsigned int> depths_) {
+            parentName = parentName_;
+            path = path_;
+            instanceCount = instanceCount_;
+            textureAtlasSize = textureAtlasSize_;
+            textureAtlasTileCount = textureAtlasTileCount_;
+            depths = depths_;
+            type = type_;
         }
         // Load the mesh stored in this variant without populating its buffers
         bool loadMesh() {
-            mesh = new BoneMesh(parentName + "_" + MODEL_NO_DIR(path), path, textureAtlasSize, textureAtlasTileCount, false);
-            // mesh = new StaticMesh(parentName + "_" + MODEL_NO_DIR(path), path, textureAtlasSize, textureAtlasTileCount, false);
+            using enum VariantType;
+            if (type == STATIC) mesh = new StaticMesh(parentName + "_" + MODEL_NO_DIR(path), path, textureAtlasSize, textureAtlasTileCount, false);
+            else if (type == SKINNED) mesh = new BoneMesh(parentName + "_" + MODEL_NO_DIR(path), path, textureAtlasSize, textureAtlasTileCount, false);
             return mesh->loadMesh(path, false);
         }
         std::string parentName;
@@ -50,6 +58,7 @@ class VariantMesh : public Mesh {
         unsigned int textureAtlasTileCount;
         std::vector<unsigned int> depths;
         Mesh* mesh;
+        VariantType type;
     };
 
     VariantMesh() { name = "NewVariantMesh" + std::to_string(SM::unnamedVariantMeshCount++); }
@@ -63,12 +72,13 @@ class VariantMesh : public Mesh {
         - `unsigned int`: the number of tiles in the texture, vertically. must be at least 1. if -1, will be set to 1.
         - `vector<unsigned int>`: a list of depths to use in the mesh. must have a size equal to the number of instances (first unsigned int)
      */
-    VariantMesh(std::string nm, Shader* s, std::vector<std::tuple<std::string, unsigned int, unsigned int, unsigned int, std::vector<unsigned int>>> variants_) {
+    VariantMesh(std::string nm, Shader* s, VariantType type_, std::vector<std::tuple<std::string, unsigned int, unsigned int, unsigned int, std::vector<unsigned int>>> variants_) {
         name = nm;
         shader = s;
+        type = type_;
         animShader = new Shader("anim shader", PROJDIR "Shaders/anim.comp");
         for (const auto& [path_, instanceCount_, textureAtlasSize_, textureAtlasTileCount_, depths_] : variants_) {
-            VariantInfo* vi = new VariantInfo(name, path_, instanceCount_, textureAtlasSize_, textureAtlasTileCount_, depths_);
+            VariantInfo* vi = new VariantInfo(name, path_, type, instanceCount_, textureAtlasSize_, textureAtlasTileCount_, depths_);
             variants.push_back(vi);
         }
         if (!loadMeshes()) std::cout << "\n\nfailed to load variant mesh \"" << nm.c_str() << "\" :(\n";
@@ -113,6 +123,7 @@ class VariantMesh : public Mesh {
     std::vector<std::string> paths;           // paths of variant mesh files
     std::vector<VariantInfo*> variants;       // variant meshes held in this object
     Shader* animShader;
+    VariantType type;
 };
 
 #endif /* VARIANTMESH_H */

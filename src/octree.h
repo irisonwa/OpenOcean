@@ -31,15 +31,6 @@ class Octree {
         }
     }
 
-    // void build();
-    // Octree *createChild(std::vector<Boid *>&, Box);
-    // std::vector<Boid*> getBoidsList(); // get all child boids as a 1d list
-    // std::vector<std::vector<Boid*>> getAllBoids(); // get all child boids as a 1d list
-    // std::vector<std::vector<Boid*>> getAllBoids(std::vector<std::vector<Boid*>>, std::vector<Boid*>);
-    // bool update();
-    // bool isLeaf();
-    // void updateTransforms(std::pair<std::vector<mat4>&, std::vector<vec3>> transformsAndHomes);
-
     const unsigned* getBoidsInRange(vec3 origin, float range, int &count);
     unsigned* getBoidsInRange(vec3 origin, float range, int &count, unsigned *acc);
     void insert(Boid*);

@@ -68,13 +68,13 @@ vec3 lerpV(vec3 a, vec3 b, float dt) {
         lerp(a.z, b.z, dt));
 }
 
-// Generate a random number in the range (`lo`, `hi`).
+// Generate a uniformly-distributed random number in the range (`lo`, `hi`).
 int random(int lo, int hi) {
     std::uniform_int_distribution<> d(lo, hi);
     return d(mt_gen);
 }
 
-// Generate a vector with random components in the range (`lo`, `hi`).
+// Generate a vector with uniformly-distributed random components in the cubed range `(vec3(lo)`, `vec3(hi))`.
 vec3 randomv(int lo, int hi) {
     std::uniform_int_distribution<> d(lo, hi);
     return vec3(
@@ -208,15 +208,19 @@ mat4 lookTowards(vec3 from, vec3 to, vec3 up) {
     return mat * inverse(lookAt(from, from + to, up));
 }
 
-void printVec3(vec3 v) {
+void print(vec4 v) {
+    printf("(%f, %f, %f, %f)\n", v.x, v.y, v.z, v.w);
+}
+
+void print(vec3 v) {
     printf("(%f, %f, %f)\n", v.x, v.y, v.z);
 }
 
-void printVec2(vec2 v) {
+void print(vec2 v) {
     printf("(%f, %f)\n", v.x, v.y);
 }
 
-void printMat4(mat4 m) {
+void print(mat4 m) {
     printf("\n");
     printf("[%.2f][%.2f][%.2f][%.2f]\n", m[0][0], m[1][0], m[2][0], m[3][0]);
     printf("[%.2f][%.2f][%.2f][%.2f]\n", m[0][1], m[1][1], m[2][1], m[3][1]);
@@ -224,11 +228,11 @@ void printMat4(mat4 m) {
     printf("[%.2f][%.2f][%.2f][%.2f]\n", m[0][3], m[1][3], m[2][3], m[3][3]);
 }
 
-void printMat4(aiMatrix4x4 m) {
-    printMat4(aiToGLM(&m));
+void print(aiMatrix4x4 m) {
+    print(aiToGLM(&m));
 }
 
-void printList(std::vector<int> vs) {
+void print(std::vector<int> vs) {
     printf("[");
     for (int i = 0; i < vs.size(); ++i) {
         printf("%d", vs[i]);
@@ -239,7 +243,7 @@ void printList(std::vector<int> vs) {
     printf("]\n");
 }
 
-void printList(std::vector<float> vs) {
+void print(std::vector<float> vs) {
     printf("[");
     for (int i = 0; i < vs.size(); ++i) {
         printf("%.2f", vs[i]);

@@ -125,10 +125,6 @@ public:
         glEnableVertexAttribArray(0);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), 0);
 
-        // glGenBuffers(1, &EBO);
-        // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-        // glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices[0]) * indices.size(), &indices[0], GL_STATIC_DRAW);
-        
         glBindVertexArray(0);
     }
 
@@ -139,10 +135,6 @@ public:
         shader->setMat4("view", SM::camera->getViewMatrix());
         shader->setMat4("model", transform);
         glBindVertexArray(VAO);
-        // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-        // glDrawElements(GL_LINE_LOOP, 4, GL_UNSIGNED_SHORT, 0);
-        // glDrawElements(GL_LINE_LOOP, 4, GL_UNSIGNED_SHORT, (GLvoid*)(4 * sizeof(GLushort)));
-        // glDrawElements(GL_LINES, 8, GL_UNSIGNED_SHORT, (GLvoid*)(8 * sizeof(GLushort)));
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);  // show wireframe of bounding box
         glDrawArrays(GL_TRIANGLES, 0, 36);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);  // show full faces

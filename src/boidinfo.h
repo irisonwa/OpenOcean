@@ -33,7 +33,7 @@ struct BoidS {
     int hasHome;
     int isBeingChased;
     int isChasing;
-    float boidsAround;
+    int boidsAround;
     unsigned int type;
     unsigned int ID;
     unsigned int myPredators[NUM_BOID_TYPES+1]; // needs to be divisible by 4

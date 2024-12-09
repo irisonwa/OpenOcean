@@ -238,12 +238,13 @@ void StaticMesh::render(unsigned int nInstances, const mat4* model_matrix, const
             (void*)(sizeof(unsigned int) * meshes[i].baseIndex),
             nInstances,
             meshes[i].baseVertex);
+        
+        // unbind textures so they don't "spill over"
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
     }
-    // unbind textures so they don't "spill over"
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
     glBindVertexArray(0);  // prevent VAO from being changed externally
 }
 
@@ -254,7 +255,7 @@ void StaticMesh::render(unsigned int nInstances, const mat4* model_matrix, const
 /// <param name="model_matrix">The matrices you would like to transform each instance with.</param>
 void StaticMesh::render(unsigned int nInstances, const mat4* model_matrix) {
     std::vector<float> dpths(nInstances, 0);
-    return render(nInstances, model_matrix, dpths.data());
+    render(nInstances, model_matrix, dpths.data());
 }
 
 /// <summary>

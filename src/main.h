@@ -73,15 +73,10 @@
 #define MESH_SPEARFISH "fish_spear.obj"
 #define MESH_SEA "sea_surface.obj"
 
-/* Animated meshes */
-#define MESH_SEA_ANIM "sea_surface.gltf"
-#define MESH_PLAYER_ANIM "sub.gltf"
-#define MESH_GUY_ANIM "boblampclean.md5mesh"
-#define MESH_WLL_ANIM "wll.gltf"
-#define MESH_SIMPLE_ANIM "test_ballb.gltf"
+/* Meshes */
 // Plants
-#define MESH_KELP_ANIM "kelp.gltf"                 // Kelp model (animated)
-#define MESH_ANEMONE_ANIM "anemone.gltf"           // Anemone model (animated)
+#define MESH_KELP_ANIM "kelp.gltf"  // Kelp model (animated)
+#define MESH_ANEMONE "anemone.obj"  // Anemone model (static)
 // Fish
 #define MESH_SHARK_ANIM "shark.gltf"               // Generic shark model (animated)
 #define MESH_WHALE_SHARK_ANIM "shark_whale.gltf"   // Whale shark model (animated)
@@ -95,6 +90,12 @@
 #define MESH_SPEARFISH_ANIM "fish_spear.gltf"      // Spearfish model (animated)
 #define MESH_CLOWNFISH_ANIM "fish_clown.gltf"      // Clownfish model (animated)
 #define MESH_HERRING_ANIM "fish_herring.gltf"      // Herring model (animated)
+// Other
+#define MESH_PLAYER_ANIM "sub.gltf"  // Player submarine (animated)
+#define MESH_BEACON "beacon.gltf"    // Light beacon (static)
+#define MESH_TERRAIN "terrain.gltf"
+#define MESH_BEACH "beach.gltf"
+#define MESH_BEACH_ITEM "beach_item.obj"
 
 const char* vert_smesh = PROJDIR "Shaders/staticMesh.vert";
 const char* frag_smesh = PROJDIR "Shaders/staticMesh.frag";
@@ -118,7 +119,7 @@ VariantMesh* vMesh;
 
 vec3 flashlightCoords = vec3(-10000);
 vec3 flashlightDir = vec3(0, -1, 0);
-vec3 sunPos = vec3(0, 300, 0);
+vec3 sunPos = vec3(0, 500, 0);
 vec3 sunDir = Util::UP * -1.f;
 float seaLevel = 100;
 std::map<std::string, Shader*> shaders;
@@ -128,7 +129,50 @@ std::vector<vec3> translations, scales;
 std::vector<mat4> transm;
 std::vector<int> mat_idxs;
 std::vector<float> depths;
-int spread = 30;
+
+std::vector<mat4> beaconLightMats;
+std::vector<vec3> beaconLightPos = {
+    vec3(-5.517541, -171.772491, -184.788651) * vec3(1, 0.8, 1),
+    vec3(-246.655991, -156.900360, -225.508698) * vec3(1, 0.8, 1),
+    vec3(-168.904816, -167.625061, 100.703346) * vec3(1, 0.8, 1),
+    vec3(-122.003487, -167.601807, 238.243576) * vec3(1, 0.8, 1),
+    vec3(-16.958982, -162.666428, 216.117126) * vec3(1, 0.8, 1),
+    vec3(147.293274, -255.615295, 262.316681) * vec3(1, 0.8, 1),
+    vec3(24.694633, -217.530853, 304.397736) * vec3(1, 0.8, 1),
+    vec3(269.658295, -201.544113, 132.361252) * vec3(1, 0.8, 1),
+    vec3(61.435417, -181.549606, 172.717377) * vec3(1, 0.8, 1),
+    vec3(125.427429, -163.743774, -309.644012) * vec3(1, 0.8, 1),
+    vec3(14.141843, -161.406906, -226.288147) * vec3(1, 0.8, 1),
+    vec3(-34.764236, -221.480225, -6.967876) * vec3(1, 0.8, 1),
+    vec3(16.821505, -213.663513, -3.734689) * vec3(1, 0.8, 1),
+    vec3(310.439575, -194.521057, 79.667366) * vec3(1, 0.8, 1),
+    vec3(101.371223, -113.593376, -59.377941),
+    vec3(73.735527, -129.348282, 54.185513),
+    vec3(-283.396637, -116.780930, -36.396130),
+    vec3(-451.899231, -130.391678, -7.988328),
+    vec3(-111.995651, -133.852020, -376.756104),
+    vec3(104.884323, -149.077881, 345.610077),
+};
+
+std::vector<mat4> anemoneMats, kelpMats;
+std::vector<vec3> anemonePos = {
+    vec3(-5.517541, -171.772491, -184.788651),
+    vec3(-246.655991, -156.900360, -225.508698),
+    vec3(-168.904816, -167.625061, 100.703346),
+    vec3(-122.003487, -167.601807, 238.243576),
+    vec3(-16.958982, -162.666428, 216.117126),
+    vec3(147.293274, -255.615295, 262.316681),
+    vec3(24.694633, -217.530853, 304.397736),
+    vec3(269.658295, -201.544113, 132.361252),
+    vec3(61.435417, -181.549606, 172.717377),
+    vec3(125.427429, -163.743774, -309.644012),
+    vec3(14.141843, -161.406906, -226.288147),
+    vec3(-34.764236, -221.480225, -6.967876),
+    vec3(16.821505, -213.663513, -3.734689),
+    vec3(310.439575, -194.521057, 79.667366),
+    vec3(282.533051, -183.193207, -126.183655),
+    vec3(230.126678, -174.246231, -106.679169),
+};
 
 std::vector<std::string> cubemap_faces = {
     PROJDIR "Models/bskybox/right.jpg",

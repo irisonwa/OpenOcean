@@ -10,7 +10,7 @@ bool VariantMesh::loadMeshes(std::vector<VariantInfo *> infos) {
         for (auto x : v->mesh->vertices) vertices.push_back(x);
         for (auto x : v->mesh->normals) normals.push_back(x);
         for (auto x : v->mesh->texCoords) texCoords.push_back(x);
-        for (auto x : v->mesh->materials){
+        for (auto x : v->mesh->materials) {
             if (x.diffTex || x.mtlsTex) materials.push_back(x);
         }
         for (auto x : v->mesh->indices) indices.push_back(x);
@@ -75,6 +75,7 @@ void VariantMesh::populateBuffers() {
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices[0]) * indices.size(), &indices[0], GL_STATIC_DRAW);
 
     glBindBuffer(GL_ARRAY_BUFFER, IBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(mat4) * SM::MAX_NUM_BOIDS, NULL, GL_DYNAMIC_DRAW);
     for (unsigned int i = 0; i < 4; i++) {
         glEnableVertexAttribArray(VA_INSTANCE_LOC + i);
         glVertexAttribPointer(VA_INSTANCE_LOC + i, 4, GL_FLOAT, GL_FALSE, sizeof(mat4), (const void *)(i * sizeof(vec4)));
@@ -121,6 +122,7 @@ void VariantMesh::generateCommands() {
     glBufferData(GL_DRAW_INDIRECT_BUFFER, sizeof(IndirectDrawCommand) * variants.size(), &cmds[0], GL_DYNAMIC_DRAW);
 }
 
+// Bind up to 12 diffuse and metalness textures
 void VariantMesh::loadMaterials() {
     for (int i = 0; i < variants.size(); ++i) {
         auto diff_id = GL_TEXTURE0 + i * 2;
@@ -148,20 +150,25 @@ void VariantMesh::unloadMaterials() {
 // Update and render all animations for each variant
 void VariantMesh::render(const mat4 *instance_trans_matrix) {
     glBindVertexArray(VAO);
+    if (type == SKINNED) {
 #ifdef TREE
-    glBindBuffer(GL_ARRAY_BUFFER, IBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(mat4) * totalInstanceCount, &instance_trans_matrix[0], GL_DYNAMIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER, IBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(mat4) * totalInstanceCount, &instance_trans_matrix[0]);
 #endif
-    loadMaterials();
+        // update animations
+        animShader->use();
+        animShader->setFloat("timeSinceApplicationStarted", SM::getGlobalTime());
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ABBO);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, BIBO);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, BOBO);
+        glDispatchCompute((int)ceil(boneInfos.size() / 32.f), 1, 1);  // declare work group sizes and run compute shader
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);               // wait for all threads to be finished
+    } else if (type == STATIC) {
+        glBindBuffer(GL_ARRAY_BUFFER, IBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(mat4) * totalInstanceCount, &instance_trans_matrix[0]);
+    }
 
-    // update animations
-    animShader->use();
-    animShader->setFloat("timeSinceApplicationStarted", SM::getGlobalTime());
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ABBO);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, BIBO);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, BOBO);
-    glDispatchCompute((int)ceil(boneInfos.size() / 32.f), 1, 1);   // declare work group sizes and run compute shader
-    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);  // wait for all threads to be finished
+    loadMaterials();
 
     shader->use();
     glMultiDrawElementsIndirect(

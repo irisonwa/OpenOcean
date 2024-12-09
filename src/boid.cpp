@@ -110,11 +110,9 @@ void Boid::move(BoidContainer*& bc, const unsigned* indices, int neighbours, std
 
         // separation
         if (isBeingChased) {
-            // printf("a(%.2f)", biggestFearWeight);
-            // if (hasHome) {
-            //     avgMoveFlee -= (pos - currentHome) * biggestFearWeight * .5f;  // fleeing home
-            // }
-            // Util::printVec3(avgMoveFlee);
+            if (hasHome) {
+                avgMoveFlee -= (pos - currentHome) * biggestFearWeight * .5f;  // fleeing home
+            }
             velocity += avgMoveFlee * getBoidAvoidFactor(type) * 100.f;
         } else if (isInPursuit) {
             if (isInChasing) {

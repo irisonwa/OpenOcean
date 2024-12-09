@@ -8,19 +8,19 @@ std::map<BoidType, std::set<BoidType>> preyTable = {
     {F_SPEAR_FISH, {PLANKTON}},
     {F_HERRING, {PLANKTON}},
     {F_CLOWNFISH, {PLANKTON}},
-    {S_BLUE, {F_THREADFIN, F_MARLIN, F_SPEAR_FISH, F_HERRING, F_CLOWNFISH}},
+    {S_BLUE, {PLANKTON, F_THREADFIN, F_MARLIN, F_SPEAR_FISH, F_HERRING, F_CLOWNFISH}},
     {S_WHALE, {PLANKTON, F_HERRING}},
-    {S_WHITE, {}},
-    {DOLPHIN, {}},
+    {S_WHITE, {PLANKTON, F_THREADFIN, F_MARLIN, F_SPEAR_FISH, F_HERRING, F_CLOWNFISH, DOLPHIN}},
+    {DOLPHIN, {PLANKTON, F_THREADFIN, F_MARLIN, F_SPEAR_FISH, F_HERRING, F_CLOWNFISH}},
     {WHALE, {PLANKTON, F_HERRING}},
     {PLANKTON, {}}};
 
 std::map<BoidType, std::set<BoidType>> predTable = {
-    {F_THREADFIN, {S_BLUE, S_WHITE, WHALE}},
-    {F_MARLIN, {S_BLUE, S_WHITE, WHALE}},
-    {F_SPEAR_FISH, {S_BLUE, S_WHITE, WHALE}},
-    {F_HERRING, {S_BLUE, S_WHALE, S_WHITE, WHALE}},
-    {F_CLOWNFISH, {S_BLUE, S_WHALE, S_WHITE, WHALE}},
+    {F_THREADFIN, {DOLPHIN, S_BLUE, S_WHITE, WHALE}},
+    {F_MARLIN, {DOLPHIN, S_BLUE, S_WHITE, WHALE}},
+    {F_SPEAR_FISH, {DOLPHIN, S_BLUE, S_WHITE, WHALE}},
+    {F_HERRING, {DOLPHIN, S_BLUE, S_WHALE, S_WHITE, WHALE}},
+    {F_CLOWNFISH, {DOLPHIN, S_BLUE, S_WHALE, S_WHITE, WHALE}},
     {S_BLUE, {}},
     {S_WHALE, {}},
     {S_WHITE, {WHALE}}, // scared for no reason (dumb idiot)
@@ -62,32 +62,32 @@ float getBoidMinSpeed(BoidType t) {
 }
 
 float getBoidMaxSpeed(BoidType t) {
-    float m = 1.f/16;
+    float m = getBoidMinSpeed(t)/32;
     switch (t) {
         case F_THREADFIN:
-            return 8 * m;
+            return 1 + (8 * m);
         case F_MARLIN:
-            return 8 * m;
+            return 1 + (8 * m);
         case F_SPEAR_FISH:
-            return 8 * m;
+            return 1 + (8 * m);
         case F_HERRING:
-            return 8 * m;
+            return 1 + (8 * m);
         case F_CLOWNFISH:
-            return 8 * m;
+            return 1 + (8 * m);
         case S_BLUE:
-            return 12 * m;
+            return 1 + (12 * m);
         case S_WHALE:
-            return 12 * m;
+            return 1 + (12 * m);
         case S_WHITE:
-            return 12 * m;
+            return 1 + (12 * m);
         case WHALE:
-            return 1 * m;
+            return 1 + (2 * m);
         case DOLPHIN:
-            return 32 * m;
+            return 1 + (32 * m);
         case PLANKTON:
-            return 4 * m;
+            return 1 + (4 * m);
         default:
-            return 10 * m;
+            return 1 + (10 * m);
     }
 }
 float getBoidSepDistance(BoidType t) {
@@ -275,6 +275,7 @@ int getHomeValidation(BoidType t) {
         case F_THREADFIN:
         case F_HERRING:
         case F_CLOWNFISH:
+        case PLANKTON:
             return true;
         default:
             return false;
@@ -313,8 +314,8 @@ BoidS createBoidStruct(BoidType t, unsigned id, vec3 pos, vec3 vel) {
     b.lastVelocity = vec4(vel, 0);
     b.dir = normalize(vec4(vel, 0));
     b.type = t;
-    b.scale = vec4(getBoidScale(t), 1);
-    b.min_speed = 1;
+    b.scale = vec4(getBoidScale(t), 0);
+    b.min_speed = getBoidMinSpeed(t);
     b.max_speed = getBoidMaxSpeed(t);
     b.minSepDistance = getBoidSepDistance(t);
     b.minEnemyChaseDistance = getBoidChaseDistance(t);
@@ -325,10 +326,11 @@ BoidS createBoidStruct(BoidType t, unsigned id, vec3 pos, vec3 vel) {
     b.centeringFactor = getBoidCenteringFactor(t);
     b.bounds = getBoidBounds(t);
     b.canHaveHome = getHomeValidation(t);
-    b.hasHome = false;
+    b.hasHome = 0;
+    b.home = vec4(1e9);
     b.isBeingChased = false;
     b.isChasing = false;
-    b.boidsAround = 999;
+    b.boidsAround = -1;
     for (int i = 0; i < NUM_BOID_TYPES; ++i) {
         if (isPreyTo(t, (BoidType)i)) b.myPredators[i] = 1;
         else b.myPredators[i] = 0;

@@ -1,13 +1,15 @@
 #include "sm.h"
-#include "camera.h" // fwd
+#include "camera.h"  // fwd
+#include "box.h"  // fwd
 
 namespace SM {
 int width = 1024;
 int height = 600;
 
 glm::vec4 bgColour = glm::vec4(0.2, 0.3, 0.5, 1);  // lightest colour of background. any distance fog should match this colour
-glm::vec2 fogBounds = glm::vec2(25, 200);          // near and far bounds for fog
-float seaLevel = 200;                              // y-level of ocean
+glm::vec2 fogBounds = glm::vec2(25, 100);          // near and far bounds for fog
+float seaLevel = 290;                              // y-level of ocean
+float updateDistance = 100;                        // distance at which to update boids
 
 const float floor_position = 0.f;
 bool flashlightToggled = false;
@@ -25,12 +27,14 @@ float mouseDY = 0;
 bool isFreeCam = false;
 bool isFirstPerson = false;
 bool isThirdPerson = true;
-Camera *camera = new Camera(0.1f, 1000.0f, (float)SM::width / (float)SM::height);
 CAMERA_MODE camMode = CAMERA_MODE::THIRD;
+CAMERA_MODE lastCamMode = CAMERA_MODE::THIRD;
+Camera *camera = new Camera(0.1f, 1000.0f, (float)SM::width / (float)SM::height);
+
+Box *sceneBox = new Box(vec3(WORLD_BOUND_LOW * 2), vec3(WORLD_BOUND_HIGH * 2));
 
 bool showNormal = false;
 
-int MAX_NUM_BOIDS = 10000;
 bool canBoidsAttack = true;
 
 void updateDelta() {
@@ -53,27 +57,43 @@ void updateMouse(int nx, int ny) {
     glutWarpPointer(xPos, yPos);
 }
 
-void activateFreeCam() {
-    isFreeCam = true;
-    isFirstPerson = false;
-    isThirdPerson = false;
-}
-void activateFirstPerson() {
-    isFreeCam = false;
-    isFirstPerson = true;
-    isThirdPerson = false;
-}
-void activateThirdPerson() {
-    isFreeCam = false;
-    isFirstPerson = false;
-    isThirdPerson = true;
-}
-void changeCameraState() {
-    camMode = (CAMERA_MODE)Util::wrap(camMode + 1, CAMERA_MODE::FIRST, CAMERA_MODE::FREE + 1);
+void switchFirstAndThirdCam() {
+    if (isFreeCam) return;
+    camMode = (CAMERA_MODE)Util::wrap(camMode + 1, CAMERA_MODE::FIRST, CAMERA_MODE::THIRD + 1);
     isFirstPerson = camMode == CAMERA_MODE::FIRST;
     isThirdPerson = camMode == CAMERA_MODE::THIRD;
-    isFreeCam = camMode == CAMERA_MODE::FREE;
     printf("SWITCHED CAMERA MODE: %s\n", isFirstPerson ? "first person" : isThirdPerson ? "third person"
                                                                                         : "free camera");
 }
+
+void toggleFreeCam() {
+    if (camMode == CAMERA_MODE::FREE) {
+        // disable free cam
+        camMode = lastCamMode;
+        isFreeCam = false;
+        isFirstPerson = camMode == CAMERA_MODE::FIRST;
+        isThirdPerson = camMode == CAMERA_MODE::THIRD;
+        printf("SWITCHED CAMERA MODE: %s\n", isFirstPerson ? "first person" : isThirdPerson ? "third person"
+                                                                                            : "free camera");
+    } else {
+        // enable free cam
+        lastCamMode = camMode;
+        camMode = CAMERA_MODE::FREE;
+        isFreeCam = true;
+        isFirstPerson = false;
+        isThirdPerson = false;
+        printf("SWITCHED CAMERA MODE: free camera\n");
+    }
+}
+
+void changeFlashlightState() {
+    flashlightToggled = !flashlightToggled;
+    // printf("FLASHLIGHT: %s\n", flashlightToggled ? "on" : "off");
+}
+
+void changeBoidAttackState() {
+    canBoidsAttack = !canBoidsAttack;
+    printf("BOID ATTACKING: %s\n", canBoidsAttack ? "true" : "false");
+}
+
 }  // namespace SM

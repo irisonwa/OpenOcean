@@ -10,6 +10,7 @@
 #define WORLD_BOUND_LOW -128
 
 class Camera;
+class Box;
 
 // Scene Manager singleton
 namespace SM {
@@ -25,10 +26,10 @@ extern void updateDelta();
 extern float getGlobalTime();
 // Update the delta mouse positions
 extern void updateMouse(int nx, int ny);
-extern void activateFreeCam();
-extern void activateFirstPerson();
-extern void activateThirdPerson();
-extern void changeCameraState();
+extern void switchFirstAndThirdCam();
+extern void toggleFreeCam();
+extern void changeFlashlightState();
+extern void changeBoidAttackState();
 
 // delta time
 extern float delta;
@@ -45,6 +46,7 @@ extern int height;  // screen height
 extern glm::vec4 bgColour;
 extern glm::vec2 fogBounds;
 extern float seaLevel;
+extern float updateDistance;
 
 extern int unnamedMeshCount;
 extern int unnamedBoneMeshCount;
@@ -57,10 +59,13 @@ extern bool isFreeCam;      // in free cam, the player model is loaded and updat
 extern bool isFirstPerson;  // in first person, the player model is not updated but the camera follows it anyway
 extern bool isThirdPerson;  // in third person, the player model is loaded and the camera moves with it
 extern Camera *camera;
+extern CAMERA_MODE lastCamMode;
 extern CAMERA_MODE camMode;
 extern bool showNormal;
 
-extern int MAX_NUM_BOIDS;    // maximum count of boids allowed to be rendered.
+extern Box *sceneBox;
+
+constexpr int MAX_NUM_BOIDS = 10000;    // maximum count of boids allowed to be rendered.
 extern bool canBoidsAttack;  // toggle predator/prey behaviour of boids
 
 };  // namespace SM

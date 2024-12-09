@@ -9,7 +9,8 @@ void Player::setShader(Shader* shader) {
 }
 
 void Player::lookAt(vec3 p) {
-    transform = Util::lookTowards(followPos, p);
+    dir = p;
+    transform = Util::lookTowards(followPos, dir);
 }
 
 void Player::render() {
@@ -59,8 +60,8 @@ void Player::processMovement() {
     if (!CAN_FLY) pos.y = t_cpos_y;  // if can't fly, don't change y_pos
 
     pos = vec3(
-        Util::clamp(pos.x, WORLD_BOUND_LOW, WORLD_BOUND_HIGH),
-        Util::clamp(pos.y, WORLD_BOUND_LOW, WORLD_BOUND_HIGH),
-        Util::clamp(pos.z, WORLD_BOUND_LOW, WORLD_BOUND_HIGH));
+        Util::clamp(pos.x, WORLD_BOUND_LOW, WORLD_BOUND_HIGH + 100),
+        Util::clamp(pos.y, WORLD_BOUND_LOW, WORLD_BOUND_HIGH + 100),
+        Util::clamp(pos.z, WORLD_BOUND_LOW, WORLD_BOUND_HIGH + 100));
     followPos = Util::lerpV(followPos, pos, SM::delta * acceleration);
 }
