@@ -61,7 +61,7 @@ void init() {
     stvMats.push_back(translate(scale(mat4(1), vec3(1.f)), vec3(0, -220, 0))); // terrain
     stvMats.push_back(translate(mat4(1), sunPos)); // sun
     staticVariants = new VariantMesh(
-        "static vmesh", shaders["variant_static"], VariantType::STATIC,
+        "v_geom", shaders["variant_static"], VariantType::STATIC,
         {
             {MESH_BEACON, beaconLightPos.size(), -1, -1, std::vector<unsigned>(beaconLightPos.size(), 0)},
             {MESH_ANEMONE, anemonePos.size(), -1, -1, std::vector<unsigned>(anemonePos.size(), 0)},
@@ -82,26 +82,22 @@ void init() {
 
     /// -------------------------------------------------- BOIDS -------------------------------------------------- ///
     flockVariants = new VariantMesh(
-        "flock vmesh", shaders["variant_skinned"], VariantType::SKINNED,
+        "v_flock", shaders["variant_skinned"], VariantType::SKINNED,
         {
             {MESH_BLUE_SHARK_ANIM   , 32,   -1,   -1, std::vector<unsigned int>(32, 0)},
             {MESH_WHITE_SHARK_ANIM  , 32,   -1,   -1, std::vector<unsigned int>(32, 0)},
             {MESH_WHALE_SHARK_ANIM  , 32,   -1,   -1, std::vector<unsigned int>(32, 0)},
-            {MESH_WHALE_ANIM        , 60,    -1,   -1, std::vector<unsigned int>(60, 0)},
+            {MESH_WHALE_ANIM        , 4,    -1,   -1, std::vector<unsigned int>(4, 0)},
             {MESH_MARLIN_ANIM       , 500,  1024,  2, std::vector<unsigned int>(500, 0)},  // black marlin
             {MESH_MARLIN_ANIM       , 500,  1024,  2, std::vector<unsigned int>(500, 1)},  // blue marlin
             {MESH_SPEARFISH_ANIM    , 500,  -1,   -1, std::vector<unsigned int>(500, 0)},
             {MESH_DOLPHIN_ANIM      , 100,  -1,   -1, std::vector<unsigned int>(100, 0)},
-            {MESH_CLOWNFISH_ANIM    , 1500, -1,   -1, std::vector<unsigned int>(1500, 0)},
+            {MESH_CLOWNFISH_ANIM    , 2300, -1,   -1, std::vector<unsigned int>(2300, 0)},
             {MESH_HERRING_ANIM      , 2500, -1,   -1, std::vector<unsigned int>(2500, 0)},
             {MESH_PLANKTON_ANIM     , 1000, -1,   -1, std::vector<unsigned int>(1000, 0)},
             {MESH_THREADFIN_ANIM    , 2500, -1,   -1, std::vector<unsigned int>(2500, 0)},
         });
     flock = new Flock(flockVariants, anemonePos);
-
-    /// -------------------------------------------------- CUBEMAP -------------------------------------------------- ///
-    // cubemap = new Cubemap();
-    // cubemap->loadCubemap(cubemap_faces);
 
     /// -------------------------------------------------- LIGHTS -------------------------------------------------- ///
     float beaconAttLin = 0.00000009;
@@ -182,7 +178,7 @@ void display() {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDepthFunc(GL_LESS);  // depth-testing interprets a smaller value as "closer"
     vec4 newBg = SM::bgColour * Util::mapRange(SM::camera->pos.y, WORLD_BOUND_LOW, WORLD_BOUND_HIGH, useHeightBackground ? 0.2 : 0.99999f, 1);
-    SM::seaLevel = SM::isFreeCam ? -1000 : 300;
+    SM::seaLevel = SM::isFreeCam ? -1000 : 1000;
     glClearColor(newBg.x, newBg.y, newBg.z, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -223,6 +219,7 @@ void display() {
     }
 
     if (showLevelBounds) {
+        SM::sceneBox->transform = scale(vec3(flock->levelDistance * 4 /* ?? */));
         SM::sceneBox->drawWireframe();
     }
     if (showUpdateBounds) {
@@ -250,15 +247,34 @@ void display() {
         ImGui::Checkbox("Show Fish", &showBoids);
         ImGui::Checkbox("Show Ground", &showGround);
         ImGui::Checkbox("Show Level Bounds", &showLevelBounds);
+        ImGui::SliderFloat("Level Distance", &flock->levelDistance, 1, 300);
+        ImGui::SameLine();
+        if (ImGui::Button("Reset##Level")) {
+            flock->levelDistance = WORLD_BOUND_HIGH;
+        }
         ImGui::Checkbox("Change background colour from height", &useHeightBackground);
         ImGui::Checkbox("Enable Attacking", &SM::canBoidsAttack);
-        ImGui::Text("\nThe Update Distance value controls the distance at \nwhich boids are updated, from a radius surrounding the player.");
+        ImGui::SliderFloat("Speed Factor", &flock->speedFactor, 0.1f, 10.f);
+        ImGui::SameLine();
+        if (ImGui::Button("Reset##Speed")) {
+            flock->speedFactor = 1;
+        }
+        ImGui::Text("\nThe Update Distance value controls the distance at \nwhich boids are updated, from a radius surrounding the player. "
+                    "\nIt's actually bound in a sphere, but is displayed as a cube.");
         ImGui::Checkbox("Show Update Bounds", &showUpdateBounds);
-        ImGui::SliderFloat("Update Distance", &SM::updateDistance, 25.f, 2048.f);
+        ImGui::SliderFloat("Update Distance", &SM::updateDistance, 1.f, 2048.f);
+        ImGui::SameLine();
+        if (ImGui::Button("Reset##Update")) {
+            SM::updateDistance = 100;
+        }
         SM::fogBounds.y = SM::updateDistance; // update fog bounds too
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
         if (ImGui::Button("Centre Player")) {
             player->pos = vec3(0);
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Centre Boids")) {
+            flock->reset();
         }
         ImGui::End();
         glUseProgram(0); // ?
@@ -320,8 +336,6 @@ void mousePressed(int button, int state, int x, int y) {
 }
 
 void specKeyPressed(int key, int x, int y) {
-    // ImGuiIO& io = ImGui::GetIO();
-    // io.AddMouseButtonEvent(key, true);
     if (key == GLUT_KEY_SHIFT_L) {
         if (SM::isFreeCam) {
             SM::camera->DOWN = true;
@@ -335,8 +349,6 @@ void specKeyPressed(int key, int x, int y) {
 }
 
 void specKeyReleased(int key, int x, int y) {
-    // ImGuiIO& io = ImGui::GetIO();
-    // io.AddMouseButtonEvent(key, false);
     if (key == GLUT_KEY_SHIFT_L) {
         if (SM::isFreeCam) {
             SM::camera->DOWN = false;
@@ -351,8 +363,6 @@ void specKeyReleased(int key, int x, int y) {
 
 // Function ran on key press
 void keyPressed(unsigned char key, int x, int y) {
-    // ImGuiIO& io = ImGui::GetIO();
-    // io.AddMouseButtonEvent(key, true);
     if (key == VK_ESCAPE) {
         cout << endl
              << endl
@@ -362,15 +372,12 @@ void keyPressed(unsigned char key, int x, int y) {
     if (key == VK_TAB) {
         SM::debug = !SM::debug;
         if (SM::debug && !SM::isFreeCam) SM::toggleFreeCam(); // enable free cam when in debug mode
+        if (!SM::debug) glutWarpPointer(SM::width / 2, SM::height / 2); // warp immediately to prevent sudden jerk
     }
+
+    // debug
     if (key == ',') SM::showNormal = !SM::showNormal;
     if (key == '\\') Util::print(SM::camera->pos);
-
-    if (key == '.') {
-        // flock->reset();
-        // player->pos = vec3(0);
-        // SM::camera->setPosition(vec3(0));
-    }
 
     if (key == 'h' || key == 'H') showGround = !showGround;
     if (key == '`') SM::toggleFreeCam();
@@ -404,8 +411,6 @@ void keyPressed(unsigned char key, int x, int y) {
 
 // Function ran on key release
 void keyReleased(unsigned char key, int x, int y) {
-    // ImGuiIO& io = ImGui::GetIO();
-    // io.AddMouseButtonEvent(key, false);
     if (SM::isFreeCam) {
         if (key == ' ') SM::camera->UP = false;
         if (key == 'w' || key == 'W') SM::camera->FORWARD = false;
@@ -470,10 +475,8 @@ int main(int argc, char** argv) {
     io.DisplaySize = ImVec2(SM::width, SM::height);
     (void)io;
     ImGui::StyleColorsDark();
-    // io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
     ImGui_ImplGLUT_Init();
     ImGui_ImplOpenGL3_Init("#version 460");
-    // ImGui_ImplGLUT_InstallFuncs();
 
     // Set up your objects and shaders
     init();

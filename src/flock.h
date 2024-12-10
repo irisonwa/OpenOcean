@@ -15,7 +15,7 @@ class Flock {
    public:
     Flock(VariantMesh* _vmesh, std::vector<vec3> homes_) {
         vmesh = _vmesh;
-        int spread = WORLD_BOUND_HIGH/16;
+        int spread = WORLD_BOUND_HIGH / 16;
         int id = 0;
         bc = new BoidContainer();
         bc->boids = new Boid*[vmesh->totalInstanceCount];
@@ -23,7 +23,6 @@ class Flock {
         for (auto v : vmesh->variants) {
             BoidType type = getTypeFromModel(v->path);
             for (int i = 0; i < v->instanceCount; ++i) {
-                // vec3 pos = Util::randomv(-spread, -spread / 2);
                 vec3 pos = Util::randomv(-spread / 2, spread / 2);
                 vec3 vel = Util::randomv(-5, 5);
                 Boid* boid = new Boid(
@@ -105,24 +104,19 @@ class Flock {
         boidShader->use();
         boidShader->setFloat("deltaTime", SM::delta);
         boidShader->setBool("canAttack", SM::canBoidsAttack);
-        boidShader->setVec3("gridSize", vec3(WORLD_BOUND_HIGH));
+        boidShader->setVec3("gridSize", vec3(levelDistance));
         boidShader->setVec3("updateCentre", updateCentre);
         boidShader->setFloat("updateDistance", updateDist);
+        boidShader->setFloat("globalSpeedFactor", speedFactor);
+        boidShader->setBool("resetFlag", resetFlag);
+        resetFlag = false;
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, BSBO);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, HLBO);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, BTBO);
 
-        // Dispatch loop
-        // In the compute shader, each thread only affects the value at its invocation index + idBase
         int n = transforms.size();
-        int idBase = 0;
-        while (n > 0) {
-            boidShader->setInt("idBase", idBase);
-            glDispatchCompute(DISPATCH_SIZE, 1, 1);          // declare work group sizes and run compute shader
-            glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);  // wait for all threads to be finished
-            n -= DISPATCH_SIZE;
-            idBase += DISPATCH_SIZE;
-        }
+        glDispatchCompute(ceil(n / DISPATCH_SIZE + 1), 1, 1);  // declare work group sizes and run compute shader
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);        // wait for all threads to be finished
 #endif
     }
 
@@ -137,8 +131,8 @@ class Flock {
     }
 
     void reset() {
-        int spread = WORLD_BOUND_HIGH;
 #ifdef TREE
+        int spread = WORLD_BOUND_HIGH;
         for (int i = 0; i < boid_count; ++i) {
             vec3 np = Util::randomv(-spread / 2, spread / 2);
             vec3 nv = normalize(Util::randomv(-5, 5));
@@ -148,31 +142,7 @@ class Flock {
         }
         tree->reset();
 #else
-        BoidS* map_bs;
-        map_bs = (BoidS*)glMapNamedBuffer(BSBO, GL_READ_WRITE);
-        if (map_bs) {
-            for (int i = 0; i < boid_count; ++i) {
-                // vec3 np = Util::randomv(-spread / 2, spread / 2);
-                // vec3 nv = normalize(Util::randomv(-5, 5));
-                BoidS b = map_bs[i];
-                // b.pos = vec4(np, 0);
-                // b.velocity = vec4(nv, 0);
-                // if (b.boidsAround == 99) printf("home\n");
-                // printf("%d, %d\n", b.boidsAround, b.canHaveHome);
-
-                printf("Pos: "); Util::print(b.dir);
-                printf("Home: "); Util::print(b.home);
-                printf("Squared distance: %d\n\n", b.boidsAround);
-
-                // printf("%d\n", b.boidsAround);
-            }
-            printf("\n\n\n\n\n");
-
-        } else {
-            printf("map failed\n");
-        }
-        // if (printed) printf("\n");
-        glUnmapNamedBuffer(BSBO);
+        resetFlag = true;
 #endif
     }
 
@@ -188,6 +158,9 @@ class Flock {
     std::vector<vec4> cs_homes;
     std::vector<vec3> homes = {vec3(0, 10, 0), vec3(0, -10, 0), vec3(10)};
     int boid_count = 0;
+    float speedFactor = 1;
+    float levelDistance = WORLD_BOUND_HIGH;
+    bool resetFlag = false;
 
     unsigned int BSBO;  // boid structs
     unsigned int HLBO;  // home locations

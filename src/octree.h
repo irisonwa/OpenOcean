@@ -14,12 +14,12 @@
 class Octree {
    public:
     Octree() {}
-    Octree(Box bound) { 
+    Octree(Box bound) {
         box = bound;
         for (int i = 0; i < OCT; ++i) children[i] = nullptr;
     }
 
-    Octree(BoidContainer* &cnt, Box bound) : bc(cnt) {
+    Octree(BoidContainer*& cnt, Box bound) : bc(cnt) {
         box = bound;
         for (int i = 0; i < OCT; ++i) children[i] = nullptr;
     }
@@ -31,15 +31,15 @@ class Octree {
         }
     }
 
-    const unsigned* getBoidsInRange(vec3 origin, float range, int &count);
-    unsigned* getBoidsInRange(vec3 origin, float range, int &count, unsigned *acc);
+    const unsigned* getBoidsInRange(vec3 origin, float range, int& count);
+    unsigned* getBoidsInRange(vec3 origin, float range, int& count, unsigned* acc);
     void insert(Boid*);
     void reset();
 
     Octree* children[OCT];
     BoidContainer* bc;
     unsigned indices[MAX_CHILD_COUNT * MAX_CHILD_COUNT];  // list of boid indices
-    unsigned bcount = 0; // number of boids in the list. always points to the top of the `indices` list.
+    unsigned bcount = 0;                                  // number of boids in the list. always points to the top of the `indices` list.
     Box box;
 };
 

@@ -26,8 +26,8 @@ void Octree::insert(Boid* boid) {
 }
 
 // Get a list of boid indices within the radius `range` around `origin`. The size of the list will be held in `count`.
-const unsigned* Octree::getBoidsInRange(vec3 origin, float range, int &count) {
-    unsigned *idxs = new unsigned[MAX_CHECK];
+const unsigned* Octree::getBoidsInRange(vec3 origin, float range, int& count) {
+    unsigned* idxs = new unsigned[MAX_CHECK];
     int cnt = 0;
     getBoidsInRange(origin, range, cnt, idxs);
     count = cnt;
@@ -35,7 +35,7 @@ const unsigned* Octree::getBoidsInRange(vec3 origin, float range, int &count) {
 }
 
 // helper function
-unsigned* Octree::getBoidsInRange(vec3 origin, float range, int &count, unsigned* acc) {
+unsigned* Octree::getBoidsInRange(vec3 origin, float range, int& count, unsigned* acc) {
     float dist = range * range;
     int octant = box.getOctant(origin);
     if (children[octant]) acc = children[octant]->getBoidsInRange(origin, range, count, acc);

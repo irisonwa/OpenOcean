@@ -47,8 +47,10 @@ class VariantMesh : public Mesh {
         // Load the mesh stored in this variant without populating its buffers
         bool loadMesh() {
             using enum VariantType;
-            if (type == STATIC) mesh = new StaticMesh(parentName + "_" + MODEL_NO_DIR(path), path, textureAtlasSize, textureAtlasTileCount, false);
-            else if (type == SKINNED) mesh = new BoneMesh(parentName + "_" + MODEL_NO_DIR(path), path, textureAtlasSize, textureAtlasTileCount, false);
+            if (type == STATIC)
+                mesh = new StaticMesh(parentName + "_" + MODEL_NO_DIR(path), path, textureAtlasSize, textureAtlasTileCount, false);
+            else if (type == SKINNED)
+                mesh = new BoneMesh(parentName + "_" + MODEL_NO_DIR(path), path, textureAtlasSize, textureAtlasTileCount, false);
             return mesh->loadMesh(path, false);
         }
         std::string parentName;
@@ -100,10 +102,10 @@ class VariantMesh : public Mesh {
     void render();
     std::vector<mat4> getUpdatedTransforms(Shader* skinnedShader, float animSpeed) { return {}; }  // unused
     std::vector<mat4> getUpdatedTransforms(float animSpeed) { return {}; }                         // unused
-    void update() {}                                                                   // unused
-    void update(float speed) {}                                                        // unused
-    void update(Shader* shader) {}                                                     // unused
-    void update(Shader* shader, float speed) {}                                        // unused
+    void update() {}                                                                               // unused
+    void update(float speed) {}                                                                    // unused
+    void update(Shader* shader) {}                                                                 // unused
+    void update(Shader* shader, float speed) {}                                                    // unused
 
 #define VA_POSITION_LOC 0     // p_vbo
 #define VA_NORMAL_LOC 1       // n_vbo

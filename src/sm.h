@@ -66,8 +66,8 @@ extern bool showNormal;
 extern Box *sceneBox;
 extern bool debug;
 
-constexpr int MAX_NUM_BOIDS = 10000;    // maximum count of boids allowed to be rendered.
-extern bool canBoidsAttack;  // toggle predator/prey behaviour of boids
+constexpr int MAX_NUM_BOIDS = 10000;  // maximum count of boids allowed to be rendered.
+extern bool canBoidsAttack;           // toggle predator/prey behaviour of boids
 
 };  // namespace SM
 

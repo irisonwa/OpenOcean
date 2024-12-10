@@ -23,7 +23,7 @@ std::map<BoidType, std::set<BoidType>> predTable = {
     {F_CLOWNFISH, {DOLPHIN, S_BLUE, S_WHALE, S_WHITE, WHALE}},
     {S_BLUE, {}},
     {S_WHALE, {}},
-    {S_WHITE, {WHALE}}, // scared for no reason (dumb idiot)
+    {S_WHITE, {WHALE}},  // scared for no reason (dumb idiot)
     {DOLPHIN, {}},
     {WHALE, {}},
     {PLANKTON, {F_THREADFIN, F_MARLIN, F_SPEAR_FISH, F_HERRING, F_CLOWNFISH, S_BLUE, S_WHALE, S_WHITE, WHALE, DOLPHIN}}};
@@ -62,7 +62,7 @@ float getBoidMinSpeed(BoidType t) {
 }
 
 float getBoidMaxSpeed(BoidType t) {
-    float m = getBoidMinSpeed(t)/4;
+    float m = getBoidMinSpeed(t) / 4;
     switch (t) {
         case F_THREADFIN:
             return 1 + (8 * m);
@@ -219,7 +219,7 @@ float getBoidGoalWeight(BoidType t) {
         case S_WHALE:
             return 0.1;
         case S_WHITE:
-            return 0.4; // more aggressive
+            return 0.4;  // more aggressive
         case WHALE:
             return 0.1;
         case DOLPHIN:
@@ -239,29 +239,28 @@ float getBoidCenteringFactor(BoidType t) {
 }
 
 vec2 getBoidBounds(BoidType t) {
+    // full bounds of world low - world high is 0 - 224 metres
     switch (t) {
         case F_THREADFIN:
             return {WORLD_BOUND_LOW, WORLD_BOUND_HIGH};
         case F_MARLIN:
-            return {WORLD_BOUND_LOW, WORLD_BOUND_HIGH};
+            return {-30, WORLD_BOUND_HIGH};  // 0 - 142
         case F_SPEAR_FISH:
-            return {WORLD_BOUND_LOW, WORLD_BOUND_HIGH};
+            return {10, WORLD_BOUND_HIGH};  // 0 - 102
         case F_HERRING:
             return {WORLD_BOUND_LOW, WORLD_BOUND_HIGH};
         case F_CLOWNFISH:
             return {WORLD_BOUND_LOW, WORLD_BOUND_HIGH};
         case S_BLUE:
-            // todo: lower down
-            return {WORLD_BOUND_LOW, WORLD_BOUND_HIGH};
+            return {WORLD_BOUND_LOW, 80};  // 20 - 224
         case S_WHALE:
             return {WORLD_BOUND_LOW, WORLD_BOUND_HIGH};
         case S_WHITE:
-            // todo: higher up
-            return {WORLD_BOUND_LOW, WORLD_BOUND_HIGH};
+            return {-50, WORLD_BOUND_HIGH};  // 0 - 162
         case WHALE:
             return {WORLD_BOUND_LOW, WORLD_BOUND_HIGH};
         case DOLPHIN:
-            return {WORLD_BOUND_LOW, WORLD_BOUND_HIGH};
+            return {50, WORLD_BOUND_HIGH};  // 0 - 52
         case PLANKTON:
             return {WORLD_BOUND_LOW, WORLD_BOUND_HIGH};
         default:

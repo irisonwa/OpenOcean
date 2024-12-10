@@ -36,18 +36,15 @@ struct BoidS {
     int boidsAround;
     unsigned int type;
     unsigned int ID;
-    unsigned int myPredators[NUM_BOID_TYPES+1]; // needs to be divisible by 4
-    unsigned int myPrey[NUM_BOID_TYPES+1];
+    unsigned int myPredators[NUM_BOID_TYPES + 1];  // needs to be divisible by 4
+    unsigned int myPrey[NUM_BOID_TYPES + 1];
     int pd1;
-    // int pd2;
-    // int pd3;
 };
 
 enum BoidType {
     F_THREADFIN,
     F_MARLIN,
     F_SPEAR_FISH,
-    // F_TUNA,
     F_HERRING,
     F_CLOWNFISH,
     S_BLUE,
@@ -59,27 +56,26 @@ enum BoidType {
 };
 
 namespace BoidInfo {
-    extern std::map<BoidType, std::set<BoidType>> preyTable; // table for each boid's prey
-    extern std::map<BoidType, std::set<BoidType>> predTable; // table for each boid's predators
-    extern vec3 getBoidScale(BoidType t);
-    extern float getBoidMinSpeed(BoidType t);
-    extern float getBoidMaxSpeed(BoidType t);
-    extern float getBoidSepDistance(BoidType t);
-    extern float getBoidChaseDistance(BoidType t);
-    extern float getBoidInterceptDistance(BoidType t);
-    extern float getBoidAvoidFactor(BoidType t);
-    extern float getBoidGoalWeight(BoidType t);
-    extern float getBoidFearWeight(BoidType a, BoidType b);
-    extern float getBoidMatchingFactor(BoidType t);
-    extern float getBoidCenteringFactor(BoidType t);
-    extern vec2 getBoidBounds(BoidType t);
-    extern int getHomeValidation(BoidType t);
-    extern bool isFamily(BoidType a, BoidType b);
-    extern bool isPreyTo(BoidType a, BoidType b);
-    extern bool isPredatorTo(BoidType a, BoidType b);
-    extern BoidS createBoidStruct(BoidType t, unsigned id, vec3 pos, vec3 dirs);
-    extern std::string getBoidName(BoidType t);
-} // namespace BoidInfo
-
+extern std::map<BoidType, std::set<BoidType>> preyTable;  // table for each boid's prey
+extern std::map<BoidType, std::set<BoidType>> predTable;  // table for each boid's predators
+extern vec3 getBoidScale(BoidType t);
+extern float getBoidMinSpeed(BoidType t);
+extern float getBoidMaxSpeed(BoidType t);
+extern float getBoidSepDistance(BoidType t);
+extern float getBoidChaseDistance(BoidType t);
+extern float getBoidInterceptDistance(BoidType t);
+extern float getBoidAvoidFactor(BoidType t);
+extern float getBoidGoalWeight(BoidType t);
+extern float getBoidFearWeight(BoidType a, BoidType b);
+extern float getBoidMatchingFactor(BoidType t);
+extern float getBoidCenteringFactor(BoidType t);
+extern vec2 getBoidBounds(BoidType t);
+extern int getHomeValidation(BoidType t);
+extern bool isFamily(BoidType a, BoidType b);
+extern bool isPreyTo(BoidType a, BoidType b);
+extern bool isPredatorTo(BoidType a, BoidType b);
+extern BoidS createBoidStruct(BoidType t, unsigned id, vec3 pos, vec3 dirs);
+extern std::string getBoidName(BoidType t);
+}  // namespace BoidInfo
 
 #endif /* BOIDINFO_H */

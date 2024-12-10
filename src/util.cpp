@@ -80,8 +80,7 @@ vec3 randomv(int lo, int hi) {
     return vec3(
         d(mt_gen),
         d(mt_gen),
-        d(mt_gen)
-    );
+        d(mt_gen));
 }
 
 // Map a value `v` from input range `[inLow, inHigh]` to output range `[outLow, outHigh]`
@@ -190,8 +189,7 @@ vec3 aiToGLM(aiVector3D* from) {
     return vec3(
         from->x,
         from->y,
-        from->z
-    );
+        from->z);
 }
 
 // Create a matrix at position `from` looking in the direction `to`. Uses the global up direction (0, 1, 0)
@@ -238,7 +236,6 @@ void print(std::vector<int> vs) {
         printf("%d", vs[i]);
         if (i != vs.size() - 1)
             printf(", ");
-        
     }
     printf("]\n");
 }
@@ -249,7 +246,6 @@ void print(std::vector<float> vs) {
         printf("%.2f", vs[i]);
         if (i != vs.size() - 1)
             printf(", ");
-        
     }
     printf("]\n");
 }

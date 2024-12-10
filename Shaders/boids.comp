@@ -1,6 +1,6 @@
 #version 460 core
 
-layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+layout (local_size_x = 1024, local_size_y = 1, local_size_z = 1) in;
 
 #define NUM_BOID_TYPES 11
 
@@ -30,8 +30,8 @@ struct Boid {
     int boidsAround;                      // 4          # 252
     uint type;                            // 4          # 256
     uint ID;                              // 4          # 260
-    uint myPredators[NUM_BOID_TYPES+1];     // 4 * 11     # 304
-    uint myPrey[NUM_BOID_TYPES+1];          // 4 * 11     # 348
+    uint myPredators[NUM_BOID_TYPES+1];   // 4 * 12     # 308
+    uint myPrey[NUM_BOID_TYPES+1];        // 4 * 12     # 356
 };
 
 uint F_THREADFIN = 0;
@@ -67,7 +67,7 @@ void process(uint idx);
 bool checkNan(vec3 v);
 bool checkNan(vec4 v);
 void resetVelocity(uint bidx);
-void checkAndResetVelocity(uint bidx);
+void checkAndReset(uint bidx);
 
 layout(std430, binding = 3) buffer BoidStructs {
     Boid boids[];
@@ -88,13 +88,14 @@ layout(std430, binding = 6) buffer writeonly TransOut {
 uniform float deltaTime;
 uniform bool canAttack;
 uniform vec3 gridSize;
-uniform int idBase;
+uniform float globalSpeedFactor;
 uniform vec3 updateCentre;
 uniform float updateDistance;
+uniform bool resetFlag;
 
 void main() {
-    uint gid = gl_GlobalInvocationID.x;
-    uint rid = idBase + gid; // real boid id
+    uint rid = gl_GlobalInvocationID.x;
+    // uint rid = idBase + gid; // real boid id
     if (rid >= boids.length()) return;
 
     // only process if inside render distance
@@ -328,7 +329,7 @@ void move(uint idx) {
             boids[idx].velocity -= (boids[idx].pos - boids[idx].currentHome) * 0.01;
         }
     } else {
-        boids[idx].velocity += (boids[idx].pos - vec4(0)) * 0.0005; // drift away from centre
+        // boids[idx].velocity += (boids[idx].pos - vec4(0)) * 0.0005; // drift away from centre
     }
 }   
 
@@ -337,25 +338,24 @@ void limitSpeed(uint idx) {
     if ((tspeed < sq(boids[idx].min_speed))) {
         boids[idx].velocity *= 1.1;
     } else {
-        float max_speed = boids[idx].max_speed;
-        if (tspeed > sq(boids[idx].max_speed)) {
-            boids[idx].velocity = normalize(boids[idx].velocity) * boids[idx].max_speed;
+        float max_speed = boids[idx].max_speed * globalSpeedFactor;
+        if (tspeed > sq(max_speed)) {
+            boids[idx].velocity = normalize(boids[idx].velocity) * max_speed;
         }
     }
-    checkAndResetVelocity(idx);
+    checkAndReset(idx);
 }
 
 void constrainBounds(uint idx) {
-    float tf = 1;
+    float tf = globalSpeedFactor;
     vec3 tg = gridSize;
-    tg.y = boids[idx].bounds.y;
     if (boids[idx].pos.x < -tg.x)
         boids[idx].velocity.x += tf;
     if (boids[idx].pos.x > tg.x)
         boids[idx].velocity.x -= tf;
-    if (boids[idx].pos.y < -tg.y)
+    if (boids[idx].pos.y < boids[idx].bounds.x)
         boids[idx].velocity.y += tf;
-    if (boids[idx].pos.y > tg.y)
+    if (boids[idx].pos.y > boids[idx].bounds.y)
         boids[idx].velocity.y -= tf;
     if (boids[idx].pos.z < -tg.z)
         boids[idx].velocity.z += tf;
@@ -364,7 +364,7 @@ void constrainBounds(uint idx) {
 }
 
 void update(uint idx) {
-    checkAndResetVelocity(idx);
+    checkAndReset(idx);
     boids[idx].lastVelocity = mix(boids[idx].lastVelocity, boids[idx].velocity, deltaTime * acc);
     boids[idx].pos += boids[idx].lastVelocity * deltaTime;
     boids[idx].pos.w = 0;
@@ -421,9 +421,12 @@ bool checkNan(vec3 v) {
 bool checkNan(vec4 v) {
     return any(isnan(v));
 }
-void checkAndResetVelocity(uint idx) {
+void checkAndReset(uint idx) {
     if (checkNan(boids[idx].velocity)) {
         resetVelocity(idx);
+    }
+    if (resetFlag) {
+        boids[idx].pos = vec4(0);
     }
 }
 void resetVelocity(uint idx) {

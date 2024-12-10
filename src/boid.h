@@ -40,9 +40,7 @@ class Boid {
     void update();
     void resetVelocity();
 
-    float visibleRange = 8; /* the distance the boid will check for other boids */
-    // const float originalViewCone = 180; /* view angle */
-    
+    float visibleRange = 8;           /* the distance the boid will check for other boids */
     vec3 currentHome = vec3(0, 0, 0); /* location of safe area */
     int canHaveHome = 0;
     int hasHome = 0;
@@ -50,16 +48,13 @@ class Boid {
     float newHomeDistFlee = 10;   // distance to determine new home when fleeing
     float homeRange = 40;         // distance to consider current home valid
 
-    vec3 pos;                          /* position */
-    vec3 velocity;                     /* current velocity of boid */
-    vec3 dir;                          /* current direction of boid; always equal to normalised velocity */
-    vec3 lastVelocity;                 /* last velocity of boid, before movement transformations. used for lerping */
-    bool isCaught = false;             /* was this boid caught by a predator? :( */
-    // float viewCone = originalViewCone; /* view angle */
-    unsigned ID;                       /* ID of boid */
+    vec3 pos;              /* position */
+    vec3 velocity;         /* current velocity of boid */
+    vec3 dir;              /* current direction of boid; always equal to normalised velocity */
+    vec3 lastVelocity;     /* last velocity of boid, before movement transformations. used for lerping */
+    bool isCaught = false; /* was this boid caught by a predator? :( */
+    unsigned ID;           /* ID of boid */
     BoidType type;
-    // bool updateHistory = false;        /* update the history of this boid? (for drawing trails) */
-    // std::vector<std::vector<vec3>> history;
 };
 
 #endif /* BOID_H */

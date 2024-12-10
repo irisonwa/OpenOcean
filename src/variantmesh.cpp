@@ -59,14 +59,6 @@ void VariantMesh::populateBuffers() {
     glEnableVertexAttribArray(VA_TEXTURE_LOC);
     glVertexAttribPointer(VA_TEXTURE_LOC, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
-    glBindBuffer(GL_ARRAY_BUFFER, BBO); // todo move into check
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vBones[0]) * vBones.size(), &vBones[0], GL_STATIC_DRAW);
-    glEnableVertexAttribArray(VA_BONE_LOC);
-    glVertexAttribIPointer(VA_BONE_LOC, MAX_NUM_BONES_PER_VERTEX, GL_INT, sizeof(VertexBoneData), (const GLvoid *)0);
-    glEnableVertexAttribArray(VA_BONE_WEIGHT_LOC);
-    glVertexAttribPointer(VA_BONE_WEIGHT_LOC, MAX_NUM_BONES_PER_VERTEX, GL_FLOAT, GL_FALSE,
-                          sizeof(VertexBoneData), (const GLvoid *)(MAX_NUM_BONES_PER_VERTEX * sizeof(unsigned int)));
-
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices[0]) * indices.size(), &indices[0], GL_STATIC_DRAW);
 
@@ -85,6 +77,14 @@ void VariantMesh::populateBuffers() {
     glVertexAttribDivisor(VA_DEPTH_LOC, 1);  // tell OpenGL this is an instanced vertex attribute.
 
     if (type == SKINNED) {
+        glBindBuffer(GL_ARRAY_BUFFER, BBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vBones[0]) * vBones.size(), &vBones[0], GL_STATIC_DRAW);
+        glEnableVertexAttribArray(VA_BONE_LOC);
+        glVertexAttribIPointer(VA_BONE_LOC, MAX_NUM_BONES_PER_VERTEX, GL_INT, sizeof(VertexBoneData), (const GLvoid *)0);
+        glEnableVertexAttribArray(VA_BONE_WEIGHT_LOC);
+        glVertexAttribPointer(VA_BONE_WEIGHT_LOC, MAX_NUM_BONES_PER_VERTEX, GL_FLOAT, GL_FALSE,
+                              sizeof(VertexBoneData), (const GLvoid *)(MAX_NUM_BONES_PER_VERTEX * sizeof(unsigned int)));
+
         // ssbos
         glCreateBuffers(1, &ABBO);
         glCreateBuffers(1, &BIBO);
@@ -151,7 +151,7 @@ void VariantMesh::unloadMaterials() {
 // Update and render all animations for each variant
 void VariantMesh::render(const mat4 *instance_trans_matrix) {
     glBindVertexArray(VAO);
-    glBindBuffer(GL_DRAW_INDIRECT_BUFFER, commandBuffer); // rebind command buffer
+    glBindBuffer(GL_DRAW_INDIRECT_BUFFER, commandBuffer);  // rebind command buffer
     if (type == SKINNED) {
 #ifdef TREE
         glBindBuffer(GL_ARRAY_BUFFER, IBO);
@@ -194,7 +194,7 @@ void VariantMesh::render(mat4 mm) {
 void VariantMesh::render() {
     glBindVertexArray(VAO);
     glBindBuffer(GL_DRAW_INDIRECT_BUFFER, commandBuffer);  // rebind command buffer
-    
+
     // update animations
     animShader->use();
     animShader->setFloat("timeSinceApplicationStarted", SM::getGlobalTime());

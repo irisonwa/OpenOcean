@@ -1,6 +1,6 @@
 #include "sm.h"
 #include "camera.h"  // fwd
-#include "box.h"  // fwd
+#include "box.h"     // fwd
 
 namespace SM {
 int width = 1024;

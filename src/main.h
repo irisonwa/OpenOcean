@@ -31,7 +31,7 @@
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 
-// ImGUI includes
+// ImGui includes
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_glut.h"
 #include "imgui/imgui_impl_opengl3.h"
@@ -45,7 +45,6 @@
 #include "shader.h"
 #include "sm.h"
 #include "util.h"
-#include "cubemap.h"
 #include "flock.h"
 #include "lighting.h"
 #include "boid.h"
@@ -53,29 +52,6 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
-
-/* Static meshes */
-#define MESH_WALL "wall.gltf"
-#define MESH_LONGWALL "wall_4x1.gltf"
-#define TEST_CUBE "test_cube.obj"
-#define TEST_INST "inst_cube.obj"
-#define TEST_SPEC "spec_cube.obj"
-#define TEST_PRISM "prism.glb"
-#define TEST_FISHA "fsh.obj"
-#define TEST_FISHB "fsh2.obj"
-#define TEST_BOID "boid.obj"
-#define TEST_GROUND "test_ground.obj"
-#define TEST_ROOM "box.obj"
-
-#define MESH_SUB "sub.obj"
-#define MESH_SHARK "shark.obj"
-#define MESH_SHARK2 "shark2.obj"
-#define MESH_KELP "kelp.obj"
-#define MESH_ISLAND "island.obj"
-#define MESH_THREADFIN "fish_threadfin.obj"
-#define MESH_MARLIN "fish_marlin.obj"
-#define MESH_SPEARFISH "fish_spear.obj"
-#define MESH_SEA "sea_surface.obj"
 
 /* Meshes */
 // Plants
@@ -114,13 +90,11 @@ const char* frag_sb = PROJDIR "Shaders/cubemap.frag";
 const char* vert_blank = PROJDIR "Shaders/blank.vert";
 const char* frag_blank = PROJDIR "Shaders/blank.frag";
 
-Cubemap* cubemap;
 Lighting *staticLight, *boneLight, *variantLight;
-
 std::vector<Boid*> boids;
 Flock* flock;
 Player* player;
-VariantMesh* flockVariants, *skinnedVariants, *staticVariants;
+VariantMesh *flockVariants, *skinnedVariants, *staticVariants;
 std::vector<mat4> skvMats, stvMats;
 Box* updateBox;
 
@@ -191,15 +165,6 @@ std::vector<mat4> islandMats = {
     translate(scale(mat4(1), vec3(15)), vec3(-184.215073, -152.724846, -139.598846) / 15.f),
     translate(scale(mat4(1), vec3(15)), vec3(291.893799, -140.834908, -227.146240) / 15.f),
     translate(scale(mat4(1), vec3(15)), vec3(-354.657928, -163.792442, 226.254578) / 15.f),
-};
-
-std::vector<std::string> cubemap_faces = {
-    PROJDIR "Models/bskybox/right.jpg",
-    PROJDIR "Models/bskybox/left.jpg",
-    PROJDIR "Models/bskybox/top.jpg",
-    PROJDIR "Models/bskybox/bottom.jpg",
-    PROJDIR "Models/bskybox/front.jpg",
-    PROJDIR "Models/bskybox/back.jpg",
 };
 
 // error/debug message callback, from https://www.khronos.org/opengl/wiki/Debug_Output#Examples

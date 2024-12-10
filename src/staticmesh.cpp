@@ -238,7 +238,7 @@ void StaticMesh::render(unsigned int nInstances, const mat4* model_matrix, const
             (void*)(sizeof(unsigned int) * meshes[i].baseIndex),
             nInstances,
             meshes[i].baseVertex);
-        
+
         // unbind textures so they don't "spill over"
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D_ARRAY, 0);

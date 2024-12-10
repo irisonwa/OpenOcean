@@ -22,7 +22,7 @@ class Shader {
         name = shader_name;
         ID = CompileShaders(vertex_shader_path, fragment_shader_path);
     }
-    
+
     Shader(std::string shader_name, const char* compute_shader_path) {
         name = shader_name;
         ID = CompileComputeShader(compute_shader_path);

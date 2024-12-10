@@ -86,13 +86,6 @@ void Camera::processMovement() {
     };
 
     speed = SPRINT ? sprintSpeed : baseSpeed;
-
-    /* // if sprinting (and moving), change the FOV on start and when stopped.
-    int lerp_speed = 350;
-    FOV = (SPRINT && ((CAN_FLY && UP) || (CAN_FLY && DOWN) || LEFT || RIGHT || FORWARD || BACK)) ?
-        std::clamp(Util::lerp(FOV, max_FOV, SM::delta * lerp_speed), base_FOV, max_FOV) : // zoom out
-        std::clamp(Util::lerp(FOV, base_FOV, SM::delta * -lerp_speed * 2), base_FOV, max_FOV); // zoom in */
-
     if (!CAN_FLY) pos.y = t_cpos_y;  // if can't fly, don't change y_pos
 }
 

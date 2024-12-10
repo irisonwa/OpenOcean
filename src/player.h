@@ -20,8 +20,7 @@ class Player {
         followPos = _pos;
         dir = _dir;
         velocity = vec3(0);
-        // mesh = new Mesh(name, mesh_path, mesh_atlas_size, mesh_atlas_tiles_used);
-        mesh = new BoneMesh(name, mesh_path);
+        mesh = new BoneMesh(name, mesh_path, mesh_atlas_size, mesh_atlas_tiles_used);
         transform = translate(transform, _pos);
     }
     Player(std::string _name, vec3 _pos, vec3 _dir) {
@@ -35,12 +34,11 @@ class Player {
     ~Player() {}
 
     void setMesh(std::string mesh_path, int _atlasTileSize, int _atlasTilesUsed);
-    void processMovement();  // process the player's movement using a camera POV
-    void lookAt(vec3 p);                  // rotate the player to look at a point `p`
-    void render();                        // display the player on screen
-    void setShader(Shader* shader);       // set the shader for the player mesh
+    void processMovement();          // process the player's movement using a camera POV
+    void lookAt(vec3 p);             // rotate the player to look at a point `p`
+    void render();                   // display the player on screen
+    void setShader(Shader* shader);  // set the shader for the player mesh
 
-    // Mesh* mesh;
     BoneMesh* mesh;
     Shader* shader;
 

@@ -1,7 +1,6 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
-
 #include "util.h"
 #include "sm.h"
 #include "player.h"

@@ -34,11 +34,7 @@ public:
         // loadWireframe();
     }
 
-    ~Box() {
-        // glBindVertexArray(0);
-        // glDeleteBuffers(1, &VAO);
-        // glDeleteBuffers(1, &VBO);
-    }
+    ~Box() {}
 
     // split the box into 8 octants
     std::vector<Box> split() {
@@ -61,9 +57,6 @@ public:
         if (pos.x >= centre.x) msk |= 4;
         if (pos.y >= centre.y) msk |= 2;
         if (pos.z >= centre.z) msk |= 1;
-        // msk += pos.x > centre.x ? 4 : 0;
-        // msk += pos.y > centre.y ? 2 : 0;
-        // msk += pos.z > centre.z ? 1 : 0;
         return msk;
     }
 

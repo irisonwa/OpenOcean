@@ -202,6 +202,7 @@ class Mesh {
 
     virtual ~Mesh() = default;
 
+    // messy and unecessary
     virtual bool loadMesh(std::string mesh_path) = 0;
     virtual bool loadMesh(std::string mesh_path, bool popBuffers) = 0;
     virtual void populateBuffers() = 0;
