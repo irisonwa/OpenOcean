@@ -2,10 +2,13 @@
 
 ## Title
 
-Open Ocean with Schooling Fish – Focus on animating the behavior of large schools of fish, with predators interacting.
+"Open Ocean with Schooling Fish – Focus on animating the behavior of large schools of fish, with predators interacting."
+
+An underwater environment simulation using boids in OpenGL. Contains different animated fish models that interact with each other and anemone around the sea floor.
 
 ### Content
 Contains:
+- Predator and prey behaviour
 - Instancing via `glMultiDrawElementsIndrect`
 - GPU parellisation via compute shaders (and an unused implementation of a CPU octree)
 - GPU-processed animations for all fish
