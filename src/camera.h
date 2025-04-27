@@ -42,7 +42,7 @@ class Camera {
     // Get the world view matrix for the camera.
     mat4 getViewMatrix();
 
-    // Get the prospective projection matrix for the camera.
+    // Get the perspective projection matrix for the camera.
     mat4 getProjectionMatrix();
 
     // Follow the target position `pos` who is pointing in the direction `dir` at some fixed distance

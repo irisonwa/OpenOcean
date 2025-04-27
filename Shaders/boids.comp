@@ -85,13 +85,13 @@ layout(std430, binding = 6) buffer writeonly TransOut {
     mat4 transforms[];
 };
 
-uniform float deltaTime;
-uniform bool canAttack;
-uniform vec3 gridSize;
-uniform float globalSpeedFactor;
-uniform vec3 updateCentre;
-uniform float updateDistance;
-uniform bool resetFlag;
+layout (location = 0) uniform float deltaTime;
+layout (location = 1) uniform bool canAttack;
+layout (location = 2) uniform vec3 gridSize;
+layout (location = 3) uniform float globalSpeedFactor;
+layout (location = 4) uniform vec3 updateCentre;
+layout (location = 5) uniform float updateDistance;
+layout (location = 6) uniform bool resetFlag;
 
 void main() {
     uint rid = gl_GlobalInvocationID.x;

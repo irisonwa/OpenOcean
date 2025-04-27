@@ -46,7 +46,7 @@ layout(std430, binding=1) buffer bInfoData{
     BoneInfo binfos[];
 };
 
-uniform float timeSinceApplicationStarted;
+layout (location = 0) uniform float timeSinceApplicationStarted;
 
 mat4 makeMat4(vec4 a, vec4 b, vec4 c, vec4 d) {
     return mat4(

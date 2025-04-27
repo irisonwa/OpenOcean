@@ -1,13 +1,19 @@
 # CS7GV6 Project 1
 
-## Title
+![An underwater scene. Fish swim about, surrounded by beacons of light and a flashlight enanating from a ship.](docs/boids.png)
+
+## Open Ocean Environment
 
 "Open Ocean with Schooling Fish – Focus on animating the behavior of large schools of fish, with predators interacting."
 
-An underwater environment simulation using boids in OpenGL. Contains different animated fish models that interact with each other and anemone around the sea floor.
+An underwater environment simulation using boids in OpenGL. Contains different animated fish models that interact with each other and anemone around the sea floor. Created for the CS7GV6 Computer Graphics module at Trinity College Dublin.
+
+Full video demonstration: <https://youtu.be/WUkUC-dtAdE>
 
 ### Content
+
 Contains:
+
 - Predator and prey behaviour
 - Instancing via `glMultiDrawElementsIndrect`
 - GPU parellisation via compute shaders (and an unused implementation of a CPU octree)
@@ -16,6 +22,7 @@ Contains:
 - Toggleable debug menu via ImGui using the TAB button
 
 Potential future milestones:
+
 - Frustum/instance culling
 - Collision avoidance
 - Procedural generation

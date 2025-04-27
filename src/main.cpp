@@ -14,20 +14,17 @@ void init() {
     Shader* s = new Shader("static", vert_smesh, frag_smesh);
     shaders[s->name] = s;
 
-    Shader* s2 = new Shader("skybox", vert_sb, frag_sb);
+    Shader* s2 = new Shader("bones", vert_bmesh, frag_bmesh);
     shaders[s2->name] = s2;
-
-    Shader* s3 = new Shader("bones", vert_bmesh, frag_bmesh);
-    shaders[s3->name] = s3;
 #ifdef TREE
-    Shader* s4 = new Shader("variant_skinned", vert_vmesh_cpu, frag_vmesh);
-    shaders[s4->name] = s4;
+    Shader* s3 = new Shader("variant_skinned", vert_vmesh_cpu, frag_vmesh);
+    shaders[s3->name] = s3;
 #else
-    Shader* s4 = new Shader("variant_skinned", vert_vmesh_gpu, frag_vmesh);
-    shaders[s4->name] = s4;
+    Shader* s3 = new Shader("variant_skinned", vert_vmesh_gpu, frag_vmesh);
+    shaders[s3->name] = s3;
 #endif
-    Shader* s5 = new Shader("variant_static", vert_vmesh_cpu, frag_vmesh);
-    shaders[s5->name] = s5;
+    Shader* s4 = new Shader("variant_static", vert_vmesh_cpu, frag_vmesh);
+    shaders[s4->name] = s4;
 
     /// -------------------------------------------------- LIGHTING -------------------------------------------------- ///
     staticLight = new Lighting("stony light", shaders["variant_static"], MATERIAL_SHINY);
@@ -434,7 +431,8 @@ void keyReleased(unsigned char key, int x, int y) {
     if (key == 'i' || key == 'I') player->FORWARD = false;
     if (key == 'k' || key == 'K') player->BACK = false;
     if (key == 'j' || key == 'J') player->LEFT = false;
-    if (key == 'p' || key == 'P') player->RIGHT = false;
+    if (key == 'l' || key == 'L') player->RIGHT = false;
+    if (key == 'p' || key == 'P') SM::camera->SPRINT = false;
 }
 
 int main(int argc, char** argv) {

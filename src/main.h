@@ -85,8 +85,6 @@ const char* frag_bmesh = PROJDIR "Shaders/boneMesh.frag";
 const char* vert_vmesh_cpu = PROJDIR "Shaders/variantMesh_c.vert";
 const char* vert_vmesh_gpu = PROJDIR "Shaders/variantMesh_g.vert";
 const char* frag_vmesh = PROJDIR "Shaders/variantMesh.frag";
-const char* vert_sb = PROJDIR "Shaders/cubemap.vert";
-const char* frag_sb = PROJDIR "Shaders/cubemap.frag";
 const char* vert_blank = PROJDIR "Shaders/blank.vert";
 const char* frag_blank = PROJDIR "Shaders/blank.frag";
 
